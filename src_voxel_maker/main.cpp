@@ -7,8 +7,7 @@
 #include <omp.h>
 #include "types.hpp"
 
-static const double HALF_SQRT_3 = sqrt(3)/2.;
-static const double TWO_TIERS_SQRT_3 = 2*sqrt(3)/3.;
+static const double APPROXIM_RANGE = 2*sqrt(3)/3.;
 static const size_t GRID_3D_SIZE = 2;
 
 /******************************************/
@@ -95,22 +94,15 @@ bool processIntersectionVertexVoxel(Vertex* v, Voxel vox, double threshold){
 }
 
 /* Calculation of intersection between an edge of the face and the voxel */
-bool processIntersectionEdgeVoxel(Vertex* v1, Vertex* v2, Voxel vox, double threshold){
+bool processIntersectionEdgeVoxel(Vertex* v1, Vertex* v2, Edge edg, Voxel vox, double threshold){
 	/* Projection of the voxel center on the edge */
-	glm::dvec3 edgeDir = createVector(v1->pos, v2->pos);
-	double edgeLength = vecNorm(edgeDir);
-	/* case where the segment is a point */
-	if(edgeLength <= 0){
-		return false;
-	}
-
 	glm::dvec3 edgeDiff = createVector(v1->pos, vox.c);
-	float t = glm::dot(edgeDiff, edgeDir);
+	float t = glm::dot(edgeDiff, edg.dir);
 	/* If the projected isn't on the segment */
 	if(t<0. || t>1.){
 		return false;
 	}
-	glm::dvec3 voxCProjected = glm::dvec3(v1->pos.x + t*edgeDir.x, v1->pos.y + t*edgeDir.y, v1->pos.z + t*edgeDir.z);
+	glm::dvec3 voxCProjected = glm::dvec3(v1->pos.x + t*edg.dir.x, v1->pos.y + t*edg.dir.y, v1->pos.z + t*edg.dir.z);
 
 	/* if the center of the voxel is inside a bounding cylinder with a radius of threshold, turn it on */
 	if(vecNorm(createVector(vox.c, voxCProjected)) < threshold){
@@ -120,13 +112,7 @@ bool processIntersectionEdgeVoxel(Vertex* v1, Vertex* v2, Voxel vox, double thre
 }
 
 /* Calculation of intersections between the main plane and the voxel */
-bool processIntersectionMainPlaneVoxel(Face testedFace, Voxel currentVoxel){
-	/* Calculate the threshold normals and its inverse */
-	glm::dvec3 normalizeN = glm::normalize(testedFace.normal);
-	glm::dvec3 thresholdNormal = TWO_TIERS_SQRT_3 * currentVoxel.size * normalizeN;
-	/* Define the upper and lower plane which surround the triangle face */
-	Plane G = createPlane(testedFace.s3->pos + thresholdNormal, testedFace.s2->pos + thresholdNormal, testedFace.s1->pos + thresholdNormal);
-	Plane H = createPlane(testedFace.s1->pos - thresholdNormal, testedFace.s2->pos - thresholdNormal, testedFace.s3->pos - thresholdNormal);
+bool processIntersectionMainPlaneVoxel(Plane G, Plane H, Voxel currentVoxel){
 
 	/* Test if the center of the voxel is between the two plane */
 	double cRelativityG = relativePositionVertexFace(G, currentVoxel.c);
@@ -143,11 +129,7 @@ bool processIntersectionMainPlaneVoxel(Face testedFace, Voxel currentVoxel){
 }
 
 /* Calculate if the voxel center is in the Ei prism */
-bool processIntersectionOtherPlanesVoxel(Face testedFace, Voxel currentVoxel){
-	/* Define the three perpendicular planes to the trangle Face passing by each edge */
-	Plane e1 = createPlane(testedFace.s1->pos, testedFace.s2->pos, testedFace.s2->pos + testedFace.normal);
-	Plane e2 = createPlane(testedFace.s2->pos, testedFace.s3->pos, testedFace.s3->pos + testedFace.normal);
-	Plane e3 = createPlane(testedFace.s3->pos, testedFace.s1->pos, testedFace.s1->pos + testedFace.normal);
+bool processIntersectionOtherPlanesVoxel(Plane e1, Plane e2, Plane e3, Voxel currentVoxel){
 
 	/* Test if the center of the voxel is on the same side of the tree plan */
 	double cRelativityE1 = relativePositionVertexFace(e1, currentVoxel.c);
@@ -165,25 +147,24 @@ bool processIntersectionOtherPlanesVoxel(Face testedFace, Voxel currentVoxel){
 }
 
 /* Main calculation of the intersection between the face and a voxel */
-bool processIntersectionPolygonVoxel(Face testedFace, Voxel currentVoxel, uint32_t mode){
+bool processIntersectionPolygonVoxel(Face testedFace, Edge edg1, Edge edg2, Edge edg3, Plane H, Plane G, Plane E1, Plane E2, Plane E3, Voxel currentVoxel, double threshold, uint32_t mode){
 	/* vertex Bounding sphere radius and edge bounding cylinder radius */
-	double Rc = currentVoxel.size * TWO_TIERS_SQRT_3;
 
 	if((mode == 1)||(mode==0)){
 		/* Vertices tests */
-		if(processIntersectionVertexVoxel(testedFace.s1, currentVoxel, Rc)){ return true;}
-		if(processIntersectionVertexVoxel(testedFace.s2, currentVoxel, Rc)){ return true;}
-		if(processIntersectionVertexVoxel(testedFace.s3, currentVoxel, Rc)){ return true;}
+		if(processIntersectionVertexVoxel(testedFace.s1, currentVoxel, threshold)){ return true;}
+		if(processIntersectionVertexVoxel(testedFace.s2, currentVoxel, threshold)){ return true;}
+		if(processIntersectionVertexVoxel(testedFace.s3, currentVoxel, threshold)){ return true;}
 	}
 	if((mode ==2)||(mode==0)){
 		/* Edges tests */
-		if(processIntersectionEdgeVoxel(testedFace.s1, testedFace.s2, currentVoxel, Rc)){return true;}
-		if(processIntersectionEdgeVoxel(testedFace.s1, testedFace.s3, currentVoxel, Rc)){return true;}
-		if(processIntersectionEdgeVoxel(testedFace.s2, testedFace.s3, currentVoxel, Rc)){return true;}
+		if(processIntersectionEdgeVoxel(testedFace.s1, testedFace.s2, edg1, currentVoxel, threshold)){return true;}
+		if(processIntersectionEdgeVoxel(testedFace.s1, testedFace.s3, edg2, currentVoxel, threshold)){return true;}
+		if(processIntersectionEdgeVoxel(testedFace.s2, testedFace.s3, edg3, currentVoxel, threshold)){return true;}
 	}
 	if((mode == 3)||(mode==0)){
 		/* Face test */
-		if(processIntersectionMainPlaneVoxel(testedFace, currentVoxel) && processIntersectionOtherPlanesVoxel(testedFace, currentVoxel)){
+		if(processIntersectionMainPlaneVoxel(H, G, currentVoxel) && processIntersectionOtherPlanesVoxel(E1, E2, E3, currentVoxel)){
 			return true;
 		}
 	}
@@ -477,26 +458,42 @@ int main(int argc, char** argv) {
 	}
 
 	double voxelSize = GRID_3D_SIZE/(double)nbSub;
-	
+	double Rc = voxelSize * APPROXIM_RANGE;
 	//INTERSECTION PROCESSING
 	
 	//For each Face
 	//#pragma omp parallel for
 	for(uint32_t n=0; n<nbFace;++n){
-
+		/* Face properties */
+		/* min and max */
 		uint32_t minVoxelX = glm::min(uint32_t(getminX(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
 		uint32_t maxVoxelX = glm::min(uint32_t(getmaxX(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
 		uint32_t minVoxelY = glm::min(uint32_t(getminY(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
 		uint32_t maxVoxelY = glm::min(uint32_t(getmaxY(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
 		uint32_t minVoxelZ = glm::min(uint32_t(getminZ(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
 		uint32_t maxVoxelZ = glm::min(uint32_t(getmaxZ(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
+		/* Edges */
+		Edge edgS1S2 = createEdge(tabF[n].s1->pos, tabF[n].s2->pos);
+		Edge edgS1S3 = createEdge(tabF[n].s1->pos, tabF[n].s3->pos);
+		Edge edgS2S3 = createEdge(tabF[n].s2->pos, tabF[n].s3->pos);
+		/* Planes */
+		/* Calculate the threshold normals and its inverse */
+		glm::dvec3 thresholdNormal = Rc * glm::normalize(tabF[n].normal);
+		/* Define the upper and lower plane which surround the triangle face */
+		Plane upperPlane = createPlane(tabF[n].s3->pos + thresholdNormal, tabF[n].s2->pos + thresholdNormal, tabF[n].s1->pos + thresholdNormal);
+		Plane lowerPlane = createPlane(tabF[n].s1->pos - thresholdNormal, tabF[n].s2->pos - thresholdNormal, tabF[n].s3->pos - thresholdNormal);
+		/* Define the three perpendicular planes to the trangle Face passing by each edge */
+		Plane e1 = createPlane(tabF[n].s1->pos, tabF[n].s2->pos, tabF[n].s2->pos + tabF[n].normal);
+		Plane e2 = createPlane(tabF[n].s2->pos, tabF[n].s3->pos, tabF[n].s3->pos + tabF[n].normal);
+		Plane e3 = createPlane(tabF[n].s3->pos, tabF[n].s1->pos, tabF[n].s1->pos + tabF[n].normal);
 
 		//For each cube of the face bounding box
 		for(uint32_t k=minVoxelZ; k<=maxVoxelZ; ++k){
 			for(uint32_t j=minVoxelY;j<=maxVoxelY; ++j){
 				for(uint32_t i=minVoxelX;i<=maxVoxelX;++i){
+					/* Voxel Properties */
 					Voxel vox = createVoxel(i*voxelSize -1, j*voxelSize -1, k*voxelSize -1, voxelSize);
-					if(processIntersectionPolygonVoxel(tabF[n], vox, mode)){
+					if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
 						uint32_t currentIndex = i + nbSub*j + k*nbSub*nbSubY;
 						tabVoxel[currentIndex].nbFaces++;
 						if(normal) tabVoxel[currentIndex].sumNormal = glm::dvec3(tabVoxel[currentIndex].sumNormal.x + tabF[n].normal.x, tabVoxel[currentIndex].sumNormal.y + tabF[n].normal.y, tabVoxel[currentIndex].sumNormal.z + tabF[n].normal.z);
@@ -509,6 +506,7 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
+	std::cout<<"-> Voxelisation finished !"<<std::endl;
 
 	//WRITTING THE VOXEL-INTERSECTION FILE
 	FILE* voxelFile = NULL;

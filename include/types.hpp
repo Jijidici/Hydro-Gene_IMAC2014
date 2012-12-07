@@ -45,6 +45,11 @@ typedef struct s_plane{
 	glm::dvec3 normal;
 }Plane;
 
+typedef struct s_edge{
+	glm::dvec3 dir;
+	double length;
+}Edge;
+
 /******************************************/
 /*          FUNCTIONS                     */
 /******************************************/
@@ -82,6 +87,13 @@ Plane createPlane(glm::dvec3 inS1, glm::dvec3 inS2, glm::dvec3 inS3){
 	newPlane.s2.pos = inS2;
 	newPlane.s3.pos = inS3;
 	return newPlane;
+}
+
+Edge createEdge(glm::dvec3 inS1, glm::dvec3 inS2){
+	Edge newEdge;
+	newEdge.dir = createVector(inS1, inS2);
+	newEdge.length = glm::length(newEdge.dir);
+	return newEdge;
 }
 
 #endif
