@@ -30,18 +30,20 @@ uint32_t reduceTab(uint32_t nbSub, VoxelData *tabVoxel){
 	uint32_t nbIntersectionMax = 0;
 	//line
 	uint32_t index=0;
-	uint32_t* newTab = new uint32_t[nbSubX*(2*nbSubY)*(2*nbSubZ)]; //NBX is divided in 2
+	PartialVoxelData* newTab = new PartialVoxelData[nbSubX*(2*nbSubY)*(2*nbSubZ)]; //NBX is divided in 2
 	for(uint32_t i=0;i<(2*nbSubX)*(2*nbSubY)*(2*nbSubZ);i=i+2){ //i runs the entire length of tabVoxel, with a treshold of 2
-		newTab[index] = tabVoxel[i].nbFaces+tabVoxel[i+1].nbFaces;
+		newTab[index].nbFaces = tabVoxel[i].nbFaces+tabVoxel[i+1].nbFaces;
+		newTab[index].sumNormal = tabVoxel[i].sumNormal+tabVoxel[i+1].sumNormal;
 		index++;
 	}
 	//row
 	uint32_t index2=0;
 	uint32_t tailleNewTab2 = nbSubX*nbSubY*(2*nbSubZ); //NBY is now divided in 2
-	uint32_t* newTab2 = new uint32_t[tailleNewTab2];
+	PartialVoxelData* newTab2 = new PartialVoxelData[tailleNewTab2];
 	for(uint32_t j=0;j<(2*nbSubY)*(2*nbSubZ);j=j+2){
 		for(uint32_t i=j*nbSubX;i<j*nbSubX+nbSubX;++i){
-			newTab2[index2] = newTab[i]+newTab[i+nbSubX];
+			newTab2[index2].nbFaces = newTab[i].nbFaces+newTab[i+nbSubX].nbFaces;
+			newTab2[index2].sumNormal = newTab[i].sumNormal+newTab[i+nbSubX].sumNormal;
 			index2++;
 		}
 	}
@@ -49,22 +51,25 @@ uint32_t reduceTab(uint32_t nbSub, VoxelData *tabVoxel){
 	//depth
 	uint32_t index3=0;
 	uint32_t tailleNewTab3 = nbSubX*nbSubY*nbSubZ; //NBZ is now divided in 2
-	uint32_t* newTab3 = new uint32_t[tailleNewTab3];
+	PartialVoxelData* newTab3 = new PartialVoxelData[tailleNewTab3];
 	for(uint32_t j=0;j<2*nbSubZ;j=j+2){
 		for(uint32_t i=j*nbSubX*nbSubY;i<j*nbSubX*nbSubY+nbSubX*nbSubY;++i){
-			newTab3[index3] = newTab2[i]+newTab2[i+nbSubX*nbSubY];
+			newTab3[index3].nbFaces = newTab2[i].nbFaces+newTab2[i+nbSubX*nbSubY].nbFaces;
+			newTab3[index3].sumNormal = newTab2[i].sumNormal+newTab2[i+nbSubX*nbSubY].sumNormal;
 			index3++;
 		}
 	}
 	delete[] newTab2;
 	//update of tabVoxel
 	for(uint32_t i=0;i<nbSubX*nbSubY*nbSubZ;++i){
-		tabVoxel[i].nbFaces = newTab3[i];
+		tabVoxel[i].nbFaces = newTab3[i].nbFaces;
+		tabVoxel[i].sumNormal = newTab3[i].sumNormal;
 		if(tabVoxel[i].nbFaces > nbIntersectionMax) nbIntersectionMax = tabVoxel[i].nbFaces;
 	}
 	delete[] newTab3;
 	for(uint32_t i=nbSubX*nbSubY*nbSubZ; i<8*nbSubX*nbSubY*nbSubZ; ++i){
 		tabVoxel[i].nbFaces = 0;
+		tabVoxel[i].sumNormal = glm::dvec3(0,0,0);
 	}
 	return nbIntersectionMax;
 }
@@ -76,6 +81,7 @@ uint32_t increaseTab(uint32_t nbSub, VoxelData *tabVoxel, uint32_t nbSubMax, Vox
 	
 	for(uint32_t i=0;i<nbSubMax*nbSubMaxY*nbSubMax;++i){
 		tabVoxel[i].nbFaces = tabVoxelMax[i].nbFaces;
+		tabVoxel[i].sumNormal = tabVoxelMax[i].sumNormal;
 	}
 	
 	if(nbSub != nbSubMax){
