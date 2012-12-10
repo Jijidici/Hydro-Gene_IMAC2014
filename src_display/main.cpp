@@ -11,7 +11,6 @@
 #include "imac2gl3/shader_tools.hpp"
 #include "types.hpp"
 
-
 #define FRAME_RATE 60
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;

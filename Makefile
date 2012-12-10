@@ -1,4 +1,5 @@
 CC = g++
+CC_OLD = gcc
 CFLAGS = -Wall -ansi -pedantic -I include -O2 -g -fopenmp
 LDFLAGS = -lSDL -lGL -fopenmp
 
@@ -6,6 +7,7 @@ SRC_VOXEL_PATH = src_voxel_maker
 SRC_TERRAIN_PATH = src_terrain_builder
 SRC_DISPLAY_PATH = src_display
 SRC_COMMON_PATH = src_common
+DRN_PATH = $(SRC_COMMON_PATH)/drn
 BIN_PATH = bin
 
 EXEC_VOXEL = hg_voxel_maker
@@ -24,10 +26,13 @@ OBJ_DISPLAY_FILES = $(patsubst $(SRC_DISPLAY_PATH)/%.cpp, $(SRC_DISPLAY_PATH)/%.
 SRC_COMMON_FILES = $(shell find $(SRC_COMMON_PATH) -type f -name '*.cpp')
 OBJ_COMMON_FILES = $(patsubst $(SRC_COMMON_PATH)/%.cpp, $(SRC_COMMON_PATH)/%.o, $(SRC_COMMON_FILES))
 
-all: $(BIN_PATH)/$(EXEC_VOXEL) $(BIN_PATH)/$(EXEC_DISPLAY) $(BIN_PATH)/$(EXEC_TERRAIN)
+SRC_DRN = $(shell find $(DRN_PATH) -type f -name '*.c')
+OBJ_DRN = $(patsubst $(DRN_PATH)/%.c, $(DRN_PATH)/%.o, $(SRC_DRN))
+
+all: $(BIN_PATH)/$(EXEC_VOXEL) $(BIN_PATH)/$(EXEC_DISPLAY) $(BIN_PATH)/$(EXEC_TERRAIN) $(OBJ_DRN)
 	@echo [--FINISHED--]
 
-$(BIN_PATH)/$(EXEC_VOXEL): $(OBJ_VOXEL_FILES) 
+$(BIN_PATH)/$(EXEC_VOXEL): $(OBJ_VOXEL_FILES)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(BIN_PATH)/$(EXEC_TERRAIN): $(OBJ_TERRAIN_FILES) 
@@ -37,7 +42,10 @@ $(BIN_PATH)/$(EXEC_DISPLAY): $(OBJ_DISPLAY_FILES) $(SRC_COMMON_PATH)/glew-1.9/gl
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(SRC_COMMON_PATH)/glew-1.9/glew.o: $(SRC_COMMON_PATH)/glew-1.9/glew.c
-	$(CC) -c -o $@ $(CFLAGS) $^ 
+	$(CC_OLD) -c -o $@ $(CFLAGS) $^ 
+
+$(DRN_PATH)/%.o: $(DRN_PATH)/%.c
+	$(CC_OLD) -c -o $@ $(CFLAGS) $^
 
 $(SRC_VOXEL_PATH)/%.o: $(SRC_VOXEL_PATH)/%.cpp
 	$(CC) -c -o $@ $(CFLAGS) $^ 
@@ -52,7 +60,7 @@ $(SRC_COMMON_PATH)/%.o: $(SRC_COMMON_PATH)/%.cpp
 	$(CC) -c -o $@ $(CFLAGS) $^ 
 
 clean:
-	rm $(OBJ_VOXEL_FILES) $(OBJ_TERRAIN_FILES) $(OBJ_DISPLAY_FILES) $(OBJ_COMMON_FILES) $(SRC_COMMON_PATH)/glew-1.9/glew.o
+	rm $(OBJ_VOXEL_FILES) $(OBJ_TERRAIN_FILES) $(OBJ_DISPLAY_FILES) $(OBJ_COMMON_FILES) $(SRC_COMMON_PATH)/glew-1.9/glew.o $(OBJ_DRN)
 
 cleanall:
-	rm $(BIN_PATH)/$(EXEC_VOXEL) $(BIN_PATH)/$(EXEC_TERRAIN) $(BIN_PATH)/$(EXEC_DISPLAY) $(OBJ_VOXEL_FILES) $(OBJ_TERRAIN_FILES) $(OBJ_DISPLAY_FILES) $(OBJ_COMMON_FILES) $(SRC_COMMON_PATH)/glew-1.9/glew.o
+	rm $(BIN_PATH)/$(EXEC_VOXEL) $(BIN_PATH)/$(EXEC_TERRAIN) $(BIN_PATH)/$(EXEC_DISPLAY) $(OBJ_VOXEL_FILES) $(OBJ_TERRAIN_FILES) $(OBJ_DISPLAY_FILES) $(OBJ_COMMON_FILES) $(SRC_COMMON_PATH)/glew-1.9/glew.o $(OBJ_DRN)
