@@ -8,7 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "imac2gl3/shader_tools.hpp"
+#include "tools/shader_tools.hpp"
 #include "types.hpp"
 
 #define FRAME_RATE 60
