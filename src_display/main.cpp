@@ -9,6 +9,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "tools/shader_tools.hpp"
+#include "tools/MatrixStack.hpp"
 #include "types.hpp"
 
 #define FRAME_RATE 60
@@ -319,6 +320,9 @@ int main(int argc, char** argv){
 	glm::mat4 V = glm::lookAt(glm::vec3(0.f,0.f,0.f), glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f,1.f,0.f));
 	glm::mat4 VP = P*V;
 	
+	MatrixStack ms;
+	ms.set(VP);
+
 	// Recuperation des variables uniformes
 	GLint NbIntersectionLocation = glGetUniformLocation(program, "uNbIntersection");
 	GLint NormSumLocation = glGetUniformLocation(program, "uNormSum");
@@ -361,6 +365,9 @@ int main(int argc, char** argv){
 		Uint32 ellapsedTime = 0;
 		start = SDL_GetTicks();
 
+		//PRE_IDLE
+		nbSubY = nbSub;
+
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				
@@ -378,43 +385,38 @@ int main(int argc, char** argv){
 			
 		double cubeSize = GRID_3D_SIZE/(double)nbSub;
 
-		glm::mat4 MVP = glm::translate(VP, glm::vec3(offsetViewX, offsetViewY, offsetViewZ)); //MOVE WITH ARROWKEYS & ZOOM WITH SCROLL
-		MVP = glm::translate(MVP, glm::vec3(0.f, 0.f, -5.f)); //MOVE AWWAY FROM THE CAMERA
-		MVP = glm::rotate(MVP, angleViewX + tmpAngleViewX,  glm::vec3(0.f, 1.f, 0.f)); //ROTATE WITH XCOORDS CLIC
-		MVP = glm::rotate(MVP, angleViewY + tmpAngleViewY,  glm::vec3(1.f, 0.f, 0.f)); //ROTATE WITH YCOORDS CLIC
-		
-		nbSubY = nbSub;
-		
-		
-		
-		light.x += lightAngle;
-		//light.z += lightAngle;
-		
-		glUniform3f(LightVectLocation, light.x, light.y, light.z);
-		
-		// Affichage de la grille
-		for(uint32_t k=0;k<nbSub;++k){
-			for(uint32_t j=0;j<nbSubY;++j){
-				for(uint32_t i=0;i<nbSub;++i){
-					uint32_t currentIndex = k*nbSub*nbSubY + j*nbSub + i;
-					uint32_t currentNbIntersection = tabVoxel[k*nbSub*nbSubY + j*nbSub + i].nbFaces;
-					if(currentNbIntersection != 0){
-						//std::cout << "somme normales cube " << currentIndex << " : " << tabVoxel[currentIndex].sumNormal.x << " " << tabVoxel[currentIndex].sumNormal.y << " " <<tabVoxel[currentIndex].sumNormal.z << " " << std::endl;
-						//std::cout << "nombre d'intersection cube " << currentIndex << " : " << tabVoxel[currentIndex].nbFaces << std::endl;
-						glm::mat4 aCubeMVP = glm::translate(MVP, glm::vec3(i*cubeSize-(GRID_3D_SIZE-cubeSize)/2, j*cubeSize-(GRID_3D_SIZE-cubeSize)/2, k*cubeSize-(GRID_3D_SIZE-cubeSize)/2)); //PLACEMENT OF EACH GRID CUBE
-						aCubeMVP = glm::scale(aCubeMVP, glm::vec3(cubeSize)); // RE-SCALE EACH GRID CUBE
-						
-						glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(aCubeMVP));
-						glUniform2i(NbIntersectionLocation, currentNbIntersection, nbIntersectionMax);
-						glUniform3f(NormSumLocation, tabVoxel[currentIndex].sumNormal.x, tabVoxel[currentIndex].sumNormal.y, tabVoxel[currentIndex].sumNormal.z);
-					
-						glBindVertexArray(cubeVAO);
-							glDrawArrays(GL_TRIANGLES, 0, aCube.nbVertices);
-						glBindVertexArray(0);
+		ms.push();
+			ms.translate(glm::vec3(offsetViewX, offsetViewY, offsetViewZ)); //MOVE WITH ARROWKEYS & ZOOM WITH SCROLL
+			ms.translate(glm::vec3(0.f, 0.f, -5.f)); //MOVE AWWAY FROM THE CAMERA
+			ms.rotate(angleViewX + tmpAngleViewX,  glm::vec3(0.f, 1.f, 0.f)); //ROTATE WITH XCOORDS CLIC
+			ms.rotate(angleViewY + tmpAngleViewY,  glm::vec3(1.f, 0.f, 0.f)); //ROTATE WITH YCOORDS CLIC*/
+			ms.translate(glm::vec3(-1.f, 0.f, -1.f)); //CENTER ON THE ORIGIN
+			glUniform3f(LightVectLocation, light.x, light.y, light.z);
+			
+			// Affichage de la grille
+			for(uint32_t k=0;k<nbSub;++k){
+				for(uint32_t j=0;j<nbSubY;++j){
+					for(uint32_t i=0;i<nbSub;++i){
+						uint32_t currentIndex = k*nbSub*nbSubY + j*nbSub + i;
+						uint32_t currentNbIntersection = tabVoxel[k*nbSub*nbSubY + j*nbSub + i].nbFaces;
+						if(currentNbIntersection != 0){
+							ms.push();
+								ms.translate(glm::vec3(i*cubeSize, j*cubeSize, k*cubeSize)); //PLACEMENT OF EACH GRID CUBE
+								ms.scale(glm::vec3(cubeSize));// RE-SCALE EACH GRID CUBE
+							
+								glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+								glUniform2i(NbIntersectionLocation, currentNbIntersection, nbIntersectionMax);
+								glUniform3f(NormSumLocation, tabVoxel[currentIndex].sumNormal.x, tabVoxel[currentIndex].sumNormal.y, tabVoxel[currentIndex].sumNormal.z);
+							
+								glBindVertexArray(cubeVAO);
+									glDrawArrays(GL_TRIANGLES, 0, aCube.nbVertices);
+								glBindVertexArray(0);
+							ms.pop();
+						}
 					}
 				}
 			}
-		}	
+		ms.pop();
 		
 		// Mise à jour de l'affichage
 		SDL_GL_SwapBuffers();
@@ -575,6 +577,9 @@ int main(int argc, char** argv){
 			offsetViewY += 0.05;
 		}
 		
+		//ILLUMINATION
+		light.x += lightAngle;
+
 		// Gestion compteur
 		end = SDL_GetTicks();
 		ellapsedTime = end - start;
