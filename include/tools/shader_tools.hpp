@@ -3,7 +3,7 @@
 
 #include <GL/glew.h>
 
-namespace imac2gl3 {
+namespace hydrogene {
 
 // Charge, compile et link les fichier sources GLSL passés en paramètre. Renvoit l'identifiant du programme compilé.
 GLuint loadProgram(const char* vertexShaderFile, const char* fragmentShaderFile);

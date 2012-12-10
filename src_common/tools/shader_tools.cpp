@@ -3,7 +3,7 @@
 #include <string>
 #include <GL/glew.h>
 
-namespace imac2gl3 {
+namespace hydrogene {
 
 static const char* readFile(const char* filePath) {
     std::ifstream file(filePath);

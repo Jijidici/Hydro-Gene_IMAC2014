@@ -8,9 +8,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "types.hpp"
 #include "tools/shader_tools.hpp"
 #include "tools/MatrixStack.hpp"
-#include "types.hpp"
+#include "cameras/TrackBallCamera.hpp"
 
 #define FRAME_RATE 60
 
@@ -93,15 +94,11 @@ uint32_t increaseTab(uint32_t nbSub, VoxelData *tabVoxel, uint32_t nbSubMax, Vox
 	return nbIntersectionMax;
 }
 
-void resetShaderProgram(GLuint &program, GLint &MVPLocation, glm::mat4 &P, glm::mat4 &V, glm::mat4 &VP, GLint &NbIntersectionLocation, GLint &NormSumLocation, GLint &LightVectLocation){
+void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersectionLocation, GLint &NormSumLocation, GLint &LightVectLocation){
 	glUseProgram(program);
 	
 	// Creation des Matrices
 	MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
-	
-	P = glm::perspective(90.f, WINDOW_WIDTH / (float) WINDOW_HEIGHT, 0.1f, 1000.f);
-	V = glm::lookAt(glm::vec3(0.f,0.f,0.f), glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f,1.f,0.f));
-	VP = P*V;
 	
 	// Recuperation des variables uniformes
 	NbIntersectionLocation = glGetUniformLocation(program, "uNbIntersection");
@@ -298,8 +295,8 @@ int main(int argc, char** argv){
 	glBindVertexArray(0);
 
 	// Creation des Shaders
-	GLuint programInter = imac2gl3::loadProgram("shaders/basic.vs.glsl", "shaders/basic.fs.glsl");
-	GLuint programNorm = imac2gl3::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl");
+	GLuint programInter = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/basic.fs.glsl");
+	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl");
 	if(!programInter || !programNorm){
 		glDeleteBuffers(1, &cubeVBO);
 		glDeleteVertexArrays(1, &cubeVAO);
@@ -317,40 +314,33 @@ int main(int argc, char** argv){
 	GLint MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
 	
 	glm::mat4 P = glm::perspective(90.f, WINDOW_WIDTH / (float) WINDOW_HEIGHT, 0.1f, 1000.f);
-	glm::mat4 V = glm::lookAt(glm::vec3(0.f,0.f,0.f), glm::vec3(0.f, 0.f, -1.f), glm::vec3(0.f,1.f,0.f));
-	glm::mat4 VP = P*V;
 	
 	MatrixStack ms;
-	ms.set(VP);
+	ms.set(P);
 
 	// Recuperation des variables uniformes
 	GLint NbIntersectionLocation = glGetUniformLocation(program, "uNbIntersection");
 	GLint NormSumLocation = glGetUniformLocation(program, "uNormSum");
 	GLint LightVectLocation = glGetUniformLocation(program, "uLightVect");
 	
+	// Creation Light
 	glm::vec3 light(-1.f,0.5f,0.f);
 	float lightAngle = 0.05;
 	
-	//light = glm::translate(light, glm::vec3(0.f,1.f,0.f));
-	
+	//Creation Cameras
+	hydrogene::TrackBallCamera tbCam;
+
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
 	
 	//Creation des ressources d'evenements
-	float offsetViewX = 0.;
-	float offsetViewY = 0.;
-	float offsetViewZ = 0.;
-	float angleViewY = 0.;
-	float tmpAngleViewY = 0.;
-	float angleViewX = 0.;
-	float tmpAngleViewX = 0.;
-	uint8_t isArrowKeyUpPressed = 0;
-	uint8_t isArrowKeyDownPressed = 0;
-	uint8_t isArrowKeyLeftPressed = 0;
-	uint8_t isArrowKeyRightPressed = 0;
-	uint8_t isLeftClicPressed = 0;
-	uint16_t savedClicX = -1;
-	uint16_t savedClicY = -1;
+	bool is_lClicPressed = false;
+	uint32_t savedClicX = 0;
+	uint32_t savedClicY = 0;
+	float angleX = 0;
+	float angleY = 0;
+	float tmpAngleX = 0;
+	float tmpAngleY = 0;
 	bool changeNbSubPlus = false;
 	bool changeNbSubMinus = false;
 
@@ -367,6 +357,7 @@ int main(int argc, char** argv){
 
 		//PRE_IDLE
 		nbSubY = nbSub;
+		double cubeSize = GRID_3D_SIZE/(double)nbSub;
 
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -382,15 +373,13 @@ int main(int argc, char** argv){
 			nbIntersectionMax = reduceTab(nbSub,tabVoxel);
 			changeNbSubMinus = false;
 		}
-			
-		double cubeSize = GRID_3D_SIZE/(double)nbSub;
+
+
 
 		ms.push();
-			ms.translate(glm::vec3(offsetViewX, offsetViewY, offsetViewZ)); //MOVE WITH ARROWKEYS & ZOOM WITH SCROLL
-			ms.translate(glm::vec3(0.f, 0.f, -5.f)); //MOVE AWWAY FROM THE CAMERA
-			ms.rotate(angleViewX + tmpAngleViewX,  glm::vec3(0.f, 1.f, 0.f)); //ROTATE WITH XCOORDS CLIC
-			ms.rotate(angleViewY + tmpAngleViewY,  glm::vec3(1.f, 0.f, 0.f)); //ROTATE WITH YCOORDS CLIC*/
-			ms.translate(glm::vec3(-1.f, 0.f, -1.f)); //CENTER ON THE ORIGIN
+			glm::mat4 V = tbCam.getViewMatrix();
+			ms.mult(V);
+			ms.translate(glm::vec3(-1.f, -1.f, -1.f)); //CENTER TO THE ORIGIN
 			glUniform3f(LightVectLocation, light.x, light.y, light.z);
 			
 			// Affichage de la grille
@@ -417,7 +406,7 @@ int main(int argc, char** argv){
 				}
 			}
 		ms.pop();
-		
+
 		// Mise à jour de l'affichage
 		SDL_GL_SwapBuffers();
 
@@ -431,40 +420,11 @@ int main(int argc, char** argv){
 				
 				case SDL_KEYDOWN:
 					switch(e.key.keysym.sym){
-						case SDLK_q:
+						case SDLK_ESCAPE:
 							done=true;
 						break;
 						
-						case SDLK_LEFT:
-							isArrowKeyLeftPressed = 1;
-						break;
-						
-						case SDLK_RIGHT:
-							isArrowKeyRightPressed = 1;
-						break;
-						
-						case SDLK_UP:
-							isArrowKeyUpPressed = 1;
-						break;
-						
-						case SDLK_DOWN:
-							isArrowKeyDownPressed = 1;
-						break;
-						
 						case SDLK_KP_PLUS:
-							if(nbSub != nbSubMax){
-								nbSub *= 2;
-								changeNbSubPlus = true;
-							}else std::cout << "You reached the maximum number of subdivisions." << std::endl;						
-						break;
-						
-						case SDLK_KP_MINUS:
-							if(nbSub != 1){
-								nbSub /= 2;
-								changeNbSubMinus = true;
-							}else std::cout << "You reached the minimum number of subdivisions." << std::endl;						
-						break;
-						
 						case SDLK_p:
 							if(nbSub != nbSubMax){
 								nbSub *= 2;
@@ -472,21 +432,20 @@ int main(int argc, char** argv){
 							}else std::cout << "You reached the maximum number of subdivisions." << std::endl;						
 						break;
 						
+						case SDLK_KP_MINUS:
 						case SDLK_m:
 							if(nbSub != 1){
 								nbSub /= 2;
 								changeNbSubMinus = true;
 							}else std::cout << "You reached the minimum number of subdivisions." << std::endl;						
 						break;
-						case SDLK_SPACE:
-						break;
 						
 						case SDLK_n:
-							resetShaderProgram(programNorm, MVPLocation, P, V, VP, NbIntersectionLocation, NormSumLocation, LightVectLocation);
+							resetShaderProgram(programNorm, MVPLocation, NbIntersectionLocation, NormSumLocation, LightVectLocation);
 							break;
 							
 						case SDLK_i:
-							resetShaderProgram(programInter, MVPLocation, P, V, VP, NbIntersectionLocation, NormSumLocation, LightVectLocation);
+							resetShaderProgram(programInter, MVPLocation, NbIntersectionLocation, NormSumLocation, LightVectLocation);
 							break;
 						
 						default:
@@ -495,23 +454,7 @@ int main(int argc, char** argv){
 				break;
 				
 				case SDL_KEYUP:
-					switch(e.key.keysym.sym){
-						case SDLK_LEFT:
-							isArrowKeyLeftPressed = 0;
-						break;
-						
-						case SDLK_RIGHT:
-							isArrowKeyRightPressed = 0;
-						break;
-						
-						case SDLK_UP:
-							isArrowKeyUpPressed = 0;
-						break;
-						
-						case SDLK_DOWN:
-							isArrowKeyDownPressed = 0;
-						break;
-						
+					switch(e.key.keysym.sym){						
 						default:
 						break;
 					}
@@ -520,15 +463,15 @@ int main(int argc, char** argv){
 				case SDL_MOUSEBUTTONDOWN:
 					switch(e.button.button){
 						case SDL_BUTTON_WHEELUP:
-							offsetViewZ += 0.3;
+							tbCam.moveFront(-0.08f);
 						break;
 						
 						case SDL_BUTTON_WHEELDOWN:
-							offsetViewZ -= 0.3;
+							tbCam.moveFront(0.08f);
 						break;
 						
 						case SDL_BUTTON_LEFT:
-							isLeftClicPressed = 1;
+							is_lClicPressed = true;
 							savedClicX = e.button.x;
 							savedClicY = e.button.y;
 						break;
@@ -539,19 +482,25 @@ int main(int argc, char** argv){
 				break;
 				
 				case SDL_MOUSEBUTTONUP:
-					isLeftClicPressed = 0;
-					savedClicX = -1;
-					savedClicY = -1;
-					angleViewX += tmpAngleViewX;
-					angleViewY += tmpAngleViewY;
-					tmpAngleViewX=0;
-					tmpAngleViewY=0;
+					switch(e.button.button){
+						case SDL_BUTTON_LEFT:
+							is_lClicPressed = false;
+							angleX += tmpAngleX;
+							angleY += tmpAngleY;
+						break;
+
+						default:
+						break;
+					}
+					
 				break;
 				
 				case SDL_MOUSEMOTION:
-					if(isLeftClicPressed){
-						tmpAngleViewX =  0.25f*(e.motion.x - savedClicX);
-						tmpAngleViewY =  0.25f*(e.motion.y - savedClicY);
+					if(is_lClicPressed){
+						tmpAngleX = 0.25*((int)e.motion.x - (int)savedClicX);
+						tmpAngleY = 0.25*((int)e.motion.y - (int)savedClicY);
+						tbCam.rotateLeft(angleX + tmpAngleX);
+						tbCam.rotateUp(angleY + tmpAngleY);
 					}
 				break;
 				
@@ -560,22 +509,7 @@ int main(int argc, char** argv){
 			}
 		}
 
-		//Idle
-		if(isArrowKeyLeftPressed){
-			offsetViewX += 0.05;
-		}
-		
-		if(isArrowKeyRightPressed){
-			offsetViewX -= 0.05;
-		}
-		
-		if(isArrowKeyUpPressed){
-			offsetViewY -= 0.05;
-		}
-		
-		if(isArrowKeyDownPressed){
-			offsetViewY += 0.05;
-		}
+		//IDLE
 		
 		//ILLUMINATION
 		light.x += lightAngle;
