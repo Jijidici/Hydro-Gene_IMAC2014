@@ -20,7 +20,7 @@ static const size_t BYTES_PER_PIXEL = 32;
 static const size_t POSITION_LOCATION = 0;
 static const size_t GRID_3D_SIZE = 2;
 
-uint32_t reduceTab(uint32_t nbSub, VoxelData *tabVoxel){
+uint32_t reduceTab(uint32_t nbSub, VoxelData *tabVoxel, uint32_t displayMode){
 
 	//NB notation means the old nbSub
 	uint32_t nbSubX = nbSub;	// = NBX/2
@@ -30,20 +30,28 @@ uint32_t reduceTab(uint32_t nbSub, VoxelData *tabVoxel){
 	uint32_t nbIntersectionMax = 0;
 	//line
 	uint32_t index=0;
-	PartialVoxelData* newTab = new PartialVoxelData[nbSubX*(2*nbSubY)*(2*nbSubZ)]; //NBX is divided in 2
+	VoxelData* newTab = new VoxelData[nbSubX*(2*nbSubY)*(2*nbSubZ)]; //NBX is divided in 2
 	for(uint32_t i=0;i<(2*nbSubX)*(2*nbSubY)*(2*nbSubZ);i=i+2){ //i runs the entire length of tabVoxel, with a treshold of 2
 		newTab[index].nbFaces = tabVoxel[i].nbFaces+tabVoxel[i+1].nbFaces;
-		newTab[index].sumNormal = tabVoxel[i].sumNormal+tabVoxel[i+1].sumNormal;
+		if(displayMode == 1) newTab[index].sumBending = tabVoxel[i].sumBending+tabVoxel[i+1].sumBending;
+		if(displayMode == 2) newTab[index].sumDrain = tabVoxel[i].sumDrain+tabVoxel[i+1].sumDrain;
+		if(displayMode == 3) newTab[index].sumGradient = tabVoxel[i].sumGradient+tabVoxel[i+1].sumGradient;
+		if(displayMode == 4) newTab[index].sumNormal = tabVoxel[i].sumNormal+tabVoxel[i+1].sumNormal;
+		if(displayMode == 5) newTab[index].sumSurface = tabVoxel[i].sumSurface+tabVoxel[i+1].sumSurface;
 		index++;
 	}
 	//row
 	uint32_t index2=0;
 	uint32_t tailleNewTab2 = nbSubX*nbSubY*(2*nbSubZ); //NBY is now divided in 2
-	PartialVoxelData* newTab2 = new PartialVoxelData[tailleNewTab2];
+	VoxelData* newTab2 = new VoxelData[tailleNewTab2];
 	for(uint32_t j=0;j<(2*nbSubY)*(2*nbSubZ);j=j+2){
 		for(uint32_t i=j*nbSubX;i<j*nbSubX+nbSubX;++i){
 			newTab2[index2].nbFaces = newTab[i].nbFaces+newTab[i+nbSubX].nbFaces;
-			newTab2[index2].sumNormal = newTab[i].sumNormal+newTab[i+nbSubX].sumNormal;
+			if(displayMode == 1) newTab2[index2].sumBending = newTab[i].sumBending+newTab[i+nbSubX].sumBending;
+			if(displayMode == 2) newTab2[index2].sumDrain = newTab[i].sumDrain+newTab[i+nbSubX].sumDrain;
+			if(displayMode == 3) newTab2[index2].sumGradient = newTab[i].sumGradient+newTab[i+nbSubX].sumGradient;
+			if(displayMode == 4) newTab2[index2].sumNormal = newTab[i].sumNormal+newTab[i+nbSubX].sumNormal;
+			if(displayMode == 5) newTab2[index2].sumSurface = newTab[i].sumSurface+newTab[i+nbSubX].sumSurface;
 			index2++;
 		}
 	}
@@ -51,11 +59,15 @@ uint32_t reduceTab(uint32_t nbSub, VoxelData *tabVoxel){
 	//depth
 	uint32_t index3=0;
 	uint32_t tailleNewTab3 = nbSubX*nbSubY*nbSubZ; //NBZ is now divided in 2
-	PartialVoxelData* newTab3 = new PartialVoxelData[tailleNewTab3];
+	VoxelData* newTab3 = new VoxelData[tailleNewTab3];
 	for(uint32_t j=0;j<2*nbSubZ;j=j+2){
 		for(uint32_t i=j*nbSubX*nbSubY;i<j*nbSubX*nbSubY+nbSubX*nbSubY;++i){
 			newTab3[index3].nbFaces = newTab2[i].nbFaces+newTab2[i+nbSubX*nbSubY].nbFaces;
-			newTab3[index3].sumNormal = newTab2[i].sumNormal+newTab2[i+nbSubX*nbSubY].sumNormal;
+			if(displayMode == 1) newTab3[index3].sumBending = newTab2[i].sumBending+newTab2[i+nbSubX*nbSubY].sumBending;
+			if(displayMode == 2) newTab3[index3].sumDrain = newTab2[i].sumDrain+newTab2[i+nbSubX*nbSubY].sumDrain;
+			if(displayMode == 3) newTab3[index3].sumGradient = newTab2[i].sumGradient+newTab2[i+nbSubX*nbSubY].sumGradient;
+			if(displayMode == 4) newTab3[index3].sumNormal = newTab2[i].sumNormal+newTab2[i+nbSubX*nbSubY].sumNormal;
+			if(displayMode == 5) newTab3[index3].sumSurface = newTab2[i].sumSurface+newTab2[i+nbSubX*nbSubY].sumSurface;
 			index3++;
 		}
 	}
@@ -63,18 +75,26 @@ uint32_t reduceTab(uint32_t nbSub, VoxelData *tabVoxel){
 	//update of tabVoxel
 	for(uint32_t i=0;i<nbSubX*nbSubY*nbSubZ;++i){
 		tabVoxel[i].nbFaces = newTab3[i].nbFaces;
-		tabVoxel[i].sumNormal = newTab3[i].sumNormal;
+		if(displayMode == 1) tabVoxel[i].sumBending = newTab3[i].sumBending;
+		if(displayMode == 2) tabVoxel[i].sumDrain = newTab3[i].sumDrain;
+		if(displayMode == 3) tabVoxel[i].sumGradient = newTab3[i].sumGradient;
+		if(displayMode == 4) tabVoxel[i].sumNormal = newTab3[i].sumNormal;
+		if(displayMode == 5) tabVoxel[i].sumSurface = newTab3[i].sumSurface;
 		if(tabVoxel[i].nbFaces > nbIntersectionMax) nbIntersectionMax = tabVoxel[i].nbFaces;
 	}
 	delete[] newTab3;
 	for(uint32_t i=nbSubX*nbSubY*nbSubZ; i<8*nbSubX*nbSubY*nbSubZ; ++i){
 		tabVoxel[i].nbFaces = 0;
-		tabVoxel[i].sumNormal = glm::dvec3(0,0,0);
+		if(displayMode == 1) tabVoxel[i].sumBending = 0;
+		if(displayMode == 1) tabVoxel[i].sumDrain = 0;
+		if(displayMode == 1) tabVoxel[i].sumGradient = 0;
+		if(displayMode == 1) tabVoxel[i].sumNormal = glm::dvec3(0,0,0);
+		if(displayMode == 1) tabVoxel[i].sumSurface = 0;
 	}
 	return nbIntersectionMax;
 }
 
-uint32_t increaseTab(uint32_t nbSub, VoxelData *tabVoxel, uint32_t nbSubMax, VoxelData *tabVoxelMax, uint32_t constNbIntersectionMax){
+uint32_t increaseTab(uint32_t nbSub, VoxelData *tabVoxel, uint32_t nbSubMax, VoxelData *tabVoxelMax, uint32_t constNbIntersectionMax, uint32_t displayMode){
 	
 	uint32_t nbSubMaxY = nbSubMax;
 	uint32_t nbIntersectionMax = constNbIntersectionMax;
@@ -87,7 +107,7 @@ uint32_t increaseTab(uint32_t nbSub, VoxelData *tabVoxel, uint32_t nbSubMax, Vox
 	if(nbSub != nbSubMax){
 		while(nbSubMax>nbSub){
 			nbSubMax /= 2;
-			nbIntersectionMax = reduceTab(nbSubMax,tabVoxel);
+			nbIntersectionMax = reduceTab(nbSubMax,tabVoxel,displayMode);
 		}
 	}
 	return nbIntersectionMax;
@@ -121,10 +141,16 @@ int main(int argc, char** argv){
 		return EXIT_FAILURE;
 	}
 
-	uint32_t nbSubMax = 1;
-	
-	test_fic = fread(&nbSubMax, sizeof(uint32_t), 1, voxelFile);
+	uint32_t arguments[6];
+		//0 : nbSub
+		//1 : bending
+		//2 : drain
+		//3 : gradient
+		//4 : normal
+		//5 : surface
 
+	test_fic = fread(arguments, sizeof(uint32_t), 6, voxelFile);
+	uint32_t nbSubMax = arguments[0];
 	uint32_t nbSubMaxY = nbSubMax; //number of subdivisions on Y
 
 	uint32_t lengthTabVoxel = nbSubMax*nbSubMaxY*nbSubMax;
@@ -134,7 +160,7 @@ int main(int argc, char** argv){
 	uint32_t nbSub = nbSubMax;
 	uint32_t nbSubY = nbSubMaxY;
 	uint32_t nbSubExpected = nbSub;
-	
+	int displayMode = 0; // = 0 to display the faces, = 1 to display the normals	
 	
 	VoxelData* tabVoxel = new VoxelData[lengthTabVoxel];
 	for(uint32_t i = 0; i<lengthTabVoxel; ++i){
@@ -195,7 +221,7 @@ int main(int argc, char** argv){
 	while(nbSub > nbSubExpected){
 		nbSub /= 2;
 		nbSubY /=2;
-		nbIntersectionMax = increaseTab(nbSub, tabVoxel, nbSubMax, tabVoxelMax, constNbIntersectionMax);
+		nbIntersectionMax = increaseTab(nbSub, tabVoxel, nbSubMax, tabVoxelMax, constNbIntersectionMax, displayMode);
 	}
 	
 	
@@ -367,13 +393,13 @@ int main(int argc, char** argv){
 				
 		if(changeNbSubPlus){ //si on a appuyé sur +
 			std::cout <<"-> New number of subdivisions : "<<nbSub<<std::endl;
-			nbIntersectionMax = increaseTab(nbSub,tabVoxel,nbSubMax,tabVoxelMax, constNbIntersectionMax);
+			nbIntersectionMax = increaseTab(nbSub,tabVoxel,nbSubMax,tabVoxelMax, constNbIntersectionMax, displayMode);
 			changeNbSubPlus = false;
 		}
 		
 		if(changeNbSubMinus){ //si on a appuyé sur -
 			std::cout << " > New number of subdivisions : " << nbSub << std::endl;
-			nbIntersectionMax = reduceTab(nbSub,tabVoxel);
+			nbIntersectionMax = reduceTab(nbSub,tabVoxel, displayMode);
 			changeNbSubMinus = false;
 		}
 			
@@ -481,11 +507,15 @@ int main(int argc, char** argv){
 						break;
 						
 						case SDLK_n:
-							resetShaderProgram(programNorm, MVPLocation, P, V, VP, NbIntersectionLocation, NormSumLocation, LightVectLocation);
+							if(arguments[4]){
+								resetShaderProgram(programNorm, MVPLocation, P, V, VP, NbIntersectionLocation, NormSumLocation, LightVectLocation);
+								displayMode = 4;
+							}
 							break;
 							
 						case SDLK_i:
 							resetShaderProgram(programInter, MVPLocation, P, V, VP, NbIntersectionLocation, NormSumLocation, LightVectLocation);
+							displayMode = 0;
 							break;
 						
 						default:

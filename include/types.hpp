@@ -40,11 +40,6 @@ typedef struct s_voxelData{ //voxels dans tabVoxel
 	uint32_t nbFaces;
 }VoxelData;
 
-typedef struct s_partialVoxelData{ //voxels dans tabVoxel
-	glm::dvec3 sumNormal;
-	uint32_t nbFaces;
-}PartialVoxelData;
-
 typedef struct s_plane{
 	Vertex s1, s2, s3;
 	glm::dvec3 normal;

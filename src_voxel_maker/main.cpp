@@ -508,6 +508,17 @@ int main(int argc, char** argv) {
 	}
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
 
+	uint32_t arguments[6];
+	arguments[0] = nbSub;
+	for(int i = 1; i<6; ++i){
+		arguments[i] = 0;
+	}
+	if(bending) arguments[1] = 1;
+	if(drain) arguments[2] = 1;
+	if(gradient) arguments[3] = 1;
+	if(normal) arguments[4] = 1;
+	if(surface) arguments[5] = 1;
+
 	//WRITTING THE VOXEL-INTERSECTION FILE
 	FILE* voxelFile = NULL;
 	voxelFile = fopen("voxels_data/voxel_intersec_1.data", "wb");
@@ -516,7 +527,7 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 
-	test_fic = fwrite(&nbSub, sizeof(uint32_t), 1, voxelFile);
+	test_fic = fwrite(arguments, sizeof(uint32_t), 6, voxelFile);
 	test_fic = fwrite(tabVoxel, tailleTabVoxel*sizeof(VoxelData), 1, voxelFile);
 
 	fclose(voxelFile);
