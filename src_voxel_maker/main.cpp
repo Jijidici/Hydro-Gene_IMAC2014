@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <omp.h>
-#include "types.hpp"
+#include "geom_types.hpp"
 
 static const double APPROXIM_RANGE = 2*sqrt(3)/3.;
 static const size_t GRID_3D_SIZE = 2;

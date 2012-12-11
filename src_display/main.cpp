@@ -8,10 +8,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "types.hpp"
+#include "geom_types.hpp"
+#include "display_types.hpp"
 #include "tools/shader_tools.hpp"
 #include "tools/MatrixStack.hpp"
 #include "cameras/TrackBallCamera.hpp"
+#include "cameras/FreeFlyCamera.hpp"
 
 #define FRAME_RATE 60
 
@@ -354,19 +356,27 @@ int main(int argc, char** argv){
 	float lightAngle = 0.05;
 	
 	//Creation Cameras
+	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
+	hydrogene::FreeFlyCamera ffCam;
 
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
 	
 	//Creation des ressources d'evenements
 	bool is_lClicPressed = false;
-	uint32_t savedClicX = 0;
-	uint32_t savedClicY = 0;
-	float angleX = 0;
-	float angleY = 0;
-	float tmpAngleX = 0;
-	float tmpAngleY = 0;
+	bool is_lKeyPressed = false;
+	bool is_rKeyPressed = false;
+	bool is_uKeyPressed = false;
+	bool is_dKeyPressed = false;
+	uint32_t tbC_savedClicX = 0;
+	uint32_t tbC_savedClicY = 0;
+	float tbC_angleX = 0;
+	float tbC_angleY = 0;
+	float tbC_tmpAngleX = 0;
+	float tbC_tmpAngleY = 0;
+	float ffC_angleX = 0;
+	float ffC_angleY = 0;
 	bool changeNbSubPlus = false;
 	bool changeNbSubMinus = false;
 
@@ -403,7 +413,13 @@ int main(int argc, char** argv){
 
 
 		ms.push();
-			glm::mat4 V = tbCam.getViewMatrix();
+			// Choose the camera
+			glm::mat4 V;
+			if(currentCam == TRACK_BALL){
+				V = tbCam.getViewMatrix();
+			}else if(currentCam == FREE_FLY){
+				V = ffCam.getViewMatrix();
+			}
 			ms.mult(V);
 			ms.translate(glm::vec3(-1.f, -1.f, -1.f)); //CENTER TO THE ORIGIN
 			glUniform3f(LightVectLocation, light.x, light.y, light.z);
@@ -442,13 +458,13 @@ int main(int argc, char** argv){
 			switch(e.type){
 				case SDL_QUIT:
 					done=true;
-				break;
+					break;
 				
 				case SDL_KEYDOWN:
 					switch(e.key.keysym.sym){
 						case SDLK_ESCAPE:
 							done=true;
-						break;
+							break;
 						
 						case SDLK_KP_PLUS:
 						case SDLK_p:
@@ -456,7 +472,7 @@ int main(int argc, char** argv){
 								nbSub *= 2;
 								changeNbSubPlus = true;
 							}else std::cout << "You reached the maximum number of subdivisions." << std::endl;						
-						break;
+							break;
 						
 						case SDLK_KP_MINUS:
 						case SDLK_m:
@@ -464,8 +480,17 @@ int main(int argc, char** argv){
 								nbSub /= 2;
 								changeNbSubMinus = true;
 							}else std::cout << "You reached the minimum number of subdivisions." << std::endl;						
-						break;
+							break;
 						
+						//Relative to the cameras
+						case SDLK_TAB:
+							if(currentCam == TRACK_BALL){
+								currentCam = FREE_FLY;
+							}else if(currentCam == FREE_FLY){
+								currentCam = TRACK_BALL;
+							}
+							break;
+
 						case SDLK_n:
 							if(arguments[4]){
 								resetShaderProgram(programNorm, MVPLocation, NbIntersectionLocation, NormSumLocation, LightVectLocation);
@@ -478,71 +503,138 @@ int main(int argc, char** argv){
 							displayMode = 0;
 							break;
 						
+						case SDLK_q:
+							if(currentCam == FREE_FLY){
+								is_lKeyPressed = true;
+							}
+							break;
+
+						case SDLK_d:
+							if(currentCam == FREE_FLY){
+								is_rKeyPressed = true;
+							}
+							break;
+
+						case SDLK_z:
+							if(currentCam == FREE_FLY){
+								is_uKeyPressed = true;
+							}
+							break;
+
+						case SDLK_s:
+							if(currentCam == FREE_FLY){
+								is_dKeyPressed = true;
+							}
+							break;
+
 						default:
-						break;
+							break;
 					}
-				break;
+					break;
 				
 				case SDL_KEYUP:
-					switch(e.key.keysym.sym){						
+					switch(e.key.keysym.sym){
+						case SDLK_q:
+							if(currentCam == FREE_FLY){
+								is_lKeyPressed = false;
+							}
+							break;
+
+						case SDLK_d:
+							if(currentCam == FREE_FLY){
+								is_rKeyPressed = false;
+							}
+							break;
+
+						case SDLK_z:
+							if(currentCam == FREE_FLY){
+								is_uKeyPressed = false;
+							}
+							break;
+
+						case SDLK_s:
+							if(currentCam == FREE_FLY){
+								is_dKeyPressed = false;
+							}
+							break;
+
 						default:
-						break;
+							break;
 					}
-				break;
+					break;
 				
 				case SDL_MOUSEBUTTONDOWN:
 					switch(e.button.button){
 						case SDL_BUTTON_WHEELUP:
-							tbCam.moveFront(-0.08f);
-						break;
+							if(currentCam == TRACK_BALL){
+								tbCam.moveFront(-0.08f);
+							}
+							break;
 						
 						case SDL_BUTTON_WHEELDOWN:
-							tbCam.moveFront(0.08f);
-						break;
+							if(currentCam == TRACK_BALL){
+								tbCam.moveFront(0.08f);
+							}
+							break;
 						
 						case SDL_BUTTON_LEFT:
-							is_lClicPressed = true;
-							savedClicX = e.button.x;
-							savedClicY = e.button.y;
-						break;
+							if(currentCam == TRACK_BALL){
+								is_lClicPressed = true;
+								tbC_savedClicX = e.button.x;
+								tbC_savedClicY = e.button.y;
+							}
+							break;
 						
 						default:
-						break;
+							break;
 					}
-				break;
+					break;
 				
 				case SDL_MOUSEBUTTONUP:
 					switch(e.button.button){
 						case SDL_BUTTON_LEFT:
-							is_lClicPressed = false;
-							angleX += tmpAngleX;
-							angleY += tmpAngleY;
-						break;
+							if(currentCam == TRACK_BALL){
+								is_lClicPressed = false;
+								tbC_angleX += tbC_tmpAngleX;
+								tbC_angleY += tbC_tmpAngleY;
+							}
+							break;
 
 						default:
-						break;
+							break;
 					}
 					
-				break;
+					break;
 				
 				case SDL_MOUSEMOTION:
-					if(is_lClicPressed){
-						tmpAngleX = 0.25*((int)e.motion.x - (int)savedClicX);
-						tmpAngleY = 0.25*((int)e.motion.y - (int)savedClicY);
-						tbCam.rotateLeft(angleX + tmpAngleX);
-						tbCam.rotateUp(angleY + tmpAngleY);
+					if(currentCam == TRACK_BALL){
+						if(is_lClicPressed){
+							tbC_tmpAngleX = 0.25*((int)e.motion.x - (int)tbC_savedClicX);
+							tbC_tmpAngleY = 0.25*((int)e.motion.y - (int)tbC_savedClicY);
+							tbCam.rotateLeft(tbC_angleX + tbC_tmpAngleX);
+							tbCam.rotateUp(tbC_angleY + tbC_tmpAngleY);
+						}
+					}else if(currentCam == FREE_FLY){
+						ffC_angleX = 0.6f*(WINDOW_WIDTH/2. - e.motion.x);
+	                    ffC_angleY = 0.6f*(WINDOW_HEIGHT/2. - e.motion.y);
+	                    ffCam.rotateLeft(ffC_angleX);
+	                    ffCam.rotateUp(ffC_angleY);
 					}
-				break;
+					break;
 				
 				default:
-				break;
+					break;
 			}
 		}
 
 		//IDLE
-		
+		if(is_lKeyPressed){ ffCam.moveLeft(0.01); }
+		if(is_rKeyPressed){ ffCam.moveLeft(-0.01); }
+		if(is_uKeyPressed){ ffCam.moveFront(0.01); }
+		if(is_dKeyPressed){ ffCam.moveFront(-0.01); }
+
 		//ILLUMINATION
-		light.x += lightAngle;
+		//light.x += lightAngle;
 
 		// Gestion compteur
 		end = SDL_GetTicks();

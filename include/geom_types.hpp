@@ -1,5 +1,5 @@
-#ifndef __TYPE_HPP__
-#define __TYPE_HPP__
+#ifndef __GEOM_TYPES_HPP__
+#define __GEOM_TYPES_HPP__
 
 #include <glm/glm.hpp>
 
