@@ -6,6 +6,7 @@
 #include <string.h>
 #include <omp.h>
 #include "geom_types.hpp"
+#include "data_types.hpp"
 #include "voxel_maker/geometrics.hpp"
 #include "voxel_maker/intersection_test.hpp"
 
@@ -112,8 +113,6 @@ void printHelp(){
 /*             MAIN                  */
 /*************************************/
 int main(int argc, char** argv) {
-	tryingWritingChunk();
-	tryingReadingChunk();
 	/* ************************************************************* */
 	/* **************PRE - TRAITEMENT DES VOXELS******************** */
 	/* ************************************************************* */
@@ -361,9 +360,9 @@ int main(int argc, char** argv) {
 	
 	std::cout << "-> Number of subdivisions : " << nbSub << std::endl;
 	std::cout << std::endl << "##########################################################################" << std::endl << std::endl;
-
-	uint32_t nbSubY = nbSub; //number of subdivisions on Y
-	size_t const tailleTabVoxel = nbSub*nbSubY*nbSub;
+	
+	/* Create the voxel array */
+	size_t const tailleTabVoxel = nbSub*nbSub*nbSub;
 	VoxelData* tabVoxel = NULL;
 	tabVoxel = new VoxelData[tailleTabVoxel];
 	if(NULL == tabVoxel){
@@ -417,7 +416,7 @@ int main(int argc, char** argv) {
 					/* Voxel Properties */
 					Voxel vox = createVoxel(i*voxelSize -1, j*voxelSize -1, k*voxelSize -1, voxelSize);
 					if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
-						uint32_t currentIndex = i + nbSub*j + k*nbSub*nbSubY;
+						uint32_t currentIndex = i + nbSub*j + k*nbSub*nbSub;
 						tabVoxel[currentIndex].nbFaces++;
 						if(normal) tabVoxel[currentIndex].sumNormal = glm::dvec3(tabVoxel[currentIndex].sumNormal.x + tabF[n].normal.x, tabVoxel[currentIndex].sumNormal.y + tabF[n].normal.y, tabVoxel[currentIndex].sumNormal.z + tabF[n].normal.z);
 						if(drain) tabVoxel[currentIndex].sumDrain = tabVoxel[currentIndex].sumDrain + tabF[n].drain;

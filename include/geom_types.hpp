@@ -32,15 +32,6 @@ typedef struct s_voxel{
 	double size;
 }Voxel;
 
-typedef struct s_voxelData{ //voxels dans tabVoxel
-	glm::dvec3 sumNormal;
-	double sumBending;
-	double sumGradient;
-	double sumSurface;
-	int sumDrain;
-	uint32_t nbFaces;
-}VoxelData;
-
 typedef struct s_plane{
 	Vertex s1, s2, s3;
 	glm::dvec3 normal;
