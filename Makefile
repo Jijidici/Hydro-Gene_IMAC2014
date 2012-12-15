@@ -29,16 +29,16 @@ OBJ_COMMON_FILES = $(patsubst $(SRC_COMMON_PATH)/%.cpp, $(SRC_COMMON_PATH)/%.o, 
 SRC_DRN = $(shell find $(DRN_PATH) -type f -name '*.c')
 OBJ_DRN = $(patsubst $(DRN_PATH)/%.c, $(DRN_PATH)/%.o, $(SRC_DRN))
 
-all: $(BIN_PATH)/$(EXEC_VOXEL) $(BIN_PATH)/$(EXEC_DISPLAY) $(BIN_PATH)/$(EXEC_TERRAIN) $(OBJ_DRN)
+all: $(BIN_PATH)/$(EXEC_VOXEL) $(BIN_PATH)/$(EXEC_DISPLAY) $(BIN_PATH)/$(EXEC_TERRAIN)
 	@echo [--FINISHED--]
 
-$(BIN_PATH)/$(EXEC_VOXEL): $(OBJ_VOXEL_FILES) $(OBJ_COMMON_FILES)  $(SRC_COMMON_PATH)/glew-1.9/glew.o
+$(BIN_PATH)/$(EXEC_VOXEL): $(OBJ_VOXEL_FILES) $(OBJ_COMMON_FILES)  $(SRC_COMMON_PATH)/glew-1.9/glew.o $(OBJ_DRN)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(BIN_PATH)/$(EXEC_TERRAIN): $(OBJ_TERRAIN_FILES) 
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-$(BIN_PATH)/$(EXEC_DISPLAY): $(OBJ_DISPLAY_FILES) $(SRC_COMMON_PATH)/glew-1.9/glew.o $(OBJ_COMMON_FILES)
+$(BIN_PATH)/$(EXEC_DISPLAY): $(OBJ_DISPLAY_FILES) $(SRC_COMMON_PATH)/glew-1.9/glew.o $(OBJ_COMMON_FILES) $(OBJ_DRN)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(SRC_COMMON_PATH)/glew-1.9/glew.o: $(SRC_COMMON_PATH)/glew-1.9/glew.c

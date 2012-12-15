@@ -4,7 +4,7 @@
 #ifndef __DRN_HASH_H__
 #define __DRN_HASH_H__
 
-#include "drn_types.h"
+#include "drn/drn_types.h"
 
 #ifdef __cplusplus
 extern "C" {
