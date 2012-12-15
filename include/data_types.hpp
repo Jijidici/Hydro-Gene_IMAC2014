@@ -10,4 +10,9 @@ typedef struct s_voxelData{ //voxels dans tabVoxel
 	uint32_t nbFaces;
 }VoxelData;
 
+typedef struct s_leaf{
+	drn_chunk_id_t id;
+	glm::dvec3 pos;
+}Leaf;
+
 #endif
