@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
+#include <stdexcept>
 #include <glm/glm.hpp>
 #include <stdint.h>
 #include <string.h>
@@ -397,18 +398,32 @@ int main(int argc, char** argv) {
 	VoxelData* l_voxelArray = NULL;
 	l_voxelArray = new VoxelData[l_voxArrLength];
 	if(NULL == l_voxelArray){
-		std::cout<<"[!] -> Allocation failure for tabVoxel"<<std::endl;
+		std::cout<<"[!] -> Allocation failure for l_voxelArray"<<std::endl;
 		return EXIT_FAILURE;
 	}
 	
-	for(uint32_t n=0;n<l_voxArrLength;++n){
-		l_voxelArray[n].nbFaces=0;
-		l_voxelArray[n].sumNormal = glm::dvec3(0,0,0);
-		l_voxelArray[n].sumDrain = 0;
-		l_voxelArray[n].sumGradient = 0;
-		l_voxelArray[n].sumSurface = 0;
-		l_voxelArray[n].sumBending = 0;
+	/* Open DATA file */
+	drn_writer_t cache;
+	int32_t test_cache = drn_open_writer(&cache, "./voxels_data/voxel_intersec_1.data", "Terrain voxelisation.");
+	if(test_cache < 0){
+		throw std::runtime_error("unable to open data file");
 	}
+	
+	/* Setting the config data */
+	uint16_t arguments[7];
+	arguments[0] = nbSub_lvl1;
+	arguments[1] = nbSub_lvl2;
+	for(int i = 2; i<7; ++i){
+		arguments[i] = 0;
+	}
+	if(bending) arguments[2] = 1;
+	if(drain) arguments[3] = 1;
+	if(gradient) arguments[4] = 1;
+	if(normal) arguments[5] = 1;
+	if(surface) arguments[6] = 1;
+	
+	/* Saving the config data */
+	test_cache = drn_writer_add_chunk(&cache, arguments, 7*sizeof(uint16_t));
 	
 	//INTERSECTION PROCESSING
 	/* Range approximation for voxelisation */
@@ -419,6 +434,17 @@ int main(int argc, char** argv) {
 		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
 			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
 				
+				/* Init leaf voxel array */	
+				for(uint32_t n=0;n<l_voxArrLength;++n){
+					l_voxelArray[n].nbFaces=0;
+					l_voxelArray[n].sumNormal = glm::dvec3(0,0,0);
+					l_voxelArray[n].sumDrain = 0;
+					l_voxelArray[n].sumGradient = 0;
+					l_voxelArray[n].sumSurface = 0;
+					l_voxelArray[n].sumBending = 0;
+				}
+				
+				/* Fix the current leaf */
 				glm::dvec3 l_origin = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
 				std::cout<<"//-> Leaf origin : ["<<l_origin.x<<"|"<<l_origin.y<<"|"<<l_origin.z<<"]"<<std::endl;
 				
@@ -474,7 +500,6 @@ int main(int argc, char** argv) {
 									// Voxel Properties 
 									Voxel vox = createVoxel(i*voxelSize + l_origin.x + voxelSize*0.5, j*voxelSize + l_origin.y + voxelSize*0.5, k*voxelSize + l_origin.z + voxelSize*0.5, voxelSize);
 									if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
-										std::cout<<"intersec"<<std::endl;
 										uint32_t currentIndex = i + nbSub_lvl2*j + k*nbSub_lvl2*nbSub_lvl2;
 										l_voxelArray[currentIndex].nbFaces++;
 										if(normal) 	l_voxelArray[currentIndex].sumNormal = glm::dvec3(l_voxelArray[currentIndex].sumNormal.x + tabF[n].normal.x, l_voxelArray[currentIndex].sumNormal.y + tabF[n].normal.y, l_voxelArray[currentIndex].sumNormal.z + tabF[n].normal.z);
@@ -482,7 +507,7 @@ int main(int argc, char** argv) {
 										if(gradient)l_voxelArray[currentIndex].sumGradient = l_voxelArray[currentIndex].sumGradient + tabF[n].gradient;
 										if(surface) l_voxelArray[currentIndex].sumSurface = l_voxelArray[currentIndex].sumSurface + tabF[n].surface;
 										if(bending) l_voxelArray[currentIndex].sumBending = l_voxelArray[currentIndex].sumBending + tabF[n].bending;	
-									} 						
+									}
 								}
 							}
 						}
@@ -492,31 +517,9 @@ int main(int argc, char** argv) {
 		}
 	}
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
-
-	uint16_t arguments[7];
-	arguments[0] = nbSub_lvl1;
-	arguments[1] = nbSub_lvl2;
-	for(int i = 2; i<7; ++i){
-		arguments[i] = 0;
-	}
-	if(bending) arguments[2] = 1;
-	if(drain) arguments[3] = 1;
-	if(gradient) arguments[4] = 1;
-	if(normal) arguments[5] = 1;
-	if(surface) arguments[6] = 1;
-
-	//WRITTING THE VOXEL-INTERSECTION FILE
-	FILE* voxelFile = NULL;
-	voxelFile = fopen("voxels_data/voxel_intersec_1.data", "wb");
-	if(NULL == voxelFile){
-		std::cout << "[!] > Unable to load the file voxelFile" << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	test_fic = fwrite(arguments, 7*sizeof(uint16_t), 1, voxelFile);
-	test_fic = fwrite(l_voxelArray, l_voxArrLength*sizeof(VoxelData), 1, voxelFile);
-
-	fclose(voxelFile);
+	
+	/* Close the DATA file */
+	test_cache = drn_close_writer(&cache);
 	
 	delete[] positionsData;
 	delete[] facesData;
