@@ -403,11 +403,6 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 	
-	/* Open DATA file */
-	drn_writer_t cache;
-	int32_t test_cache = drn_open_writer(&cache, "./voxels_data/voxel_intersec_1.data", "Terrain voxelisation.");
-	if(test_cache < 0){ throw std::runtime_error("unable to open data file"); }
-	
 	/* Setting the config data */
 	uint16_t arguments[7];
 	arguments[0] = nbSub_lvl1;
@@ -421,12 +416,22 @@ int main(int argc, char** argv) {
 	if(normal) arguments[5] = 1;
 	if(surface) arguments[6] = 1;
 	
+	/* Open DATA file */
+	drn_writer_t cache;
+	int32_t test_cache = drn_open_writer(&cache, "./voxels_data/voxel_intersec_1.data", "Terrain voxelisation.");
+	if(test_cache < 0){ throw std::runtime_error("unable to open data file"); }
+	
 	/* Saving the config data */
 	test_cache = drn_writer_add_chunk(&cache, arguments, 7*sizeof(uint16_t));
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 	
 	/* Intersection flag to know if a leaf have at least one intersection - if it isn't the case, we don't save the leaf */
 	bool is_intersec = false;
+	
+	/* Initialize the Leaves vector */
+	std::vector<Leaf> l_queue;
+	Leaf currentLeaf;
+	currentLeaf.id = 1;
 	
 	//INTERSECTION PROCESSING
 	/* Range approximation for voxelisation */
@@ -448,8 +453,8 @@ int main(int argc, char** argv) {
 				}
 				
 				/* Fix the current leaf */
-				glm::dvec3 l_origin = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
-				std::cout<<"//-> Leaf origin : ["<<l_origin.x<<"|"<<l_origin.y<<"|"<<l_origin.z<<"]"<<std::endl;
+				currentLeaf.pos = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
+				//std::cout<<"//-> Leaf origin : ["<<currentLeaf.pos.x<<"|"<<currentLeaf.pos.y<<"|"<<currentLeaf.pos.z<<"]"<<std::endl;
 				
 				//For each Face
 				//#pragma omp parallel for
@@ -501,7 +506,7 @@ int main(int argc, char** argv) {
 							for(uint16_t j=minVoxelY;j<=maxVoxelY; ++j){
 								for(uint16_t i=minVoxelX;i<=maxVoxelX;++i){
 									// Voxel Properties 
-									Voxel vox = createVoxel(i*voxelSize + l_origin.x + voxelSize*0.5, j*voxelSize + l_origin.y + voxelSize*0.5, k*voxelSize + l_origin.z + voxelSize*0.5, voxelSize);
+									Voxel vox = createVoxel(i*voxelSize + currentLeaf.pos.x + voxelSize*0.5, j*voxelSize + currentLeaf.pos.y + voxelSize*0.5, k*voxelSize + currentLeaf.pos.z + voxelSize*0.5, voxelSize);
 									if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
 										is_intersec = true;
 										uint32_t currentIndex = i + nbSub_lvl2*j + k*nbSub_lvl2*nbSub_lvl2;
@@ -517,18 +522,34 @@ int main(int argc, char** argv) {
 						}					
 					}
 				}
-				/* if the leaf isn't empty, save it */
+				/* if the leaf isn't empty, save its voxels */
 				if(is_intersec){
-					drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
+					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
+					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
+					
+					/* Upgrade the Leaf indexation */
+					l_queue.push_back(currentLeaf);
+					currentLeaf.id++;
+					
 					is_intersec = false;
-				}	
+				}
 			}
 		}
 	}
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
 	
+	/* writing the Leaf chunck */
+	Leaf* leafArray = new Leaf[l_queue.size()];
+	uint16_t cpt = 0;
+	for(std::vector<Leaf>::iterator idx=l_queue.begin();idx!=l_queue.end();++idx){
+		leafArray[cpt] = *idx;
+		cpt++;
+	}
+	test_cache = drn_writer_add_chunk(&cache, leafArray, l_queue.size()*sizeof(Leaf));
+	
 	/* Close the DATA file */
 	test_cache = drn_close_writer(&cache);
+	if(test_cache < 0){ throw std::runtime_error("unable to close the data file"); }
 	
 	delete[] positionsData;
 	delete[] facesData;
@@ -536,6 +557,7 @@ int main(int argc, char** argv) {
 	delete[] tabV;
 	delete[] tabF;
 	delete[] l_voxelArray;
+	delete[] leafArray;
 
 	return EXIT_SUCCESS;
 }
