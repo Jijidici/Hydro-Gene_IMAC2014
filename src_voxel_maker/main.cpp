@@ -24,7 +24,7 @@ static const size_t GRID_3D_SIZE = 2;
 /**************EXAMPLE OF CHUNK USING*****************/
 /*void tryingWritingChunk(){
 	drn_writer_t f;
-	int32_t t = drn_open_writer(&f, "./test/files/toto.data", "Super file !!!");
+	int32_t t = drn_open_writer(&f, "./test/files/toto.data", "Super file !!!"); // chemin, description
 	if(t == 0){
 		std::cout<<"//-> Open writer ok"<<std::endl;
 	}else{
@@ -56,8 +56,8 @@ static const size_t GRID_3D_SIZE = 2;
 	data[2].nbFaces = 9;
 	
 	//ecriture
-	t = drn_writer_add_chunk(&f, conf, 7*sizeof(uint32_t));
-	t = drn_writer_add_chunk(&f, data, 3*sizeof(VoxelData));
+	t = drn_writer_add_chunk(&f, conf, 7*sizeof(uint32_t)); // cache, pointeur vers les données, taille des données // chunck 0
+	t = drn_writer_add_chunk(&f, data, 3*sizeof(VoxelData)); // chunck 1
 	
 	t = drn_close_writer(&f);
 	if(t == 0){
@@ -68,7 +68,7 @@ static const size_t GRID_3D_SIZE = 2;
 }
 
 void tryingReadingChunk(){
-	drn_t f;
+	drn_t f; // cache
 	int32_t t = drn_open(&f, "./test/files/toto.data", DRN_READ_NOLOAD);
 	if(t == 0){
 		std::cout<<"//-> Open reader ok"<<std::endl;
