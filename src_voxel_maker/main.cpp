@@ -361,69 +361,97 @@ int main(int argc, char** argv) {
 	std::cout << "-> Number of subdivisions : " << nbSub << std::endl;
 	std::cout << std::endl << "##########################################################################" << std::endl << std::endl;
 	
-	/* Create the voxel array */
-	size_t const tailleTabVoxel = nbSub*nbSub*nbSub;
-	VoxelData* tabVoxel = NULL;
-	tabVoxel = new VoxelData[tailleTabVoxel];
-	if(NULL == tabVoxel){
+	
+	/* Grid from level 1 : grid of leaves */
+	uint16_t nbSub_lvl1 = 2;
+	double l_size = GRID_3D_SIZE/(double)nbSub_lvl1;
+	
+	/* Grid from level 2 : grid of voxel inside a leaf */
+	uint16_t nbSub_lvl2 = 16;
+	double voxelSize = l_size/(double)nbSub_lvl2;
+	
+	size_t const l_voxArrLength = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
+	VoxelData* l_voxelArray = NULL;
+	l_voxelArray = new VoxelData[l_voxArrLength];
+	if(NULL == l_voxelArray){
 		std::cout<<"[!] -> Allocation failure for tabVoxel"<<std::endl;
 		return EXIT_FAILURE;
 	}
 	
-	for(uint32_t n=0;n<tailleTabVoxel;++n){
-		tabVoxel[n].nbFaces=0;
-		tabVoxel[n].sumNormal = glm::dvec3(0,0,0);
-		tabVoxel[n].sumDrain = 0;
-		tabVoxel[n].sumGradient = 0;
-		tabVoxel[n].sumSurface = 0;
-		tabVoxel[n].sumBending = 0;
+	for(uint32_t n=0;n<l_voxArrLength;++n){
+		l_voxelArray[n].nbFaces=0;
+		l_voxelArray[n].sumNormal = glm::dvec3(0,0,0);
+		l_voxelArray[n].sumDrain = 0;
+		l_voxelArray[n].sumGradient = 0;
+		l_voxelArray[n].sumSurface = 0;
+		l_voxelArray[n].sumBending = 0;
 	}
-
-	double voxelSize = GRID_3D_SIZE/(double)nbSub;
-	double Rc = voxelSize * APPROXIM_RANGE;
-	//INTERSECTION PROCESSING
 	
-	//For each Face
-	//#pragma omp parallel for
-	for(uint32_t n=0; n<nbFace;++n){
-		/* Face properties */
-		/* min and max */
-		uint32_t minVoxelX = glm::min(uint32_t(getminX(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
-		uint32_t maxVoxelX = glm::min(uint32_t(getmaxX(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
-		uint32_t minVoxelY = glm::min(uint32_t(getminY(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
-		uint32_t maxVoxelY = glm::min(uint32_t(getmaxY(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
-		uint32_t minVoxelZ = glm::min(uint32_t(getminZ(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
-		uint32_t maxVoxelZ = glm::min(uint32_t(getmaxZ(tabF[n])/voxelSize + nbSub*0.5), nbSub-1);
-		/* Edges */
-		Edge edgS1S2 = createEdge(tabF[n].s1->pos, tabF[n].s2->pos);
-		Edge edgS1S3 = createEdge(tabF[n].s1->pos, tabF[n].s3->pos);
-		Edge edgS2S3 = createEdge(tabF[n].s2->pos, tabF[n].s3->pos);
-		/* Planes */
-		/* Calculate the threshold normals and its inverse */
-		glm::dvec3 thresholdNormal = Rc * glm::normalize(tabF[n].normal);
-		/* Define the upper and lower plane which surround the triangle face */
-		Plane upperPlane = createPlane(tabF[n].s3->pos + thresholdNormal, tabF[n].s2->pos + thresholdNormal, tabF[n].s1->pos + thresholdNormal);
-		Plane lowerPlane = createPlane(tabF[n].s1->pos - thresholdNormal, tabF[n].s2->pos - thresholdNormal, tabF[n].s3->pos - thresholdNormal);
-		/* Define the three perpendicular planes to the trangle Face passing by each edge */
-		Plane e1 = createPlane(tabF[n].s1->pos, tabF[n].s2->pos, tabF[n].s2->pos + tabF[n].normal);
-		Plane e2 = createPlane(tabF[n].s2->pos, tabF[n].s3->pos, tabF[n].s3->pos + tabF[n].normal);
-		Plane e3 = createPlane(tabF[n].s3->pos, tabF[n].s1->pos, tabF[n].s1->pos + tabF[n].normal);
+	//INTERSECTION PROCESSING
+	/* Range approximation for voxelisation */
+	double Rc = voxelSize * APPROXIM_RANGE;
+	
+	//For each leaf
+	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
+		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
+			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
+				
+				glm::dvec3 l_origin = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
+				std::cout<<"//-> Leaf origin : ["<<l_origin.x<<"|"<<l_origin.y<<"|"<<l_origin.z<<"]"<<std::endl;
+				
+				//For each Face
+				//#pragma omp parallel for
+				for(uint32_t n=0;n<nbFace;++n){
+					/* Face properties */
+					/* min and max */
+					//uint16_t minVoxelX = glm::min(uint16_t(getminX(tabF[n])/voxelSize + nbSub_lvl2/2), nbSub_lvl2-1);
+					
+					uint16_t minVoxelX = glm::min(uint16_t(getminX(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1); //PB cas triangles chevauchent 2 feuilles : max <min à cause du modulo
+					uint16_t maxVoxelX = glm::min(uint16_t(getmaxX(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1);
+					uint16_t minVoxelY = glm::min(uint16_t(getminY(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1);
+					uint16_t maxVoxelY = glm::min(uint16_t(getmaxY(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1);
+					uint16_t minVoxelZ = glm::min(uint16_t(getminZ(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1);
+					uint16_t maxVoxelZ = glm::min(uint16_t(getmaxZ(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1); /**~*/
+					
+					/*std::cout<<"//-> X bounds : ["<<minVoxelX<<"] ["<<maxVoxelX<<"]"<<std::endl;
+					std::cout<<"//-> Y bounds : ["<<minVoxelY<<"] ["<<maxVoxelY<<"]"<<std::endl;
+					std::cout<<"//-> Z bounds : ["<<minVoxelZ<<"] ["<<maxVoxelZ<<"]"<<std::endl;
+					std::cout<<std::endl;*/
+					
+					/* Edges */
+					Edge edgS1S2 = createEdge(tabF[n].s1->pos, tabF[n].s2->pos);
+					Edge edgS1S3 = createEdge(tabF[n].s1->pos, tabF[n].s3->pos);
+					Edge edgS2S3 = createEdge(tabF[n].s2->pos, tabF[n].s3->pos);
+					/* Planes */
+					/* Calculate the threshold normals and its inverse */
+					glm::dvec3 thresholdNormal = Rc * glm::normalize(tabF[n].normal);
+					/* Define the upper and lower plane which surround the triangle face */
+					Plane upperPlane = createPlane(tabF[n].s3->pos + thresholdNormal, tabF[n].s2->pos + thresholdNormal, tabF[n].s1->pos + thresholdNormal);
+					Plane lowerPlane = createPlane(tabF[n].s1->pos - thresholdNormal, tabF[n].s2->pos - thresholdNormal, tabF[n].s3->pos - thresholdNormal);
+					/* Define the three perpendicular planes to the trangle Face passing by each edge */
+					Plane e1 = createPlane(tabF[n].s1->pos, tabF[n].s2->pos, tabF[n].s2->pos + tabF[n].normal);
+					Plane e2 = createPlane(tabF[n].s2->pos, tabF[n].s3->pos, tabF[n].s3->pos + tabF[n].normal);
+					Plane e3 = createPlane(tabF[n].s3->pos, tabF[n].s1->pos, tabF[n].s1->pos + tabF[n].normal);
 
-		//For each cube of the face bounding box
-		for(uint32_t k=minVoxelZ; k<=maxVoxelZ; ++k){
-			for(uint32_t j=minVoxelY;j<=maxVoxelY; ++j){
-				for(uint32_t i=minVoxelX;i<=maxVoxelX;++i){
-					/* Voxel Properties */
-					Voxel vox = createVoxel(i*voxelSize -1, j*voxelSize -1, k*voxelSize -1, voxelSize);
-					if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
-						uint32_t currentIndex = i + nbSub*j + k*nbSub*nbSub;
-						tabVoxel[currentIndex].nbFaces++;
-						if(normal) tabVoxel[currentIndex].sumNormal = glm::dvec3(tabVoxel[currentIndex].sumNormal.x + tabF[n].normal.x, tabVoxel[currentIndex].sumNormal.y + tabF[n].normal.y, tabVoxel[currentIndex].sumNormal.z + tabF[n].normal.z);
-						if(drain) tabVoxel[currentIndex].sumDrain = tabVoxel[currentIndex].sumDrain + tabF[n].drain;
-						if(gradient) tabVoxel[currentIndex].sumGradient = tabVoxel[currentIndex].sumGradient + tabF[n].gradient;
-						if(surface) tabVoxel[currentIndex].sumSurface = tabVoxel[currentIndex].sumSurface + tabF[n].surface;
-						if(bending) tabVoxel[currentIndex].sumBending = tabVoxel[currentIndex].sumBending + tabF[n].bending;	
-					} 						
+					//For each cube of the face bounding box
+					for(uint16_t k=minVoxelZ; k<=maxVoxelZ; ++k){
+						for(uint16_t j=minVoxelY;j<=maxVoxelY; ++j){
+							for(uint16_t i=minVoxelX;i<=maxVoxelX;++i){
+								/* Voxel Properties */
+								Voxel vox = createVoxel(i*voxelSize + l_origin.x + voxelSize*0.5, j*voxelSize + l_origin.y + voxelSize*0.5, k*voxelSize + l_origin.z + voxelSize*0.5, voxelSize);
+								if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
+									std::cout<<"intersec"<<std::endl;
+									uint32_t currentIndex = i + nbSub_lvl2*j + k*nbSub_lvl2*nbSub_lvl2;
+									l_voxelArray[currentIndex].nbFaces++;
+									if(normal) 	l_voxelArray[currentIndex].sumNormal = glm::dvec3(l_voxelArray[currentIndex].sumNormal.x + tabF[n].normal.x, l_voxelArray[currentIndex].sumNormal.y + tabF[n].normal.y, l_voxelArray[currentIndex].sumNormal.z + tabF[n].normal.z);
+									if(drain) 	l_voxelArray[currentIndex].sumDrain = l_voxelArray[currentIndex].sumDrain + tabF[n].drain;
+									if(gradient)l_voxelArray[currentIndex].sumGradient = l_voxelArray[currentIndex].sumGradient + tabF[n].gradient;
+									if(surface) l_voxelArray[currentIndex].sumSurface = l_voxelArray[currentIndex].sumSurface + tabF[n].surface;
+									if(bending) l_voxelArray[currentIndex].sumBending = l_voxelArray[currentIndex].sumBending + tabF[n].bending;	
+								} 						
+							}
+						}
+					}
 				}
 			}
 		}
@@ -431,7 +459,7 @@ int main(int argc, char** argv) {
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
 
 	uint32_t arguments[6];
-	arguments[0] = nbSub;
+	arguments[0] = nbSub_lvl2;
 	for(int i = 1; i<6; ++i){
 		arguments[i] = 0;
 	}
@@ -450,7 +478,7 @@ int main(int argc, char** argv) {
 	}
 
 	test_fic = fwrite(arguments, sizeof(uint32_t), 6, voxelFile);
-	test_fic = fwrite(tabVoxel, tailleTabVoxel*sizeof(VoxelData), 1, voxelFile);
+	test_fic = fwrite(l_voxelArray, l_voxArrLength*sizeof(VoxelData), 1, voxelFile);
 
 	fclose(voxelFile);
 	
@@ -459,7 +487,7 @@ int main(int argc, char** argv) {
 
 	delete[] tabV;
 	delete[] tabF;
-	delete[] tabVoxel;
+	delete[] l_voxelArray;
 
 	return EXIT_SUCCESS;
 }

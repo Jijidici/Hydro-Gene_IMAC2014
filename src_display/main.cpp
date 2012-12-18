@@ -9,6 +9,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "geom_types.hpp"
+#include "data_types.hpp"
 #include "display_types.hpp"
 #include "tools/shader_tools.hpp"
 #include "tools/MatrixStack.hpp"
@@ -443,7 +444,20 @@ int main(int argc, char** argv){
 									glDrawArrays(GL_TRIANGLES, 0, aCube.nbVertices);
 								glBindVertexArray(0);
 							ms.pop();
-						}
+						}else{ //TO REMOVE - begin
+							ms.push();
+								ms.translate(glm::vec3(i*cubeSize, j*cubeSize, k*cubeSize)); //PLACEMENT OF EACH GRID CUBE
+								ms.scale(glm::vec3(cubeSize));// RE-SCALE EACH GRID CUBE
+							
+								glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+								glUniform2i(NbIntersectionLocation, currentNbIntersection, nbIntersectionMax);
+								glUniform3f(NormSumLocation, tabVoxel[currentIndex].sumNormal.x, tabVoxel[currentIndex].sumNormal.y, tabVoxel[currentIndex].sumNormal.z);
+							
+								glBindVertexArray(cubeVAO);
+									glDrawArrays(GL_POINTS, 0, aCube.nbVertices);
+								glBindVertexArray(0);
+							ms.pop();
+						} //TO REMOVE - end
 					}
 				}
 			}

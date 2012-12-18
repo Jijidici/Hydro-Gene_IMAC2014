@@ -1,6 +1,8 @@
 #ifndef __DATA_TYPES__
 #define __DATA_TYPES__
 
+#include <drn/drn_types.h>
+
 typedef struct s_voxelData{ //voxels dans tabVoxel
 	glm::dvec3 sumNormal;
 	double sumBending;
