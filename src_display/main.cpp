@@ -141,7 +141,7 @@ int main(int argc, char** argv){
 		return EXIT_FAILURE;
 	}
 
-	uint32_t arguments[6];
+	uint16_t arguments[7];
 		//0 : nbSub
 		//1 : bending
 		//2 : drain
@@ -149,9 +149,10 @@ int main(int argc, char** argv){
 		//4 : normal
 		//5 : surface
 
-	test_fic = fread(arguments, sizeof(uint32_t), 6, voxelFile);
-	uint32_t nbSubMax = arguments[0];
-	uint32_t nbSubMaxY = nbSubMax; //number of subdivisions on Y
+	test_fic = fread(arguments, 7*sizeof(uint16_t), 1, voxelFile);
+	uint16_t nbSubMax = arguments[1];
+	uint16_t nbSub_lvl2 = arguments[0];
+	uint16_t nbSubMaxY = nbSubMax; //number of subdivisions on Y
 
 	uint32_t lengthTabVoxel = nbSubMax*nbSubMaxY*nbSubMax;
 	VoxelData* tabVoxelMax = new VoxelData[lengthTabVoxel];
@@ -444,20 +445,7 @@ int main(int argc, char** argv){
 									glDrawArrays(GL_TRIANGLES, 0, aCube.nbVertices);
 								glBindVertexArray(0);
 							ms.pop();
-						}else{ //TO REMOVE - begin
-							ms.push();
-								ms.translate(glm::vec3(i*cubeSize, j*cubeSize, k*cubeSize)); //PLACEMENT OF EACH GRID CUBE
-								ms.scale(glm::vec3(cubeSize));// RE-SCALE EACH GRID CUBE
-							
-								glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-								glUniform2i(NbIntersectionLocation, currentNbIntersection, nbIntersectionMax);
-								glUniform3f(NormSumLocation, tabVoxel[currentIndex].sumNormal.x, tabVoxel[currentIndex].sumNormal.y, tabVoxel[currentIndex].sumNormal.z);
-							
-								glBindVertexArray(cubeVAO);
-									glDrawArrays(GL_POINTS, 0, aCube.nbVertices);
-								glBindVertexArray(0);
-							ms.pop();
-						} //TO REMOVE - end
+						}
 					}
 				}
 			}
@@ -506,7 +494,7 @@ int main(int argc, char** argv){
 							break;
 
 						case SDLK_n:
-							if(arguments[4]){
+							if(arguments[5]){
 								resetShaderProgram(programNorm, MVPLocation, NbIntersectionLocation, NormSumLocation, LightVectLocation);
 								displayMode = 4;
 							}
