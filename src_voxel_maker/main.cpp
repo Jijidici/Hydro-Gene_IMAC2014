@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <stdint.h>
 #include <string.h>
+#include <vector>
 #include <omp.h>
 #include "geom_types.hpp"
 #include "data_types.hpp"
@@ -405,9 +406,7 @@ int main(int argc, char** argv) {
 	/* Open DATA file */
 	drn_writer_t cache;
 	int32_t test_cache = drn_open_writer(&cache, "./voxels_data/voxel_intersec_1.data", "Terrain voxelisation.");
-	if(test_cache < 0){
-		throw std::runtime_error("unable to open data file");
-	}
+	if(test_cache < 0){ throw std::runtime_error("unable to open data file"); }
 	
 	/* Setting the config data */
 	uint16_t arguments[7];
@@ -424,6 +423,10 @@ int main(int argc, char** argv) {
 	
 	/* Saving the config data */
 	test_cache = drn_writer_add_chunk(&cache, arguments, 7*sizeof(uint16_t));
+	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
+	
+	/* Intersection flag to know if a leaf have at least one intersection - if it isn't the case, we don't save the leaf */
+	bool is_intersec = false;
 	
 	//INTERSECTION PROCESSING
 	/* Range approximation for voxelisation */
@@ -500,6 +503,7 @@ int main(int argc, char** argv) {
 									// Voxel Properties 
 									Voxel vox = createVoxel(i*voxelSize + l_origin.x + voxelSize*0.5, j*voxelSize + l_origin.y + voxelSize*0.5, k*voxelSize + l_origin.z + voxelSize*0.5, voxelSize);
 									if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
+										is_intersec = true;
 										uint32_t currentIndex = i + nbSub_lvl2*j + k*nbSub_lvl2*nbSub_lvl2;
 										l_voxelArray[currentIndex].nbFaces++;
 										if(normal) 	l_voxelArray[currentIndex].sumNormal = glm::dvec3(l_voxelArray[currentIndex].sumNormal.x + tabF[n].normal.x, l_voxelArray[currentIndex].sumNormal.y + tabF[n].normal.y, l_voxelArray[currentIndex].sumNormal.z + tabF[n].normal.z);
@@ -510,9 +514,14 @@ int main(int argc, char** argv) {
 									}
 								}
 							}
-						}
+						}					
 					}
 				}
+				/* if the leaf isn't empty, save it */
+				if(is_intersec){
+					drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
+					is_intersec = false;
+				}	
 			}
 		}
 	}
