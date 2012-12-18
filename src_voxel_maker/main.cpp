@@ -187,25 +187,28 @@ int main(int argc, char** argv) {
 	
 	//getting the arguments
 
-	uint32_t nbSub = 0;
-	int p4Requested = 0;
-	int drain = 0;
-	int gradient = 0;
-	int surface = 0;
-	int bending = 0;
-	int normal = 0;
-	int mode = 0;
+	uint16_t nbSub_lvl1 = 0;
+	uint16_t nbSub_lvl2 = 0;
+	uint16_t p4Requested = 0;
+	uint16_t drain = 0;
+	uint16_t gradient = 0;
+	uint16_t surface = 0;
+	uint16_t bending = 0;
+	uint16_t normal = 0;
+	uint16_t mode = 0;
 
 	if(argc > 1){
 		char** tabArguments = new char*[argc];
 
-		for(int i = 0; i<argc-1; ++i){
+		for(uint16_t i = 0; i<argc-1; ++i){
 
 			tabArguments[i] = argv[i+1];
 
 			//if a number of subdivisions has been entered
-			if(atoi(tabArguments[i])) nbSub = atoi(tabArguments[i]);
-
+			if(atoi(tabArguments[i])){
+				if(!nbSub_lvl1) nbSub_lvl1 = atoi(tabArguments[i]);
+				else nbSub_lvl2 = atoi(tabArguments[i]);
+			}
 			else if(strcmp(tabArguments[i],"help") == 0){
 				printHelp();
 				return(EXIT_SUCCESS);
@@ -331,43 +334,63 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	uint32_t test = nbSub;
-	uint32_t power = 0;
+	uint16_t test_lvl1 = nbSub_lvl1;
+	uint16_t test_lvl2 = nbSub_lvl2;
+	uint16_t power_lvl1 = 0;
+	uint16_t power_lvl2 = 0;
 	
-	while(test > 1){
-		test = test/2;
-		++power;
+	while(test_lvl1 > 1){
+		test_lvl1 = test_lvl1/2;
+		++power_lvl1;
+	}
+	while(test_lvl2 > 1){
+		test_lvl2 = test_lvl2/2;
+		++power_lvl2;
 	}
 	
 	std::cout << "-> Number of vertices : " << nbVertice << std::endl;
 	std::cout << "-> Number of faces : " << nbFace << std::endl;
 	std::cout <<"-> Altitude max : "<< altMax<< " - Altitude min : "<< altMin << std::endl << std::endl;
 
-	if(nbSub == 0){
-		nbSub = 16;
-		std::cout << "[!] -> nbSub = 0, Number of subdivisions initialized to 16" << std::endl;
+	if(nbSub_lvl1 == 0){
+		nbSub_lvl1 = 16;
+		std::cout << "[!] -> nbSub_lvl1 = 0, Number of subdivisions initialized to 16" << std::endl;
 	}else{
-		uint32_t nbLow = pow(2,power);
-		uint32_t nbUp = pow(2,power+1);
+		uint16_t nbLow = pow(2,power_lvl1);
+		uint16_t nbUp = pow(2,power_lvl1+1);
 	
-		if(nbSub - nbLow < nbUp - nbSub){
-			nbSub = nbLow;
+		if(nbSub_lvl1 - nbLow < nbUp - nbSub_lvl1){
+			nbSub_lvl1 = nbLow;
 		}else{
-			nbSub = nbUp;
+			nbSub_lvl1 = nbUp;
+		}
+		std::cout << "-> Number of subdivisions rounded to the closest power of two" << std::endl;
+	}
+
+	if(nbSub_lvl2 == 0){
+		nbSub_lvl2 = 16;
+		std::cout << "[!] -> nbSub_lvl2 = 0, Number of subdivisions initialized to 16" << std::endl;
+	}else{
+		uint16_t nbLow = pow(2,power_lvl2);
+		uint16_t nbUp = pow(2,power_lvl2+1);
+	
+		if(nbSub_lvl2 - nbLow < nbUp - nbSub_lvl2){
+			nbSub_lvl2 = nbLow;
+		}else{
+			nbSub_lvl2 = nbUp;
 		}
 		std::cout << "-> Number of subdivisions rounded to the closest power of two" << std::endl;
 	}
 	
-	std::cout << "-> Number of subdivisions : " << nbSub << std::endl;
+	std::cout << "-> Number of subdivisions : " << nbSub_lvl1 << std::endl;
+	std::cout << "-> Number of leave subdivisions : " << nbSub_lvl2 << std::endl;
 	std::cout << std::endl << "##########################################################################" << std::endl << std::endl;
 	
 	
 	/* Grid from level 1 : grid of leaves */
-	uint16_t nbSub_lvl1 = 2;
 	double l_size = GRID_3D_SIZE/(double)nbSub_lvl1;
 	
 	/* Grid from level 2 : grid of voxel inside a leaf */
-	uint16_t nbSub_lvl2 = 16;
 	double voxelSize = l_size/(double)nbSub_lvl2;
 	
 	size_t const l_voxArrLength = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
@@ -458,16 +481,17 @@ int main(int argc, char** argv) {
 	}
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
 
-	uint32_t arguments[6];
-	arguments[0] = nbSub_lvl2;
-	for(int i = 1; i<6; ++i){
+	uint16_t arguments[6];
+	arguments[0] = nbSub_lvl1;
+	arguments[1] = nbSub_lvl2;
+	for(int i = 2; i<7; ++i){
 		arguments[i] = 0;
 	}
-	if(bending) arguments[1] = 1;
-	if(drain) arguments[2] = 1;
-	if(gradient) arguments[3] = 1;
-	if(normal) arguments[4] = 1;
-	if(surface) arguments[5] = 1;
+	if(bending) arguments[2] = 1;
+	if(drain) arguments[3] = 1;
+	if(gradient) arguments[4] = 1;
+	if(normal) arguments[5] = 1;
+	if(surface) arguments[6] = 1;
 
 	//WRITTING THE VOXEL-INTERSECTION FILE
 	FILE* voxelFile = NULL;
@@ -477,7 +501,7 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 
-	test_fic = fwrite(arguments, sizeof(uint32_t), 6, voxelFile);
+	test_fic = fwrite(arguments, sizeof(uint16_t), 7, voxelFile);
 	test_fic = fwrite(l_voxelArray, l_voxArrLength*sizeof(VoxelData), 1, voxelFile);
 
 	fclose(voxelFile);
