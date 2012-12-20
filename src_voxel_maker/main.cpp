@@ -13,7 +13,6 @@
 #include "voxel_maker/intersection_test.hpp"
 
 #include "drn/drn_writer.h"
-#include "drn/drn_reader.h"
 
 static const double APPROXIM_RANGE = 2*sqrt(3)/3.;
 static const size_t GRID_3D_SIZE = 2;
@@ -273,7 +272,10 @@ int main(int argc, char** argv) {
 		}
 		delete[] tabArguments;
 		if(p4Requested||normal||mode!=0) std::cout << "##################################" << std::endl << std::endl;
-	}else printHelp();
+	}else {
+		printHelp();
+		return EXIT_FAILURE;
+	}
 
 	FILE* normalFile = NULL;
 	normalFile = fopen("terrain_data/page_2.data", "rb");
@@ -425,7 +427,7 @@ int main(int argc, char** argv) {
 	test_cache = drn_writer_add_chunk(&cache, arguments, 7*sizeof(uint16_t));
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 	
-	/* Intersection flag to know if a leaf have at least one intersection - if it isn't the case, we don't save the leaf */
+	/* Intersection flag to know if a leaf have at least one intersection - if it is not the case, we do not save the leaf */
 	bool is_intersec = false;
 	
 	/* Initialize the Leaves vector */
@@ -457,7 +459,7 @@ int main(int argc, char** argv) {
 				//std::cout<<"//-> Leaf origin : ["<<currentLeaf.pos.x<<"|"<<currentLeaf.pos.y<<"|"<<currentLeaf.pos.z<<"]"<<std::endl;
 				
 				//For each Face
-				//#pragma omp parallel for
+				#pragma omp parallel for
 				for(uint32_t n=0;n<nbFace;++n){
 					/* Face properties */
 					/* min and max */
@@ -522,7 +524,7 @@ int main(int argc, char** argv) {
 						}					
 					}
 				}
-				/* if the leaf isn't empty, save its voxels */
+				/* if the leaf is not empty, save its voxels */
 				if(is_intersec){
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
 					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
