@@ -469,12 +469,7 @@ int main(int argc, char** argv) {
 					uint16_t maxVoxelY = ((getminY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
 					uint16_t minVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
 					uint16_t maxVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
-					
-					
-					/*std::cout<<"//-> X bounds : ["<<minVoxelX<<"] ["<<maxVoxelX<<"]"<<std::endl;
-					std::cout<<"//-> Y bounds : ["<<minVoxelY<<"] ["<<maxVoxelY<<"]"<<std::endl;
-					std::cout<<"//-> Z bounds : ["<<minVoxelZ<<"] ["<<maxVoxelZ<<"]"<<std::endl;
-					std::cout<<std::endl;*/
+
 					//Test if the triangle is inside the current 
 					if(maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
 					   maxVoxelY >= 0 && minVoxelY < nbSub_lvl2 &&
@@ -540,6 +535,8 @@ int main(int argc, char** argv) {
 	}
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
 	
+	std::cout << "Number of leaves saved : "<< l_queue.size() << std::endl;
+
 	/* writing the Leaf chunck */
 	Leaf* leafArray = new Leaf[l_queue.size()];
 	uint16_t cpt = 0;

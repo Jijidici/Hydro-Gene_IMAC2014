@@ -148,6 +148,10 @@ int main(int argc, char** argv){
 	int32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
 	if(test_cache < 0){ throw std::runtime_error("unable to open data file"); }
 
+	/* Getting the number of chunks saved in the voxel_data file */
+	uint64_t nbChunks = drn_get_chunk_count(&cache);
+	std::cout << "number of chunks :" << nbChunks << std::endl;
+
 	/* Getting the config data */
 	uint16_t arguments[7];
 		//0 : nbSub_lvl1
@@ -167,7 +171,14 @@ int main(int argc, char** argv){
 	VoxelData* tabVoxelMax = new VoxelData[lengthTabVoxel];
 
 /* Getting the first leafArray */
-	test_cache = drn_read_chunk(&cache, 2, tabVoxelMax);
+	test_cache = drn_read_chunk(&cache, 1, tabVoxelMax);
+
+/* Getting the leaf chunk (last chunk) */
+	uint64_t nbLeaves = nbChunks -3;
+	std::cout<<"number of leaves saved : "<<nbLeaves << std::endl;
+
+	Leaf* leafArray = new Leaf[nbLeaves];
+	test_cache = drn_read_chunk(&cache, nbChunks-1, leafArray);
 
 	uint32_t nbSub = nbSubMaxLeaf;
 	uint32_t nbSubExpected = nbSub;
