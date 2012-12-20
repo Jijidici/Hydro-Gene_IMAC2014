@@ -150,7 +150,7 @@ int main(int argc, char** argv){
 
 	/* Getting the number of chunks saved in the voxel_data file */
 	uint64_t nbChunks = drn_get_chunk_count(&cache);
-	std::cout << "number of chunks :" << nbChunks << std::endl;
+	std::cout << "number of chunks :" << nbChunks-1 << std::endl;
 
 	/* Getting the config data */
 	uint16_t arguments[7];
