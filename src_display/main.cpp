@@ -28,7 +28,7 @@ static const size_t BYTES_PER_PIXEL = 32;
 static const size_t POSITION_LOCATION = 0;
 static const size_t GRID_3D_SIZE = 2;
 
-void displayLeafGrid(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize){
+void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize){
 	for(uint32_t k=0;k<nbSub;++k){
 		for(uint32_t j=0;j<nbSub;++j){
 			for(uint32_t i=0;i<nbSub;++i){
@@ -51,6 +51,20 @@ void displayLeafGrid(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint 
 			}
 		}
 	}
+}
+
+void display_lvl1(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, Leaf& l, double cubeSize){
+	double halfCubeSize = 0.5*cubeSize;
+	ms.push();
+		ms.translate(glm::vec3(l.pos.x + halfCubeSize, l.pos.y + halfCubeSize, l.pos.z + halfCubeSize)); //PLACEMENT OF CUBE
+		ms.scale(glm::vec3(cubeSize));// RE-SCALE EACH GRID CUBE
+	
+		glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+	
+		glBindVertexArray(cubeVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+	ms.pop();
 }
 
 void loadInMemory(std::map<uint32_t, VoxelData*>& memory, Leaf l, uint32_t l_id,  uint16_t nbSub_lvl2){
@@ -439,7 +453,9 @@ int main(int argc, char** argv){
 		start = SDL_GetTicks();
 
 		//PRE_IDLE
-		double cubeSize = GRID_3D_SIZE/(double)(nbSub_lvl1*nbSub);
+		
+		double leafSize = GRID_3D_SIZE/(double)nbSub_lvl1;
+		double cubeSize = leafSize/(double)nbSub;
 
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -467,12 +483,15 @@ int main(int argc, char** argv){
 				V = ffCam.getViewMatrix();
 			}
 			ms.mult(V);
-			ms.translate(glm::vec3(-1.f, -1.f, -1.f)); //CENTER TO THE ORIGIN
 			glUniform3f(LightVectLocation, light.x, light.y, light.z);
 			
 			// For each loaded leaf
 			for(std::map<uint32_t, VoxelData*>::iterator idx=memory.begin(); idx!=memory.end(); ++idx){
-				displayLeafGrid(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, (*idx).second, leafArray[(*idx).first], nbSub, cubeSize);
+				if(true){
+					display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, (*idx).second, leafArray[(*idx).first], nbSub, cubeSize);
+				}else{
+					display_lvl1(cubeVAO, ms, MVPLocation, leafArray[(*idx).first], leafSize);
+				}
 			}
 			
 		ms.pop();
