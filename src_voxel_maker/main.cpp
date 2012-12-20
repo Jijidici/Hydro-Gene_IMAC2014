@@ -1,9 +1,11 @@
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
+#include <stdexcept>
 #include <glm/glm.hpp>
 #include <stdint.h>
 #include <string.h>
+#include <vector>
 #include <omp.h>
 #include "geom_types.hpp"
 #include "data_types.hpp"
@@ -11,7 +13,6 @@
 #include "voxel_maker/intersection_test.hpp"
 
 #include "drn/drn_writer.h"
-#include "drn/drn_reader.h"
 
 static const double APPROXIM_RANGE = 2*sqrt(3)/3.;
 static const size_t GRID_3D_SIZE = 2;
@@ -271,7 +272,10 @@ int main(int argc, char** argv) {
 		}
 		delete[] tabArguments;
 		if(p4Requested||normal||mode!=0) std::cout << "##################################" << std::endl << std::endl;
-	}else printHelp();
+	}else {
+		printHelp();
+		return EXIT_FAILURE;
+	}
 
 	FILE* normalFile = NULL;
 	normalFile = fopen("terrain_data/page_2.data", "rb");
@@ -397,91 +401,12 @@ int main(int argc, char** argv) {
 	VoxelData* l_voxelArray = NULL;
 	l_voxelArray = new VoxelData[l_voxArrLength];
 	if(NULL == l_voxelArray){
-		std::cout<<"[!] -> Allocation failure for tabVoxel"<<std::endl;
+		std::cout<<"[!] -> Allocation failure for l_voxelArray"<<std::endl;
 		return EXIT_FAILURE;
 	}
 	
-	for(uint32_t n=0;n<l_voxArrLength;++n){
-		l_voxelArray[n].nbFaces=0;
-		l_voxelArray[n].sumNormal = glm::dvec3(0,0,0);
-		l_voxelArray[n].sumDrain = 0;
-		l_voxelArray[n].sumGradient = 0;
-		l_voxelArray[n].sumSurface = 0;
-		l_voxelArray[n].sumBending = 0;
-	}
-	
-	//INTERSECTION PROCESSING
-	/* Range approximation for voxelisation */
-	double Rc = voxelSize * APPROXIM_RANGE;
-	
-	//For each leaf
-	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
-		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
-			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
-				
-				glm::dvec3 l_origin = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
-				std::cout<<"//-> Leaf origin : ["<<l_origin.x<<"|"<<l_origin.y<<"|"<<l_origin.z<<"]"<<std::endl;
-				
-				//For each Face
-				//#pragma omp parallel for
-				for(uint32_t n=0;n<nbFace;++n){
-					/* Face properties */
-					/* min and max */
-					//uint16_t minVoxelX = glm::min(uint16_t(getminX(tabF[n])/voxelSize + nbSub_lvl2/2), nbSub_lvl2-1);
-					
-					uint16_t minVoxelX = glm::min(uint16_t(getminX(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1); //PB cas triangles chevauchent 2 feuilles : max <min à cause du modulo
-					uint16_t maxVoxelX = glm::min(uint16_t(getmaxX(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1);
-					uint16_t minVoxelY = glm::min(uint16_t(getminY(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1);
-					uint16_t maxVoxelY = glm::min(uint16_t(getmaxY(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1);
-					uint16_t minVoxelZ = glm::min(uint16_t(getminZ(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1);
-					uint16_t maxVoxelZ = glm::min(uint16_t(getmaxZ(tabF[n])/voxelSize + nbSub_lvl2/2)%nbSub_lvl2, nbSub_lvl2-1); /**~*/
-					
-					/*std::cout<<"//-> X bounds : ["<<minVoxelX<<"] ["<<maxVoxelX<<"]"<<std::endl;
-					std::cout<<"//-> Y bounds : ["<<minVoxelY<<"] ["<<maxVoxelY<<"]"<<std::endl;
-					std::cout<<"//-> Z bounds : ["<<minVoxelZ<<"] ["<<maxVoxelZ<<"]"<<std::endl;
-					std::cout<<std::endl;*/
-					
-					/* Edges */
-					Edge edgS1S2 = createEdge(tabF[n].s1->pos, tabF[n].s2->pos);
-					Edge edgS1S3 = createEdge(tabF[n].s1->pos, tabF[n].s3->pos);
-					Edge edgS2S3 = createEdge(tabF[n].s2->pos, tabF[n].s3->pos);
-					/* Planes */
-					/* Calculate the threshold normals and its inverse */
-					glm::dvec3 thresholdNormal = Rc * glm::normalize(tabF[n].normal);
-					/* Define the upper and lower plane which surround the triangle face */
-					Plane upperPlane = createPlane(tabF[n].s3->pos + thresholdNormal, tabF[n].s2->pos + thresholdNormal, tabF[n].s1->pos + thresholdNormal);
-					Plane lowerPlane = createPlane(tabF[n].s1->pos - thresholdNormal, tabF[n].s2->pos - thresholdNormal, tabF[n].s3->pos - thresholdNormal);
-					/* Define the three perpendicular planes to the trangle Face passing by each edge */
-					Plane e1 = createPlane(tabF[n].s1->pos, tabF[n].s2->pos, tabF[n].s2->pos + tabF[n].normal);
-					Plane e2 = createPlane(tabF[n].s2->pos, tabF[n].s3->pos, tabF[n].s3->pos + tabF[n].normal);
-					Plane e3 = createPlane(tabF[n].s3->pos, tabF[n].s1->pos, tabF[n].s1->pos + tabF[n].normal);
-
-					//For each cube of the face bounding box
-					for(uint16_t k=minVoxelZ; k<=maxVoxelZ; ++k){
-						for(uint16_t j=minVoxelY;j<=maxVoxelY; ++j){
-							for(uint16_t i=minVoxelX;i<=maxVoxelX;++i){
-								/* Voxel Properties */
-								Voxel vox = createVoxel(i*voxelSize + l_origin.x + voxelSize*0.5, j*voxelSize + l_origin.y + voxelSize*0.5, k*voxelSize + l_origin.z + voxelSize*0.5, voxelSize);
-								if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
-									std::cout<<"intersec"<<std::endl;
-									uint32_t currentIndex = i + nbSub_lvl2*j + k*nbSub_lvl2*nbSub_lvl2;
-									l_voxelArray[currentIndex].nbFaces++;
-									if(normal) 	l_voxelArray[currentIndex].sumNormal = glm::dvec3(l_voxelArray[currentIndex].sumNormal.x + tabF[n].normal.x, l_voxelArray[currentIndex].sumNormal.y + tabF[n].normal.y, l_voxelArray[currentIndex].sumNormal.z + tabF[n].normal.z);
-									if(drain) 	l_voxelArray[currentIndex].sumDrain = l_voxelArray[currentIndex].sumDrain + tabF[n].drain;
-									if(gradient)l_voxelArray[currentIndex].sumGradient = l_voxelArray[currentIndex].sumGradient + tabF[n].gradient;
-									if(surface) l_voxelArray[currentIndex].sumSurface = l_voxelArray[currentIndex].sumSurface + tabF[n].surface;
-									if(bending) l_voxelArray[currentIndex].sumBending = l_voxelArray[currentIndex].sumBending + tabF[n].bending;	
-								} 						
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	std::cout<<"-> Voxelisation finished !"<<std::endl;
-
-	uint16_t arguments[6];
+	/* Setting the config data */
+	uint16_t arguments[7];
 	arguments[0] = nbSub_lvl1;
 	arguments[1] = nbSub_lvl2;
 	for(int i = 2; i<7; ++i){
@@ -492,19 +417,138 @@ int main(int argc, char** argv) {
 	if(gradient) arguments[4] = 1;
 	if(normal) arguments[5] = 1;
 	if(surface) arguments[6] = 1;
+	
+	/* Open DATA file */
+	drn_writer_t cache;
+	int32_t test_cache = drn_open_writer(&cache, "./voxels_data/voxel_intersec_1.data", "Terrain voxelisation.");
+	if(test_cache < 0){ throw std::runtime_error("unable to open data file"); }
+	
+	/* Saving the config data */
+	test_cache = drn_writer_add_chunk(&cache, arguments, 7*sizeof(uint16_t));
+	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
+	
+	/* Intersection flag to know if a leaf have at least one intersection - if it is not the case, we do not save the leaf */
+	bool is_intersec = false;
+	
+	/* Initialize the Leaves vector */
+	std::vector<Leaf> l_queue;
+	Leaf currentLeaf;
+	currentLeaf.id = 1;
+	
+	//INTERSECTION PROCESSING
+	/* Range approximation for voxelisation */
+	double Rc = voxelSize * APPROXIM_RANGE;
+	
+	//For each leaf
+	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
+		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
+			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
+				
+				/* Init leaf voxel array */	
+				for(uint32_t n=0;n<l_voxArrLength;++n){
+					l_voxelArray[n].nbFaces=0;
+					l_voxelArray[n].sumNormal = glm::dvec3(0,0,0);
+					l_voxelArray[n].sumDrain = 0;
+					l_voxelArray[n].sumGradient = 0;
+					l_voxelArray[n].sumSurface = 0;
+					l_voxelArray[n].sumBending = 0;
+				}
+				
+				/* Fix the current leaf */
+				currentLeaf.pos = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
+				//std::cout<<"//-> Leaf origin : ["<<currentLeaf.pos.x<<"|"<<currentLeaf.pos.y<<"|"<<currentLeaf.pos.z<<"]"<<std::endl;
+				
+				//For each Face
+				#pragma omp parallel for
+				for(uint32_t n=0;n<nbFace;++n){
+					/* Face properties */
+					/* min and max */
+					uint16_t minVoxelX = ((getminX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
+					uint16_t maxVoxelX = ((getminX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
+					uint16_t minVoxelY = ((getminY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
+					uint16_t maxVoxelY = ((getminY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
+					uint16_t minVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
+					uint16_t maxVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
 
-	//WRITTING THE VOXEL-INTERSECTION FILE
-	FILE* voxelFile = NULL;
-	voxelFile = fopen("voxels_data/voxel_intersec_1.data", "wb");
-	if(NULL == voxelFile){
-		std::cout << "[!] > Unable to load the file voxelFile" << std::endl;
-		return EXIT_FAILURE;
+					//Test if the triangle is inside the current 
+					if(maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
+					   maxVoxelY >= 0 && minVoxelY < nbSub_lvl2 &&
+					   maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){
+					   
+						//case where triangle overlap 2 leaves
+						if(maxVoxelX > nbSub_lvl2){ maxVoxelX = nbSub_lvl2 - 1; } 
+						if(minVoxelX < 0){ maxVoxelX = 0; }
+						if(maxVoxelY > nbSub_lvl2){ maxVoxelY = nbSub_lvl2 - 1; } 
+						if(minVoxelY < 0){ maxVoxelY = 0; }
+						if(maxVoxelZ > nbSub_lvl2){ maxVoxelZ = nbSub_lvl2 - 1; } 
+						if(minVoxelZ < 0){ maxVoxelZ = 0; }
+						
+						/* Edges */
+						Edge edgS1S2 = createEdge(tabF[n].s1->pos, tabF[n].s2->pos);
+						Edge edgS1S3 = createEdge(tabF[n].s1->pos, tabF[n].s3->pos);
+						Edge edgS2S3 = createEdge(tabF[n].s2->pos, tabF[n].s3->pos);
+						/* Planes */
+						/* Calculate the threshold normals and its inverse */
+						glm::dvec3 thresholdNormal = Rc * glm::normalize(tabF[n].normal);
+						/* Define the upper and lower plane which surround the triangle face */
+						Plane upperPlane = createPlane(tabF[n].s3->pos + thresholdNormal, tabF[n].s2->pos + thresholdNormal, tabF[n].s1->pos + thresholdNormal);
+						Plane lowerPlane = createPlane(tabF[n].s1->pos - thresholdNormal, tabF[n].s2->pos - thresholdNormal, tabF[n].s3->pos - thresholdNormal);
+						/* Define the three perpendicular planes to the trangle Face passing by each edge */
+						Plane e1 = createPlane(tabF[n].s1->pos, tabF[n].s2->pos, tabF[n].s2->pos + tabF[n].normal);
+						Plane e2 = createPlane(tabF[n].s2->pos, tabF[n].s3->pos, tabF[n].s3->pos + tabF[n].normal);
+						Plane e3 = createPlane(tabF[n].s3->pos, tabF[n].s1->pos, tabF[n].s1->pos + tabF[n].normal);
+
+						//For each cube of the face bounding box
+						for(uint16_t k=minVoxelZ; k<=maxVoxelZ; ++k){
+							for(uint16_t j=minVoxelY;j<=maxVoxelY; ++j){
+								for(uint16_t i=minVoxelX;i<=maxVoxelX;++i){
+									// Voxel Properties 
+									Voxel vox = createVoxel(i*voxelSize + currentLeaf.pos.x + voxelSize*0.5, j*voxelSize + currentLeaf.pos.y + voxelSize*0.5, k*voxelSize + currentLeaf.pos.z + voxelSize*0.5, voxelSize);
+									if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
+										is_intersec = true;
+										uint32_t currentIndex = i + nbSub_lvl2*j + k*nbSub_lvl2*nbSub_lvl2;
+										l_voxelArray[currentIndex].nbFaces++;
+										if(normal) 	l_voxelArray[currentIndex].sumNormal = glm::dvec3(l_voxelArray[currentIndex].sumNormal.x + tabF[n].normal.x, l_voxelArray[currentIndex].sumNormal.y + tabF[n].normal.y, l_voxelArray[currentIndex].sumNormal.z + tabF[n].normal.z);
+										if(drain) 	l_voxelArray[currentIndex].sumDrain = l_voxelArray[currentIndex].sumDrain + tabF[n].drain;
+										if(gradient)l_voxelArray[currentIndex].sumGradient = l_voxelArray[currentIndex].sumGradient + tabF[n].gradient;
+										if(surface) l_voxelArray[currentIndex].sumSurface = l_voxelArray[currentIndex].sumSurface + tabF[n].surface;
+										if(bending) l_voxelArray[currentIndex].sumBending = l_voxelArray[currentIndex].sumBending + tabF[n].bending;	
+									}
+								}
+							}
+						}					
+					}
+				}
+				/* if the leaf is not empty, save its voxels */
+				if(is_intersec){
+					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
+					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
+					
+					/* Upgrade the Leaf indexation */
+					l_queue.push_back(currentLeaf);
+					currentLeaf.id++;
+					
+					is_intersec = false;
+				}
+			}
+		}
 	}
+	std::cout<<"-> Voxelisation finished !"<<std::endl;
+	
+	std::cout << "Number of leaves saved : "<< l_queue.size() << std::endl;
 
-	test_fic = fwrite(arguments, sizeof(uint16_t), 7, voxelFile);
-	test_fic = fwrite(l_voxelArray, l_voxArrLength*sizeof(VoxelData), 1, voxelFile);
-
-	fclose(voxelFile);
+	/* writing the Leaf chunck */
+	Leaf* leafArray = new Leaf[l_queue.size()];
+	uint16_t cpt = 0;
+	for(std::vector<Leaf>::iterator idx=l_queue.begin();idx!=l_queue.end();++idx){
+		leafArray[cpt] = *idx;
+		cpt++;
+	}
+	test_cache = drn_writer_add_chunk(&cache, leafArray, l_queue.size()*sizeof(Leaf));
+	
+	/* Close the DATA file */
+	test_cache = drn_close_writer(&cache);
+	if(test_cache < 0){ throw std::runtime_error("unable to close the data file"); }
 	
 	delete[] positionsData;
 	delete[] facesData;
@@ -512,6 +556,7 @@ int main(int argc, char** argv) {
 	delete[] tabV;
 	delete[] tabF;
 	delete[] l_voxelArray;
+	delete[] leafArray;
 
 	return EXIT_SUCCESS;
 }

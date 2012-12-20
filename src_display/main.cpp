@@ -3,6 +3,7 @@
 #include <SDL/SDL.h>
 #include <GL/glew.h>
 #include <stdint.h>
+#include <stdexcept>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -16,6 +17,8 @@
 #include "cameras/TrackBallCamera.hpp"
 #include "cameras/FreeFlyCamera.hpp"
 
+#include "drn/drn_reader.h"
+
 #define FRAME_RATE 60
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
@@ -24,7 +27,7 @@ static const size_t BYTES_PER_PIXEL = 32;
 static const size_t POSITION_LOCATION = 0;
 static const size_t GRID_3D_SIZE = 2;
 
-uint32_t reduceTab(uint32_t nbSub, VoxelData *tabVoxel, uint32_t displayMode){
+uint32_t reduceTab(uint16_t nbSub, VoxelData *tabVoxel, uint16_t displayMode){
 
 	//NB notation means the old nbSub
 	uint32_t nbSubX = nbSub;	// = NBX/2
@@ -98,7 +101,7 @@ uint32_t reduceTab(uint32_t nbSub, VoxelData *tabVoxel, uint32_t displayMode){
 	return nbIntersectionMax;
 }
 
-uint32_t increaseTab(uint32_t nbSub, VoxelData *tabVoxel, uint32_t nbSubMax, VoxelData *tabVoxelMax, uint32_t constNbIntersectionMax, uint32_t displayMode){
+uint32_t increaseTab(uint16_t nbSub, VoxelData *tabVoxel, uint16_t nbSubMax, VoxelData *tabVoxelMax, uint32_t constNbIntersectionMax, uint16_t displayMode){
 	
 	uint32_t nbSubMaxY = nbSubMax;
 	uint32_t nbIntersectionMax = constNbIntersectionMax;
@@ -127,7 +130,6 @@ void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersecti
 	NbIntersectionLocation = glGetUniformLocation(program, "uNbIntersection");
 	NormSumLocation = glGetUniformLocation(program, "uNormSum");
 	LightVectLocation = glGetUniformLocation(program, "uLightVect");
-	
 }
 
 int main(int argc, char** argv){
@@ -141,26 +143,46 @@ int main(int argc, char** argv){
 		return EXIT_FAILURE;
 	}
 
-	uint32_t arguments[6];
-		//0 : nbSub
-		//1 : bending
-		//2 : drain
-		//3 : gradient
-		//4 : normal
-		//5 : surface
+	/* Open DATA file */
+	drn_t cache;
+	int32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
+	if(test_cache < 0){ throw std::runtime_error("unable to open data file"); }
 
-	test_fic = fread(arguments, sizeof(uint32_t), 6, voxelFile);
-	uint32_t nbSubMax = arguments[0];
-	uint32_t nbSubMaxY = nbSubMax; //number of subdivisions on Y
+	/* Getting the number of chunks saved in the voxel_data file */
+	uint64_t nbChunks = drn_get_chunk_count(&cache);
+	std::cout << "number of chunks :" << nbChunks-1 << std::endl;
 
-	uint32_t lengthTabVoxel = nbSubMax*nbSubMaxY*nbSubMax;
+	/* Getting the config data */
+	uint16_t arguments[7];
+		//0 : nbSub_lvl1
+		//1 : nbSub_lvl2
+		//2 : bending
+		//3 : drain
+		//4 : gradient
+		//5 : normal
+		//6 : surface
+
+	test_cache = drn_read_chunk(&cache, 0, arguments);
+
+	uint16_t nbSub_lvl1 = arguments[0];
+	uint16_t nbSubMaxLeaf = arguments[1];
+
+	uint32_t lengthTabVoxel = nbSubMaxLeaf*nbSubMaxLeaf*nbSubMaxLeaf;
 	VoxelData* tabVoxelMax = new VoxelData[lengthTabVoxel];
-	test_fic = fread(tabVoxelMax, lengthTabVoxel*sizeof(VoxelData), 1, voxelFile);
-	
-	uint32_t nbSub = nbSubMax;
-	uint32_t nbSubY = nbSubMaxY;
+
+/* Getting the first leafArray */
+	test_cache = drn_read_chunk(&cache, 1, tabVoxelMax);
+
+/* Getting the leaf chunk (last chunk) */
+	uint64_t nbLeaves = nbChunks -3;
+	std::cout<<"number of leaves saved : "<<nbLeaves << std::endl;
+
+	Leaf* leafArray = new Leaf[nbLeaves];
+	test_cache = drn_read_chunk(&cache, nbChunks-1, leafArray);
+
+	uint32_t nbSub = nbSubMaxLeaf;
 	uint32_t nbSubExpected = nbSub;
-	int displayMode = 0; // = 0 to display the faces, = 1 to display the normals	
+	uint16_t displayMode = 0; // = 0 to display the faces, = 1 to display the normals	
 	
 	VoxelData* tabVoxel = new VoxelData[lengthTabVoxel];
 	for(uint32_t i = 0; i<lengthTabVoxel; ++i){
@@ -171,43 +193,10 @@ int main(int argc, char** argv){
 		tabVoxel[i].sumGradient = tabVoxelMax[i].sumGradient;
 		tabVoxel[i].sumSurface = tabVoxelMax[i].sumSurface;
 	}
-	
-	if(argc > 1){
-		if(atoi(argv[1]) <= (int) nbSubMax){
-			nbSubExpected = atoi(argv[1]);
-			
-			uint32_t test = nbSubExpected;
-			uint32_t power = 0;
-			
-			while(test > 1){
-				test = test/2;
-				++power;
-			}
-			
-			uint32_t nbLow = pow(2,power);
-			uint32_t nbUp = pow(2,power+1);
-			
-			if(nbSubExpected - nbLow < nbUp - nbSubExpected){
-				nbSubExpected = nbLow;
-			}else{
-				nbSubExpected = nbUp;
-			}
-			
-			if(nbSubExpected == 0){
-				nbSubExpected = nbSubMax;
-				std::cout << "-> ! nbSub = 0, nbSub initialisé à " << nbSubMax << std::endl;
-			}else{
-				std::cout << "-> Nombre de subdivisions arrondi à la puissance de 2 la plus proche" << std::endl;
-			}
-		}else{
-			std::cout << "précision demandée supérieure au nb de subdivs max" << std::endl;
-		}
-	}
-	
+		
 	std::cout << "-> nbSub : " << nbSubExpected << std::endl;
-	
-	
-	fclose(voxelFile);
+
+	test_cache = drn_close(&cache);
 
 	uint32_t nbIntersectionMax = 0;
 	for(uint32_t i=0; i<lengthTabVoxel;++i){
@@ -220,11 +209,10 @@ int main(int argc, char** argv){
 	
 	while(nbSub > nbSubExpected){
 		nbSub /= 2;
-		nbSubY /=2;
-		nbIntersectionMax = increaseTab(nbSub, tabVoxel, nbSubMax, tabVoxelMax, constNbIntersectionMax, displayMode);
+		nbIntersectionMax = increaseTab(nbSub, tabVoxel, nbSubMaxLeaf, tabVoxelMax, constNbIntersectionMax, displayMode);
 	}
 	
-	
+
 	/* ************************************************************* */
 	/* *************INITIALISATION OPENGL/SDL*********************** */
 	/* ************************************************************* */
@@ -245,7 +233,7 @@ int main(int argc, char** argv){
 	/* *********************************** */
 	/* ****** CREATION DES FORMES ******** */
 	/* *********************************** */
-	
+
 	// CREATION DU CUBE 
 	Cube aCube = createCube(-0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f);
 	
@@ -384,6 +372,7 @@ int main(int argc, char** argv){
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
 	/* ************************************************************* */
+
 	bool done = false;
 	while(!done) {
 		// Initilisation compteur
@@ -393,7 +382,6 @@ int main(int argc, char** argv){
 		start = SDL_GetTicks();
 
 		//PRE_IDLE
-		nbSubY = nbSub;
 		double cubeSize = GRID_3D_SIZE/(double)nbSub;
 
 		// Nettoyage de la fenêtre
@@ -401,7 +389,7 @@ int main(int argc, char** argv){
 				
 		if(changeNbSubPlus){ //si on a appuyé sur +
 			std::cout <<"-> New number of subdivisions : "<<nbSub<<std::endl;
-			nbIntersectionMax = increaseTab(nbSub,tabVoxel,nbSubMax,tabVoxelMax, constNbIntersectionMax, displayMode);
+			nbIntersectionMax = increaseTab(nbSub,tabVoxel,nbSubMaxLeaf,tabVoxelMax, constNbIntersectionMax, displayMode);
 			changeNbSubPlus = false;
 		}
 		
@@ -427,10 +415,10 @@ int main(int argc, char** argv){
 			
 			// Affichage de la grille
 			for(uint32_t k=0;k<nbSub;++k){
-				for(uint32_t j=0;j<nbSubY;++j){
+				for(uint32_t j=0;j<nbSub;++j){
 					for(uint32_t i=0;i<nbSub;++i){
-						uint32_t currentIndex = k*nbSub*nbSubY + j*nbSub + i;
-						uint32_t currentNbIntersection = tabVoxel[k*nbSub*nbSubY + j*nbSub + i].nbFaces;
+						uint32_t currentIndex = k*nbSub*nbSub + j*nbSub + i;
+						uint32_t currentNbIntersection = tabVoxel[k*nbSub*nbSub + j*nbSub + i].nbFaces;
 						if(currentNbIntersection != 0){
 							ms.push();
 								ms.translate(glm::vec3(i*cubeSize, j*cubeSize, k*cubeSize)); //PLACEMENT OF EACH GRID CUBE
@@ -444,20 +432,7 @@ int main(int argc, char** argv){
 									glDrawArrays(GL_TRIANGLES, 0, aCube.nbVertices);
 								glBindVertexArray(0);
 							ms.pop();
-						}else{ //TO REMOVE - begin
-							ms.push();
-								ms.translate(glm::vec3(i*cubeSize, j*cubeSize, k*cubeSize)); //PLACEMENT OF EACH GRID CUBE
-								ms.scale(glm::vec3(cubeSize));// RE-SCALE EACH GRID CUBE
-							
-								glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-								glUniform2i(NbIntersectionLocation, currentNbIntersection, nbIntersectionMax);
-								glUniform3f(NormSumLocation, tabVoxel[currentIndex].sumNormal.x, tabVoxel[currentIndex].sumNormal.y, tabVoxel[currentIndex].sumNormal.z);
-							
-								glBindVertexArray(cubeVAO);
-									glDrawArrays(GL_POINTS, 0, aCube.nbVertices);
-								glBindVertexArray(0);
-							ms.pop();
-						} //TO REMOVE - end
+						}
 					}
 				}
 			}
@@ -482,7 +457,7 @@ int main(int argc, char** argv){
 						
 						case SDLK_KP_PLUS:
 						case SDLK_p:
-							if(nbSub != nbSubMax){
+							if(nbSub != nbSubMaxLeaf){
 								nbSub *= 2;
 								changeNbSubPlus = true;
 							}else std::cout << "You reached the maximum number of subdivisions." << std::endl;						
@@ -506,7 +481,7 @@ int main(int argc, char** argv){
 							break;
 
 						case SDLK_n:
-							if(arguments[4]){
+							if(arguments[5]){
 								resetShaderProgram(programNorm, MVPLocation, NbIntersectionLocation, NormSumLocation, LightVectLocation);
 								displayMode = 4;
 							}
@@ -664,6 +639,6 @@ int main(int argc, char** argv){
 	
 	delete[] tabVoxel;
 	delete[] tabVoxelMax;
-	
+
 	return (EXIT_SUCCESS);
 }
