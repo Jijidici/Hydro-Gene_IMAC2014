@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 #include <stdint.h>
 #include <stdexcept>
+#include <map>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -26,6 +27,29 @@ static const size_t WINDOW_WIDTH = 600, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
 static const size_t POSITION_LOCATION = 0;
 static const size_t GRID_3D_SIZE = 2;
+
+void loadInMemory(std::map<uint32_t, VoxelData*>& memory, Leaf l, uint32_t l_id,  uint16_t nbSub_lvl2){
+	drn_t cache;
+	uint32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
+	if(test_cache <0){ throw std::runtime_error("unable to open data file"); }
+	
+	VoxelData* voxArray = NULL;
+	voxArray = new VoxelData[nbSub_lvl2*nbSub_lvl2*nbSub_lvl2];
+	test_cache = drn_read_chunk(&cache, l.id, voxArray);
+	if(test_cache <0){ throw std::runtime_error("unable to read data file"); }
+	
+	test_cache = drn_close(&cache);
+	if(test_cache <0){ throw std::runtime_error("unable to close data file"); }
+	
+	//add to map
+	memory.insert(memory.end(), std::make_pair(l_id, voxArray));
+}
+
+void freeInMemory(std::map<uint32_t, VoxelData*>& memory, uint32_t l_id){
+	delete[] memory[l_id];
+	memory[l_id] = NULL;
+	memory.erase(l_id);
+}
 
 uint32_t reduceTab(uint16_t nbSub, VoxelData *tabVoxel, uint16_t displayMode){
 
@@ -174,15 +198,24 @@ int main(int argc, char** argv){
 	test_cache = drn_read_chunk(&cache, 1, tabVoxelMax);
 
 /* Getting the leaf chunk (last chunk) */
-	uint64_t nbLeaves = nbChunks -3;
+	uint32_t nbLeaves = nbChunks - 3;
 	std::cout<<"number of leaves saved : "<<nbLeaves << std::endl;
 
 	Leaf* leafArray = new Leaf[nbLeaves];
-	test_cache = drn_read_chunk(&cache, nbChunks-1, leafArray);
+	test_cache = drn_read_chunk(&cache, nbChunks-2, leafArray);
 
 	uint32_t nbSub = nbSubMaxLeaf;
 	uint32_t nbSubExpected = nbSub;
 	uint16_t displayMode = 0; // = 0 to display the faces, = 1 to display the normals	
+	
+	test_cache = drn_close(&cache);
+	
+	/* Memory cache - map of voxelarray */
+	std::map<uint32_t, VoxelData*> memory;
+	
+	for(uint32_t idx=0;idx<nbLeaves;++idx){
+		loadInMemory(memory, leafArray[idx], idx, nbSubMaxLeaf);
+	}
 	
 	VoxelData* tabVoxel = new VoxelData[lengthTabVoxel];
 	for(uint32_t i = 0; i<lengthTabVoxel; ++i){
@@ -195,8 +228,7 @@ int main(int argc, char** argv){
 	}
 		
 	std::cout << "-> nbSub : " << nbSubExpected << std::endl;
-
-	test_cache = drn_close(&cache);
+	
 
 	uint32_t nbIntersectionMax = 0;
 	for(uint32_t i=0; i<lengthTabVoxel;++i){
@@ -636,6 +668,11 @@ int main(int argc, char** argv){
 	// Destruction des ressources OpenGL
 	glDeleteBuffers(1, &cubeVBO);
 	glDeleteVertexArrays(1, &cubeVAO);
+	
+	//free cache memory
+	for(uint32_t idx=0;idx<nbLeaves;++idx){
+		freeInMemory(memory, idx);
+	}
 	
 	delete[] tabVoxel;
 	delete[] tabVoxelMax;
