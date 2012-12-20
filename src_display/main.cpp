@@ -28,6 +28,31 @@ static const size_t BYTES_PER_PIXEL = 32;
 static const size_t POSITION_LOCATION = 0;
 static const size_t GRID_3D_SIZE = 2;
 
+void displayLeafGrid(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize){
+	for(uint32_t k=0;k<nbSub;++k){
+		for(uint32_t j=0;j<nbSub;++j){
+			for(uint32_t i=0;i<nbSub;++i){
+				uint32_t currentIndex = k*nbSub*nbSub + j*nbSub + i;
+				uint32_t currentNbIntersection = voxArray[k*nbSub*nbSub + j*nbSub + i].nbFaces;
+				if(currentNbIntersection != 0){
+					ms.push();
+						ms.translate(glm::vec3(i*cubeSize + l.pos.x, j*cubeSize + l.pos.y, k*cubeSize + l.pos.z)); //PLACEMENT OF EACH GRID CUBE
+						ms.scale(glm::vec3(cubeSize));// RE-SCALE EACH GRID CUBE
+					
+						glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+						glUniform2i(NbIntersectionLocation, currentNbIntersection, nbIntersectionMax);
+						glUniform3f(NormSumLocation, voxArray[currentIndex].sumNormal.x, voxArray[currentIndex].sumNormal.y, voxArray[currentIndex].sumNormal.z);
+					
+						glBindVertexArray(cubeVAO);
+							glDrawArrays(GL_TRIANGLES, 0, nbVertices);
+						glBindVertexArray(0);
+					ms.pop();
+				}
+			}
+		}
+	}
+}
+
 void loadInMemory(std::map<uint32_t, VoxelData*>& memory, Leaf l, uint32_t l_id,  uint16_t nbSub_lvl2){
 	drn_t cache;
 	uint32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
@@ -414,7 +439,7 @@ int main(int argc, char** argv){
 		start = SDL_GetTicks();
 
 		//PRE_IDLE
-		double cubeSize = GRID_3D_SIZE/(double)nbSub;
+		double cubeSize = GRID_3D_SIZE/(double)(nbSub_lvl1*nbSub);
 
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -445,29 +470,11 @@ int main(int argc, char** argv){
 			ms.translate(glm::vec3(-1.f, -1.f, -1.f)); //CENTER TO THE ORIGIN
 			glUniform3f(LightVectLocation, light.x, light.y, light.z);
 			
-			// Affichage de la grille
-			for(uint32_t k=0;k<nbSub;++k){
-				for(uint32_t j=0;j<nbSub;++j){
-					for(uint32_t i=0;i<nbSub;++i){
-						uint32_t currentIndex = k*nbSub*nbSub + j*nbSub + i;
-						uint32_t currentNbIntersection = tabVoxel[k*nbSub*nbSub + j*nbSub + i].nbFaces;
-						if(currentNbIntersection != 0){
-							ms.push();
-								ms.translate(glm::vec3(i*cubeSize, j*cubeSize, k*cubeSize)); //PLACEMENT OF EACH GRID CUBE
-								ms.scale(glm::vec3(cubeSize));// RE-SCALE EACH GRID CUBE
-							
-								glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-								glUniform2i(NbIntersectionLocation, currentNbIntersection, nbIntersectionMax);
-								glUniform3f(NormSumLocation, tabVoxel[currentIndex].sumNormal.x, tabVoxel[currentIndex].sumNormal.y, tabVoxel[currentIndex].sumNormal.z);
-							
-								glBindVertexArray(cubeVAO);
-									glDrawArrays(GL_TRIANGLES, 0, aCube.nbVertices);
-								glBindVertexArray(0);
-							ms.pop();
-						}
-					}
-				}
+			// For each loaded leaf
+			for(std::map<uint32_t, VoxelData*>::iterator idx=memory.begin(); idx!=memory.end(); ++idx){
+				displayLeafGrid(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, (*idx).second, leafArray[(*idx).first], nbSub, cubeSize);
 			}
+			
 		ms.pop();
 
 		// Mise à jour de l'affichage
