@@ -28,3 +28,8 @@ void freeInMemory(std::map<uint32_t, VoxelData*>& memory, uint32_t l_id){
 	memory[l_id] = NULL;
 	memory.erase(l_id);
 }
+
+double computeDistanceLeafCamera(Chunk currentChunk, glm::mat4& view, double halfLeafSize){
+	glm::vec4 homogenPos = glm::vec4(currentChunk.pos.x + halfLeafSize, currentChunk.pos.y + halfLeafSize, currentChunk.pos.z + halfLeafSize, 1.);
+	return glm::length(view*homogenPos);
+}  

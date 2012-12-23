@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 #include <stdint.h>
 #include <stdexcept>
-#include <map>
+#include <vector>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -137,11 +137,6 @@ void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersecti
 	LightVectLocation = glGetUniformLocation(program, "uLightVect");
 }
 
-double computeDistanceLeafCamera(Chunk currentChunk, glm::mat4& view, double halfLeafSize){
-	glm::vec4 homogenPos = glm::vec4(currentChunk.pos.x + halfLeafSize, currentChunk.pos.y + halfLeafSize, currentChunk.pos.z + halfLeafSize, 1.);
-	return glm::length(view*homogenPos);
-}  
-
 int main(int argc, char** argv){
 	
 	// OPEN AND READ THE VOXEL-INTERSECTION FILE
@@ -197,11 +192,11 @@ int main(int argc, char** argv){
 	test_cache = drn_close(&cache);
 	
 	/* Memory cache - vector of voxelarray */
-	std::map<uint32_t, VoxelData*> memory;
+	std::vector<Chunk> memory;
 	
-	for(uint32_t idx=0;idx<nbLeaves;++idx){
+	/*for(uint32_t idx=0;idx<nbLeaves;++idx){
 		loadInMemory(memory, leafArray[idx], idx, nbSubMaxLeaf);
-	}
+	}*/
 	
 	VoxelData* tabVoxel = new VoxelData[lengthTabVoxel];
 	for(uint32_t i = 0; i<lengthTabVoxel; ++i){
@@ -431,14 +426,8 @@ int main(int argc, char** argv){
 			ms.mult(V);
 			glUniform3f(LightVectLocation, light.x, light.y, light.z);
 			
-			/* Calculate distance leaf-camera */
-			Chunk aChunk;
-			aChunk.voxels = memory[1];
-			aChunk.pos = leafArray[1].pos;
-			std::cout<<computeDistanceLeafCamera(aChunk, V, leafSize/2.)<<std::endl;
-			
 			// For each loaded leaf
-			for(std::map<uint32_t, VoxelData*>::iterator idx=memory.begin(); idx!=memory.end(); ++idx){
+			for(std::vector<Chunk>::iterator idx=memory.begin(); idx!=memory.end(); ++idx){
 				if(true){
 					display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, (*idx).second, leafArray[(*idx).first], nbSub, cubeSize);
 				}else{
@@ -645,9 +634,9 @@ int main(int argc, char** argv){
 	glDeleteVertexArrays(1, &cubeVAO);
 	
 	//free cache memory
-	for(uint32_t idx=0;idx<nbLeaves;++idx){
+	/*for(uint32_t idx=0;idx<nbLeaves;++idx){
 		freeInMemory(memory, idx);
-	}
+	}*/
 	
 	delete[] tabVoxel;
 	delete[] tabVoxelMax;
