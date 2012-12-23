@@ -1,5 +1,5 @@
-#ifndef __LVL_DISPLAYING__
-#define __LVL_DISPLAYING__
+#ifndef __LVL_DISPLAYING_HPP__
+#define __LVL_DISPLAYING_HPP__
 
 #include <stdint.h>
 #include <GL/glew.h>
