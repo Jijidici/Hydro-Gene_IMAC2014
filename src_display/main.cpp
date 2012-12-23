@@ -341,7 +341,10 @@ int main(int argc, char** argv){
 	// Creation des Matrices
 	GLint MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
 	
-	glm::mat4 P = glm::perspective(90.f, WINDOW_WIDTH / (float) WINDOW_HEIGHT, 0.1f, 1000.f);
+	float verticalFieldOfView = 90.0;
+	float nearDistance = 0.1;
+	float farDistance = 100.;
+	glm::mat4 P = glm::perspective(verticalFieldOfView, WINDOW_WIDTH / (float) WINDOW_HEIGHT, nearDistance, farDistance);
 	
 	MatrixStack ms;
 	ms.set(P);
@@ -358,7 +361,7 @@ int main(int argc, char** argv){
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
-	hydrogene::FreeFlyCamera ffCam;
+	hydrogene::FreeFlyCamera ffCam(nearDistance, farDistance, verticalFieldOfView);
 
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
@@ -543,6 +546,10 @@ int main(int argc, char** argv){
 							if(currentCam == FREE_FLY){
 								is_dKeyPressed = false;
 							}
+							break;
+
+						case SDLK_SPACE:
+							std::cout << "test cam : " << ffCam.m_frustumFarPlanePoint.x << std::endl;
 							break;
 
 						default:

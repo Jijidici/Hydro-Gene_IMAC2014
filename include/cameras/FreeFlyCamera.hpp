@@ -13,11 +13,31 @@ class FreeFlyCamera{
 		glm::vec3 m_FrontVector;
 		glm::vec3 m_LeftVector;
 		glm::vec3 m_UpVector;
+		
+		float m_nearDistance, m_farDistance, m_verticalFieldOfView;
 
 		void computeDirectionVectors();
+		void computeFrustumPlanes();
 
 	public:
-		FreeFlyCamera();
+		
+		glm::vec3 m_frustumNearPlanePoint;
+		glm::vec3 m_frustumFarPlanePoint;
+		glm::vec3 m_frustumTopPlanePoint;
+		glm::vec3 m_frustumRightPlanePoint;
+		glm::vec3 m_frustumBottomPlanePoint;
+		glm::vec3 m_frustumLeftPlanePoint;
+		
+		glm::vec3 m_frustumNearPlaneNormal;
+		glm::vec3 m_frustumFarPlaneNormal;
+		glm::vec3 m_frustumTopPlaneNormal;
+		glm::vec3 m_frustumRightPlaneNormal;
+		glm::vec3 m_frustumBottomPlaneNormal;
+		glm::vec3 m_frustumLeftPlaneNormal;
+	
+	
+		FreeFlyCamera(float nearDistance, float farDistance, float verticalFieldOfView);
+		//~ FreeFlyCamera();
 		void moveLeft(float const t);
 		void moveFront(float const t);
 		void rotateLeft(float degree);
