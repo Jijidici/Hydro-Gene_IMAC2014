@@ -7,7 +7,7 @@
 #include "data_types.hpp"
 #include  "tools/MatrixStack.hpp"
 
-void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize){
+void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, glm::dvec3 pos, uint16_t nbSub, double cubeSize){
 	for(uint32_t k=0;k<nbSub;++k){
 		for(uint32_t j=0;j<nbSub;++j){
 			for(uint32_t i=0;i<nbSub;++i){
@@ -15,7 +15,7 @@ void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbI
 				uint32_t currentNbIntersection = voxArray[k*nbSub*nbSub + j*nbSub + i].nbFaces;
 				if(currentNbIntersection != 0){
 					ms.push();
-						ms.translate(glm::vec3(i*cubeSize + l.pos.x, j*cubeSize + l.pos.y, k*cubeSize + l.pos.z)); //PLACEMENT OF EACH GRID CUBE
+						ms.translate(glm::vec3(i*cubeSize + pos.x, j*cubeSize + pos.y, k*cubeSize + pos.z)); //PLACEMENT OF EACH GRID CUBE
 						ms.scale(glm::vec3(cubeSize));// RE-SCALE EACH GRID CUBE
 					
 						glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
