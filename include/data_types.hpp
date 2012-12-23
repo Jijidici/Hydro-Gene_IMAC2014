@@ -23,6 +23,7 @@ typedef struct s_leaf{
 typedef struct s_chunk{
 	VoxelData* voxels;
 	glm::dvec3 pos;
+	uint16_t idxLeaf;
 }Chunk;
 
 #endif

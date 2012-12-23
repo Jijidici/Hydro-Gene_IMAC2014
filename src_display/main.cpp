@@ -403,6 +403,7 @@ int main(int argc, char** argv){
 		//PRE_IDLE
 		
 		double leafSize = GRID_3D_SIZE/(double)nbSub_lvl1;
+		double halfLeafSize = leafSize*0.5;
 		double cubeSize = leafSize/(double)nbSub;
 
 		// Nettoyage de la fenêtre
@@ -434,11 +435,32 @@ int main(int argc, char** argv){
 			glUniform3f(LightVectLocation, light.x, light.y, light.z);
 			
 			// For each loaded leaf
-			for(std::vector<Chunk>::iterator idx=memory.begin(); idx!=memory.end(); ++idx){
+			/*for(std::vector<Chunk>::iterator idx=memory.begin(); idx!=memory.end(); ++idx){
 				if(true){
 					display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, (*idx).voxels, (*idx).pos, nbSub, cubeSize);
 				}else{
 					display_lvl1(cubeVAO, ms, MVPLocation, idx->pos, leafSize);
+				}
+			}*/
+			
+			//For each leaf
+			for(uint16_t idx=0;idx<nbLeaves;++idx){
+				double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
+				if(d<THRESHOLD_DISTANCE){
+					if(!loadedLeaf[idx]){
+						freeInMemory(memory, loadedLeaf);
+						loadInMemory(memory, leafArray[idx], idx, nbSubMaxLeaf);
+						loadedLeaf[idx] = true;
+						//sort
+					}
+					for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+						if(idx == n->idxLeaf){
+							display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, n->voxels, n->pos, nbSubMaxLeaf, cubeSize);
+							//break;
+						}
+					}
+				}else{
+					display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
 				}
 			}
 			
@@ -641,9 +663,9 @@ int main(int argc, char** argv){
 	glDeleteVertexArrays(1, &cubeVAO);
 	
 	//free cache memory
-	for(uint32_t idx=0;idx<nbLeaves;++idx){
-		loadedLeaf[idx] = false;
-		freeInMemory(memory);
+	uint16_t nbLoadedLeaves = memory.size();
+	for(uint16_t idx=0;idx<nbLoadedLeaves;++idx){
+		freeInMemory(memory, loadedLeaf);
 	}
 	
 	delete[] tabVoxel;

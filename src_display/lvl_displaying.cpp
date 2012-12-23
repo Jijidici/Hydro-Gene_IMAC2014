@@ -7,7 +7,7 @@
 #include "data_types.hpp"
 #include  "tools/MatrixStack.hpp"
 
-void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, glm::dvec3 pos, uint16_t nbSub, double cubeSize){
+void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, VoxelData* voxArray, glm::dvec3 pos, uint16_t nbSub, double cubeSize){
 	for(uint32_t k=0;k<nbSub;++k){
 		for(uint32_t j=0;j<nbSub;++j){
 			for(uint32_t i=0;i<nbSub;++i){
@@ -23,7 +23,7 @@ void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbI
 						glUniform3f(NormSumLocation, voxArray[currentIndex].sumNormal.x, voxArray[currentIndex].sumNormal.y, voxArray[currentIndex].sumNormal.z);
 					
 						glBindVertexArray(cubeVAO);
-							glDrawArrays(GL_TRIANGLES, 0, nbVertices);
+							glDrawArrays(GL_TRIANGLES, 0, 36);
 						glBindVertexArray(0);
 					ms.pop();
 				}
@@ -32,11 +32,10 @@ void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbI
 	}
 }
 
-void display_lvl1(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, glm::dvec3 pos, double cubeSize){
-	double halfCubeSize = 0.5*cubeSize;
+void display_lvl1(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, glm::dvec3 pos, double halfLeafSize){
 	ms.push();
-		ms.translate(glm::vec3(pos.x + halfCubeSize, pos.y + halfCubeSize, pos.z + halfCubeSize)); //PLACEMENT OF CUBE
-		ms.scale(glm::vec3(cubeSize));// RE-SCALE EACH GRID CUBE
+		ms.translate(glm::vec3(pos.x + halfLeafSize, pos.y + halfLeafSize, pos.z + halfLeafSize)); //PLACEMENT OF THE LEAF
+		ms.scale(glm::vec3(2*halfLeafSize));// RE-SCALE EACH GRID CUBE
 	
 		glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 	

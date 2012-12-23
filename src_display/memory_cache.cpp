@@ -10,7 +10,7 @@ size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf,
 	size_t currentMemSize = 0;
 	uint32_t currentLeaf = 0;
 	while(currentMemSize + chunkBytesSize < MAX_MEMORY_SIZE){
-		loadInMemory(memory, leafArray[currentLeaf], nbSub_lvl2);
+		loadInMemory(memory, leafArray[currentLeaf], currentLeaf, nbSub_lvl2);
 		loadedLeaf[currentLeaf] = true;
 		currentLeaf++;
 		currentMemSize+= chunkBytesSize; 
@@ -18,7 +18,7 @@ size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf,
 	return currentMemSize;
 }
 
-void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t nbSub_lvl2){
+void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, uint16_t nbSub_lvl2){
 	drn_t cache;
 	uint32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
 	if(test_cache <0){ throw std::runtime_error("unable to open data file"); }
@@ -36,17 +36,18 @@ void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t nbSub_lvl2){
 	Chunk newChunk;
 	newChunk.voxels = voxArray;
 	newChunk.pos = l.pos;
+	newChunk.idxLeaf = l_idx;
 	memory.push_back(newChunk);
 }
 
-void freeInMemory(std::vector<Chunk>& memory){
-	Chunk lastElt = *(memory.end());
+void freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
+	Chunk lastElt = memory.back();
+	loadedLeaf[lastElt.idxLeaf] = false;
 	delete[] lastElt.voxels;
-	lastElt.voxels = NULL;
 	memory.pop_back();
 }
 
-double computeDistanceLeafCamera(Chunk currentChunk, glm::mat4& view, double halfLeafSize){
-	glm::vec4 homogenPos = glm::vec4(currentChunk.pos.x + halfLeafSize, currentChunk.pos.y + halfLeafSize, currentChunk.pos.z + halfLeafSize, 1.);
-	return glm::length(view*homogenPos);
+double computeDistanceLeafCamera(Leaf currentLeaf, glm::mat4& view, double halfLeafSize){
+	glm::vec4 homogenPos = glm::vec4(currentLeaf.pos.x + halfLeafSize, currentLeaf.pos.y + halfLeafSize, currentLeaf.pos.z + halfLeafSize, 1.);
+	return glm::length(view*homogenPos) -1;
 }  
