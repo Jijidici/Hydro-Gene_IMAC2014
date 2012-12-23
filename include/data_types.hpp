@@ -20,7 +20,7 @@ typedef struct s_leaf{
 
 typedef struct s_chunk{
 	VoxelData* voxels;
-	Leaf* l;
+	glm::dvec3 pos;
 }Chunk;
 
 #endif

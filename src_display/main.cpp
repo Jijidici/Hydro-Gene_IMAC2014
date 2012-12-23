@@ -30,6 +30,7 @@ static const size_t BYTES_PER_PIXEL = 32;
 static const size_t POSITION_LOCATION = 0;
 static const size_t GRID_3D_SIZE = 2;
 static const size_t MAX_MEMORY_CACHE = 2097152;
+static const double THRESHOLD_DISTANCE = 0.5;
 
 uint32_t reduceTab(uint16_t nbSub, VoxelData *tabVoxel, uint16_t displayMode){
 
@@ -135,6 +136,11 @@ void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersecti
 	NormSumLocation = glGetUniformLocation(program, "uNormSum");
 	LightVectLocation = glGetUniformLocation(program, "uLightVect");
 }
+
+double computeDistanceLeafCamera(Chunk currentChunk, glm::mat4& view, double halfLeafSize){
+	glm::vec4 homogenPos = glm::vec4(currentChunk.pos.x + halfLeafSize, currentChunk.pos.y + halfLeafSize, currentChunk.pos.z + halfLeafSize, 1.);
+	return glm::length(view*homogenPos);
+}  
 
 int main(int argc, char** argv){
 	
@@ -354,7 +360,6 @@ int main(int argc, char** argv){
 	
 	// Creation Light
 	glm::vec3 light(-1.f,0.5f,0.f);
-	float lightAngle = 0.05;
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -425,6 +430,12 @@ int main(int argc, char** argv){
 			}
 			ms.mult(V);
 			glUniform3f(LightVectLocation, light.x, light.y, light.z);
+			
+			/* Calculate distance leaf-camera */
+			Chunk aChunk;
+			aChunk.voxels = memory[1];
+			aChunk.pos = leafArray[1].pos;
+			std::cout<<computeDistanceLeafCamera(aChunk, V, leafSize/2.)<<std::endl;
 			
 			// For each loaded leaf
 			for(std::map<uint32_t, VoxelData*>::iterator idx=memory.begin(); idx!=memory.end(); ++idx){
@@ -620,9 +631,6 @@ int main(int argc, char** argv){
 		if(is_rKeyPressed){ ffCam.moveLeft(-0.01); }
 		if(is_uKeyPressed){ ffCam.moveFront(0.01); }
 		if(is_dKeyPressed){ ffCam.moveFront(-0.01); }
-
-		//ILLUMINATION
-		//light.x += lightAngle;
 
 		// Gestion compteur
 		end = SDL_GetTicks();
