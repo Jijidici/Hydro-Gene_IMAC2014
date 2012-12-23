@@ -29,6 +29,7 @@ static const size_t WINDOW_WIDTH = 600, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
 static const size_t POSITION_LOCATION = 0;
 static const size_t GRID_3D_SIZE = 2;
+static const size_t MAX_MEMORY_CACHE = 2097152;
 
 uint32_t reduceTab(uint16_t nbSub, VoxelData *tabVoxel, uint16_t displayMode){
 
@@ -173,10 +174,10 @@ int main(int argc, char** argv){
 	uint32_t lengthTabVoxel = nbSubMaxLeaf*nbSubMaxLeaf*nbSubMaxLeaf;
 	VoxelData* tabVoxelMax = new VoxelData[lengthTabVoxel];
 
-/* Getting the first leafArray */
+	/* Getting the first leafArray */
 	test_cache = drn_read_chunk(&cache, 1, tabVoxelMax);
 
-/* Getting the leaf chunk (last chunk) */
+	/* Getting the leaf chunk (last chunk) */
 	uint32_t nbLeaves = nbChunks - 3;
 	std::cout<<"number of leaves saved : "<<nbLeaves << std::endl;
 
@@ -189,7 +190,7 @@ int main(int argc, char** argv){
 	
 	test_cache = drn_close(&cache);
 	
-	/* Memory cache - map of voxelarray */
+	/* Memory cache - vector of voxelarray */
 	std::map<uint32_t, VoxelData*> memory;
 	
 	for(uint32_t idx=0;idx<nbLeaves;++idx){

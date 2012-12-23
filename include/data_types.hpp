@@ -18,4 +18,9 @@ typedef struct s_leaf{
 	glm::dvec3 pos;
 }Leaf;
 
+typedef struct s_chunk{
+	VoxelData* voxels;
+	Leaf* l;
+}Chunk;
+
 #endif
