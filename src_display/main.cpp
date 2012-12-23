@@ -429,10 +429,10 @@ int main(int argc, char** argv){
 			
 			// For each loaded leaf
 			for(std::vector<Chunk>::iterator idx=memory.begin(); idx!=memory.end(); ++idx){
-				if(true){
+				if(false){
 					//display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, (*idx).second, leafArray[(*idx).first], nbSub, cubeSize);
 				}else{
-					//display_lvl1(cubeVAO, ms, MVPLocation, leafArray[(*idx).first], leafSize);
+					display_lvl1(cubeVAO, ms, MVPLocation, idx->pos, leafSize);
 				}
 			}
 			

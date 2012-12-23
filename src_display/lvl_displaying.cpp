@@ -32,10 +32,10 @@ void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbI
 	}
 }
 
-void display_lvl1(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, Leaf& l, double cubeSize){
+void display_lvl1(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, glm::dvec3 pos, double cubeSize){
 	double halfCubeSize = 0.5*cubeSize;
 	ms.push();
-		ms.translate(glm::vec3(l.pos.x + halfCubeSize, l.pos.y + halfCubeSize, l.pos.z + halfCubeSize)); //PLACEMENT OF CUBE
+		ms.translate(glm::vec3(pos.x + halfCubeSize, pos.y + halfCubeSize, pos.z + halfCubeSize)); //PLACEMENT OF CUBE
 		ms.scale(glm::vec3(cubeSize));// RE-SCALE EACH GRID CUBE
 	
 		glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
