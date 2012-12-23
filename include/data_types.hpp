@@ -2,6 +2,7 @@
 #define __DATA_TYPES__
 
 #include <drn/drn_types.h>
+#include <glm/glm.hpp>
 
 typedef struct s_voxelData{ //voxels dans tabVoxel
 	glm::dvec3 sumNormal;
