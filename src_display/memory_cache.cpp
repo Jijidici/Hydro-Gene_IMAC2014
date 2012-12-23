@@ -27,10 +27,11 @@ void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t nbSub_lvl2){
 	memory.push_back(newChunk);
 }
 
-void freeInMemory(std::vector<Chunk>& memory, uint32_t l_id){
-	/*delete[] memory[l_id];
-	memory[l_id] = NULL;
-	memory.erase(l_id);*/
+void freeInMemory(std::vector<Chunk>& memory){
+	Chunk lastElt = *(memory.end());
+	delete[] lastElt.voxels;
+	lastElt.voxels = NULL;
+	memory.pop_back();
 }
 
 double computeDistanceLeafCamera(Chunk currentChunk, glm::mat4& view, double halfLeafSize){

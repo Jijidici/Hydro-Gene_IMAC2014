@@ -635,9 +635,9 @@ int main(int argc, char** argv){
 	glDeleteVertexArrays(1, &cubeVAO);
 	
 	//free cache memory
-	/*for(uint32_t idx=0;idx<nbLeaves;++idx){
-		freeInMemory(memory, idx);
-	}*/
+	for(uint32_t idx=0;idx<nbLeaves;++idx){
+		freeInMemory(memory);
+	}
 	
 	delete[] tabVoxel;
 	delete[] tabVoxelMax;
