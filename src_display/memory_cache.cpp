@@ -6,11 +6,12 @@
 #include "drn/drn_reader.h"
 #include "data_types.hpp"
 
-size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, uint16_t nbSub_lvl2, size_t chunkBytesSize){
+size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint16_t nbSub_lvl2, size_t chunkBytesSize){
 	size_t currentMemSize = 0;
 	uint32_t currentLeaf = 0;
 	while(currentMemSize + chunkBytesSize < MAX_MEMORY_SIZE){
 		loadInMemory(memory, leafArray[currentLeaf], nbSub_lvl2);
+		loadedLeaf[currentLeaf] = true;
 		currentLeaf++;
 		currentMemSize+= chunkBytesSize; 
 	}

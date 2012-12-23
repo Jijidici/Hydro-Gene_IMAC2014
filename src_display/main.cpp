@@ -186,6 +186,12 @@ int main(int argc, char** argv){
 	Leaf* leafArray = new Leaf[nbLeaves];
 	test_cache = drn_read_chunk(&cache, nbChunks-2, leafArray);
 	
+	/* Array which know if a leaf grid is loaded or not */
+	bool* loadedLeaf = new bool[nbLeaves];
+	for(uint16_t idx=0;idx<nbLeaves;++idx){
+		loadedLeaf[idx] = false;
+	}
+	
 	uint32_t nbSub = nbSubMaxLeaf;
 	uint32_t nbSubExpected = nbSub;
 	uint16_t displayMode = 0; // = 0 to display the faces, = 1 to display the normals	
@@ -195,7 +201,7 @@ int main(int argc, char** argv){
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
 	
-	size_t currentMemCache = initMemory(memory, leafArray, nbSubMaxLeaf, chunkBytesSize);
+	size_t currentMemCache = initMemory(memory, leafArray, loadedLeaf, nbSubMaxLeaf, chunkBytesSize);
 	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
 	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
 	
@@ -636,11 +642,14 @@ int main(int argc, char** argv){
 	
 	//free cache memory
 	for(uint32_t idx=0;idx<nbLeaves;++idx){
+		loadedLeaf[idx] = false;
 		freeInMemory(memory);
 	}
 	
 	delete[] tabVoxel;
 	delete[] tabVoxelMax;
+	delete[] leafArray;
+	delete[] loadedLeaf;
 
 	return (EXIT_SUCCESS);
 }
