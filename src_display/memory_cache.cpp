@@ -1,10 +1,21 @@
 #include "display/memory_cache.hpp"
 
-#include <map>
+#include <vector>
 #include <stdint.h>
 #include <stdexcept>
 #include "drn/drn_reader.h"
 #include "data_types.hpp"
+
+size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, uint16_t nbSub_lvl2, size_t chunkBytesSize){
+	size_t currentMemSize = 0;
+	uint32_t currentLeaf = 0;
+	while(currentMemSize + chunkBytesSize < MAX_MEMORY_SIZE){
+		loadInMemory(memory, leafArray[currentLeaf], nbSub_lvl2);
+		currentLeaf++;
+		currentMemSize+= chunkBytesSize; 
+	}
+	return currentMemSize;
+}
 
 void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t nbSub_lvl2){
 	drn_t cache;

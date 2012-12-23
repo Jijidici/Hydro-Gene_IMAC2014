@@ -4,6 +4,8 @@
 #include <drn/drn_types.h>
 #include <glm/glm.hpp>
 
+static const size_t VOXELDATA_BYTES_SIZE = 56;
+
 typedef struct s_voxelData{ //voxels dans tabVoxel
 	glm::dvec3 sumNormal;
 	double sumBending;

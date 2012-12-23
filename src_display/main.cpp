@@ -29,8 +29,6 @@ static const size_t WINDOW_WIDTH = 600, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
 static const size_t POSITION_LOCATION = 0;
 static const size_t GRID_3D_SIZE = 2;
-static const size_t MAX_MEMORY_CACHE = 2097152;
-static const double THRESHOLD_DISTANCE = 0.5;
 
 uint32_t reduceTab(uint16_t nbSub, VoxelData *tabVoxel, uint16_t displayMode){
 
@@ -171,11 +169,14 @@ int main(int argc, char** argv){
 
 	uint16_t nbSub_lvl1 = arguments[0];
 	uint16_t nbSubMaxLeaf = arguments[1];
-
+	
 	uint32_t lengthTabVoxel = nbSubMaxLeaf*nbSubMaxLeaf*nbSubMaxLeaf;
 	VoxelData* tabVoxelMax = new VoxelData[lengthTabVoxel];
-
-	/* Getting the first leafArray */
+	
+	size_t chunkBytesSize = lengthTabVoxel*VOXELDATA_BYTES_SIZE;
+	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
+	
+	/* Getting the first leafArray - TO RECONSIDER /!\*/
 	test_cache = drn_read_chunk(&cache, 1, tabVoxelMax);
 
 	/* Getting the leaf chunk (last chunk) */
@@ -184,7 +185,7 @@ int main(int argc, char** argv){
 
 	Leaf* leafArray = new Leaf[nbLeaves];
 	test_cache = drn_read_chunk(&cache, nbChunks-2, leafArray);
-
+	
 	uint32_t nbSub = nbSubMaxLeaf;
 	uint32_t nbSubExpected = nbSub;
 	uint16_t displayMode = 0; // = 0 to display the faces, = 1 to display the normals	
@@ -194,10 +195,9 @@ int main(int argc, char** argv){
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
 	
-	for(uint32_t idx=0;idx<nbLeaves;++idx){
-		loadInMemory(memory, leafArray[idx], nbSubMaxLeaf);
-	}
+	size_t currentMemCache = initMemory(memory, leafArray, nbSubMaxLeaf, chunkBytesSize);
 	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
+	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
 	
 	VoxelData* tabVoxel = new VoxelData[lengthTabVoxel];
 	for(uint32_t i = 0; i<lengthTabVoxel; ++i){

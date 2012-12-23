@@ -43,39 +43,33 @@ $(BIN_PATH)/$(EXEC_DISPLAY): $(OBJ_DISPLAY_FILES) $(SRC_COMMON_PATH)/glew-1.9/gl
 
 $(SRC_COMMON_PATH)/glew-1.9/glew.o: $(SRC_COMMON_PATH)/glew-1.9/glew.c
 	$(CC_OLD) -c -o $@ $(CFLAGS) $^ 
-	@echo []
 	@echo [--$@ compiled--]
-	@echo []
+	@echo 
 
 $(DRN_PATH)/%.o: $(DRN_PATH)/%.c
 	$(CC_OLD) -c -o $@ $(CFLAGS) $^
-	@echo []
 	@echo [--$@ compiled--]
-	@echo []
+	@echo 
 
 $(SRC_VOXEL_PATH)/%.o: $(SRC_VOXEL_PATH)/%.cpp
 	$(CC) -c -o $@ $(CFLAGS) $^ 
-	@echo []
 	@echo [--$@ compiled--]
-	@echo []
+	@echo 
 
 $(SRC_TERRAIN_PATH)/%.o: $(SRC_TERRAIN_PATH)/%.cpp
 	$(CC) -c -o $@ $(CFLAGS) $^ 
-	@echo []
 	@echo [--$@ compiled--]
-	@echo []
+	@echo 
 
 $(SRC_DISPLAY_PATH)/%.o: $(SRC_DISPLAY_PATH)/%.cpp
 	$(CC) -c -o $@ $(CFLAGS) $^ 
-	@echo []
 	@echo [--$@ compiled--]
-	@echo []
+	@echo 
 
 $(SRC_COMMON_PATH)/%.o: $(SRC_COMMON_PATH)/%.cpp
 	$(CC) -c -o $@ $(CFLAGS) $^ 
-	@echo []
 	@echo [--$@ compiled--]
-	@echo []
+	@echo 
 
 clean:
 	rm $(OBJ_VOXEL_FILES) $(OBJ_TERRAIN_FILES) $(OBJ_DISPLAY_FILES) $(OBJ_COMMON_FILES) $(SRC_COMMON_PATH)/glew-1.9/glew.o $(OBJ_DRN)
