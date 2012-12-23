@@ -6,11 +6,11 @@
 #include "drn/drn_reader.h"
 #include "data_types.hpp"
 
-size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint16_t nbSub_lvl2, size_t chunkBytesSize){
+size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize){
 	size_t currentMemSize = 0;
 	uint32_t currentLeaf = 0;
 	while(currentMemSize + chunkBytesSize < MAX_MEMORY_SIZE){
-		loadInMemory(memory, leafArray[currentLeaf], currentLeaf, nbSub_lvl2);
+		loadInMemory(memory, leafArray[currentLeaf], currentLeaf, computeDistanceLeafCamera(leafArray[currentLeaf], V, halfLeafSize), nbSub_lvl2);
 		loadedLeaf[currentLeaf] = true;
 		currentLeaf++;
 		currentMemSize+= chunkBytesSize; 
@@ -18,7 +18,7 @@ size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf,
 	return currentMemSize;
 }
 
-void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, uint16_t nbSub_lvl2){
+void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double distance, uint16_t nbSub_lvl2){
 	drn_t cache;
 	uint32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
 	if(test_cache <0){ throw std::runtime_error("unable to open data file"); }
@@ -37,6 +37,7 @@ void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, uint16_t n
 	newChunk.voxels = voxArray;
 	newChunk.pos = l.pos;
 	newChunk.idxLeaf = l_idx;
+	newChunk.d = distance;
 	memory.push_back(newChunk);
 }
 

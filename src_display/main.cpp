@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdexcept>
 #include <vector>
+#include <algorithm>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -198,13 +199,6 @@ int main(int argc, char** argv){
 	
 	test_cache = drn_close(&cache);
 	
-	/* Memory cache - vector of voxelarray */
-	std::vector<Chunk> memory;
-	
-	size_t currentMemCache = initMemory(memory, leafArray, loadedLeaf, nbSubMaxLeaf, chunkBytesSize);
-	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
-	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
-	
 	VoxelData* tabVoxel = new VoxelData[lengthTabVoxel];
 	for(uint32_t i = 0; i<lengthTabVoxel; ++i){
 		tabVoxel[i].nbFaces = tabVoxelMax[i].nbFaces;
@@ -253,7 +247,12 @@ int main(int argc, char** argv){
 	/* *********************************** */
 	/* ****** CREATION DES FORMES ******** */
 	/* *********************************** */
-
+	
+	/* Differents cube size */
+	double leafSize = GRID_3D_SIZE/(double)nbSub_lvl1;
+	double halfLeafSize = leafSize*0.5;
+	double cubeSize = leafSize/(double)nbSub;
+	
 	// CREATION DU CUBE 
 	Cube aCube = createCube(-0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f);
 	
@@ -367,7 +366,14 @@ int main(int argc, char** argv){
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
 	hydrogene::FreeFlyCamera ffCam;
-
+	
+	/* Memory cache - vector of voxelarray */
+	std::vector<Chunk> memory;
+	
+	size_t currentMemCache = initMemory(memory, leafArray, loadedLeaf, nbSubMaxLeaf,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
+	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
+	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
+	
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
 	
@@ -401,10 +407,6 @@ int main(int argc, char** argv){
 		start = SDL_GetTicks();
 
 		//PRE_IDLE
-		
-		double leafSize = GRID_3D_SIZE/(double)nbSub_lvl1;
-		double halfLeafSize = leafSize*0.5;
-		double cubeSize = leafSize/(double)nbSub;
 
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -434,29 +436,20 @@ int main(int argc, char** argv){
 			ms.mult(V);
 			glUniform3f(LightVectLocation, light.x, light.y, light.z);
 			
-			// For each loaded leaf
-			/*for(std::vector<Chunk>::iterator idx=memory.begin(); idx!=memory.end(); ++idx){
-				if(true){
-					display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, (*idx).voxels, (*idx).pos, nbSub, cubeSize);
-				}else{
-					display_lvl1(cubeVAO, ms, MVPLocation, idx->pos, leafSize);
-				}
-			}*/
-			
 			//For each leaf
 			for(uint16_t idx=0;idx<nbLeaves;++idx){
 				double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
 				if(d<THRESHOLD_DISTANCE){
 					if(!loadedLeaf[idx]){
 						freeInMemory(memory, loadedLeaf);
-						loadInMemory(memory, leafArray[idx], idx, nbSubMaxLeaf);
+						loadInMemory(memory, leafArray[idx], idx, d, nbSubMaxLeaf);
 						loadedLeaf[idx] = true;
-						//sort
+						std::sort(memory.begin(), memory.end(), memory.front());
 					}
 					for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 						if(idx == n->idxLeaf){
 							display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, n->voxels, n->pos, nbSubMaxLeaf, cubeSize);
-							//break;
+							break;
 						}
 					}
 				}else{

@@ -24,6 +24,11 @@ typedef struct s_chunk{
 	VoxelData* voxels;
 	glm::dvec3 pos;
 	uint16_t idxLeaf;
+	double d;
+	
+	bool operator()(const s_chunk chk1, const s_chunk chk2){
+		return chk1.d < chk2.d;
+	}
 }Chunk;
 
 #endif
