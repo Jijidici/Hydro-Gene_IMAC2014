@@ -194,9 +194,10 @@ int main(int argc, char** argv){
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
 	
-	/*for(uint32_t idx=0;idx<nbLeaves;++idx){
-		loadInMemory(memory, leafArray[idx], idx, nbSubMaxLeaf);
-	}*/
+	for(uint32_t idx=0;idx<nbLeaves;++idx){
+		loadInMemory(memory, leafArray[idx], nbSubMaxLeaf);
+	}
+	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
 	
 	VoxelData* tabVoxel = new VoxelData[lengthTabVoxel];
 	for(uint32_t i = 0; i<lengthTabVoxel; ++i){
@@ -429,9 +430,9 @@ int main(int argc, char** argv){
 			// For each loaded leaf
 			for(std::vector<Chunk>::iterator idx=memory.begin(); idx!=memory.end(); ++idx){
 				if(true){
-					display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, (*idx).second, leafArray[(*idx).first], nbSub, cubeSize);
+					//display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, (*idx).second, leafArray[(*idx).first], nbSub, cubeSize);
 				}else{
-					display_lvl1(cubeVAO, ms, MVPLocation, leafArray[(*idx).first], leafSize);
+					//display_lvl1(cubeVAO, ms, MVPLocation, leafArray[(*idx).first], leafSize);
 				}
 			}
 			
