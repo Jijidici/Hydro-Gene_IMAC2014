@@ -42,7 +42,30 @@ namespace hydrogene{
 	
 	void FreeFlyCamera::computeFrustumPlanes(){
 		m_frustumNearPlanePoint = m_Position + (m_FrontVector*m_nearDistance);
+		m_frustumNearPlaneNormal = glm::normalize(m_Position - m_frustumNearPlanePoint);
+		
 		m_frustumFarPlanePoint = m_Position + (m_FrontVector*m_farDistance);
+		m_frustumFarPlaneNormal = glm::normalize(m_frustumFarPlanePoint - m_Position);
+		
+		float ratio = 1.; /* ratio between height and width, can change with the window size */
+		
+		float nearHalfHeight = tan(m_verticalFieldOfView/2.) * m_nearDistance;
+		float nearHalfWidth = nearHalfHeight * ratio;
+		
+		float farHalfHeight = tan(m_verticalFieldOfView/2.) * m_farDistance;
+		float farHalfWidth = farHalfHeight * ratio;
+		
+		m_frustumTopPlanePoint = m_Position;
+		m_frustumTopPlaneNormal = glm::normalize(glm::cross(m_LeftVector, (m_frustumNearPlanePoint + m_UpVector*nearHalfHeight) - m_Position));
+		
+		m_frustumRightPlanePoint = m_Position;
+		m_frustumRightPlaneNormal = glm::normalize(glm::cross(m_UpVector, (m_frustumNearPlanePoint - m_LeftVector*nearHalfHeight) - m_Position));
+		
+		m_frustumBottomPlanePoint = m_Position;
+		m_frustumBottomPlaneNormal = glm::normalize(glm::cross((m_frustumNearPlanePoint - m_UpVector*nearHalfHeight) - m_Position, m_LeftVector));
+		
+		m_frustumLeftPlanePoint = m_Position;
+		m_frustumLeftPlaneNormal = glm::normalize(glm::cross((m_frustumNearPlanePoint + m_LeftVector*nearHalfHeight) - m_Position, m_UpVector));
 	}
 
 	void FreeFlyCamera::moveLeft(float const t){

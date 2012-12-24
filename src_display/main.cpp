@@ -431,7 +431,7 @@ int main(int argc, char** argv){
 			// For each loaded leaf
 			for(std::map<uint32_t, VoxelData*>::iterator idx=memory.begin(); idx!=memory.end(); ++idx){
 				if(true){
-					display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, (*idx).second, leafArray[(*idx).first], nbSub, cubeSize);
+					display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, (*idx).second, leafArray[(*idx).first], nbSub, cubeSize, ffCam);
 				}else{
 					display_lvl1(cubeVAO, ms, MVPLocation, leafArray[(*idx).first], leafSize);
 				}
@@ -549,7 +549,10 @@ int main(int argc, char** argv){
 							break;
 
 						case SDLK_SPACE:
-							std::cout << "test cam : " << ffCam.m_frustumFarPlanePoint.x << std::endl;
+							std::cout << "top plane normal : " << std::endl << "x : " << ffCam.m_frustumTopPlaneNormal.x << ", y : " << ffCam.m_frustumTopPlaneNormal.y << ", z : " << ffCam.m_frustumTopPlaneNormal.z << std::endl;
+							std::cout << "right plane normal : " << std::endl << "x : " << ffCam.m_frustumRightPlaneNormal.x << ", y : " << ffCam.m_frustumRightPlaneNormal.y << ", z : " << ffCam.m_frustumRightPlaneNormal.z << std::endl;
+							std::cout << "bottom plane normal : " << std::endl << "x : " << ffCam.m_frustumBottomPlaneNormal.x << ", y : " << ffCam.m_frustumBottomPlaneNormal.y << ", z : " << ffCam.m_frustumBottomPlaneNormal.z << std::endl;
+							std::cout << "left plane normal : " << std::endl << "x : " << ffCam.m_frustumLeftPlaneNormal.x << ", y : " << ffCam.m_frustumLeftPlaneNormal.y << ", z : " << ffCam.m_frustumLeftPlaneNormal.z << std::endl;
 							break;
 
 						default:
