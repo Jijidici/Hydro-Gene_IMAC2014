@@ -55,16 +55,22 @@ bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, F
 	//~ int out = 0;
 	
 	//~ if(ffCam.m_frustumNearPlaneNormal * (l.pos - ffCam.m_frustumNearPlanePoint) < 0){
-	if(glm::dot(ffCam.m_frustumRightPlaneNormal, (glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.) - ffCam.m_frustumRightPlanePoint)) < 0){
+	if(glm::dot(ffCam.m_frustumNearPlaneNormal, (ffCam.m_frustumNearPlanePoint - glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.))) < 0.){
 		return false;
 	}
-	if(glm::dot(ffCam.m_frustumLeftPlaneNormal, (glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.) - ffCam.m_frustumLeftPlanePoint)) < 0){
+	if(glm::dot(ffCam.m_frustumRightPlaneNormal, (glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.) - ffCam.m_frustumRightPlanePoint)) < 0.){
 		return false;
 	}
-	if(glm::dot(ffCam.m_frustumTopPlaneNormal, (glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.) - ffCam.m_frustumTopPlanePoint)) < 0){
+	if(glm::dot(ffCam.m_frustumLeftPlaneNormal, (glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.) - ffCam.m_frustumLeftPlanePoint)) < 0.){
 		return false;
 	}
-	if(glm::dot(ffCam.m_frustumBottomPlaneNormal, (glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.) - ffCam.m_frustumBottomPlanePoint)) < 0){
+	if(glm::dot(ffCam.m_frustumTopPlaneNormal, (glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.) - ffCam.m_frustumTopPlanePoint)) < 0.){
+		return false;
+	}
+	if(glm::dot(ffCam.m_frustumBottomPlaneNormal, (glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.) - ffCam.m_frustumBottomPlanePoint)) < 0.){
+		return false;
+	}
+	if(glm::dot(ffCam.m_frustumFarPlaneNormal, (ffCam.m_frustumFarPlanePoint - glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.))) < 0.){
 		return false;
 	}
 	
