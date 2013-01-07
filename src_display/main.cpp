@@ -349,7 +349,10 @@ int main(int argc, char** argv){
 	// Creation des Matrices
 	GLint MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
 	
-	glm::mat4 P = glm::perspective(90.f, WINDOW_WIDTH / (float) WINDOW_HEIGHT, 0.1f, 1000.f);
+	float verticalFieldOfView = 90.0;
+	float nearDistance = 0.1;
+	float farDistance = 100.;
+	glm::mat4 P = glm::perspective(verticalFieldOfView, WINDOW_WIDTH / (float) WINDOW_HEIGHT, nearDistance, farDistance);
 	
 	MatrixStack ms;
 	ms.set(P);
@@ -365,8 +368,7 @@ int main(int argc, char** argv){
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
-	hydrogene::FreeFlyCamera ffCam;
-	
+
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
 	
@@ -374,6 +376,9 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
 	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
 	
+	hydrogene::FreeFlyCamera ffCam(nearDistance, farDistance, verticalFieldOfView);
+
+
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
 	
@@ -448,7 +453,7 @@ int main(int argc, char** argv){
 					}
 					for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 						if(idx == n->idxLeaf){
-							display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, n->voxels, n->pos, nbSubMaxLeaf, cubeSize);
+							display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, n->voxels, leafArray[idx], nbSub, cubeSize, ffCam);
 							break;
 						}
 					}
@@ -566,6 +571,13 @@ int main(int argc, char** argv){
 							if(currentCam == FREE_FLY){
 								is_dKeyPressed = false;
 							}
+							break;
+
+						case SDLK_SPACE:
+							std::cout << "top plane normal : " << std::endl << "x : " << ffCam.m_frustumTopPlaneNormal.x << ", y : " << ffCam.m_frustumTopPlaneNormal.y << ", z : " << ffCam.m_frustumTopPlaneNormal.z << std::endl;
+							std::cout << "right plane normal : " << std::endl << "x : " << ffCam.m_frustumRightPlaneNormal.x << ", y : " << ffCam.m_frustumRightPlaneNormal.y << ", z : " << ffCam.m_frustumRightPlaneNormal.z << std::endl;
+							std::cout << "bottom plane normal : " << std::endl << "x : " << ffCam.m_frustumBottomPlaneNormal.x << ", y : " << ffCam.m_frustumBottomPlaneNormal.y << ", z : " << ffCam.m_frustumBottomPlaneNormal.z << std::endl;
+							std::cout << "left plane normal : " << std::endl << "x : " << ffCam.m_frustumLeftPlaneNormal.x << ", y : " << ffCam.m_frustumLeftPlaneNormal.y << ", z : " << ffCam.m_frustumLeftPlaneNormal.z << std::endl;
 							break;
 
 						default:
