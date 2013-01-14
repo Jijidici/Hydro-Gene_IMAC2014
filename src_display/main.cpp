@@ -31,99 +31,6 @@ static const size_t BYTES_PER_PIXEL = 32;
 static const size_t POSITION_LOCATION = 0;
 static const size_t GRID_3D_SIZE = 2;
 
-uint32_t reduceTab(uint16_t nbSub, VoxelData *tabVoxel, uint16_t displayMode){
-
-	//NB notation means the old nbSub
-	uint32_t nbSubX = nbSub;	// = NBX/2
-	uint32_t nbSubY = nbSub;	// = NBY/2
-	uint32_t nbSubZ = nbSub;	// = NBZ/2
-
-	uint32_t nbIntersectionMax = 0;
-	//line
-	uint32_t index=0;
-	VoxelData* newTab = new VoxelData[nbSubX*(2*nbSubY)*(2*nbSubZ)]; //NBX is divided in 2
-	for(uint32_t i=0;i<(2*nbSubX)*(2*nbSubY)*(2*nbSubZ);i=i+2){ //i runs the entire length of tabVoxel, with a treshold of 2
-		newTab[index].nbFaces = tabVoxel[i].nbFaces+tabVoxel[i+1].nbFaces;
-		if(displayMode == 1) newTab[index].sumBending = tabVoxel[i].sumBending+tabVoxel[i+1].sumBending;
-		if(displayMode == 2) newTab[index].sumDrain = tabVoxel[i].sumDrain+tabVoxel[i+1].sumDrain;
-		if(displayMode == 3) newTab[index].sumGradient = tabVoxel[i].sumGradient+tabVoxel[i+1].sumGradient;
-		if(displayMode == 4) newTab[index].sumNormal = tabVoxel[i].sumNormal+tabVoxel[i+1].sumNormal;
-		if(displayMode == 5) newTab[index].sumSurface = tabVoxel[i].sumSurface+tabVoxel[i+1].sumSurface;
-		index++;
-	}
-	//row
-	uint32_t index2=0;
-	uint32_t tailleNewTab2 = nbSubX*nbSubY*(2*nbSubZ); //NBY is now divided in 2
-	VoxelData* newTab2 = new VoxelData[tailleNewTab2];
-	for(uint32_t j=0;j<(2*nbSubY)*(2*nbSubZ);j=j+2){
-		for(uint32_t i=j*nbSubX;i<j*nbSubX+nbSubX;++i){
-			newTab2[index2].nbFaces = newTab[i].nbFaces+newTab[i+nbSubX].nbFaces;
-			if(displayMode == 1) newTab2[index2].sumBending = newTab[i].sumBending+newTab[i+nbSubX].sumBending;
-			if(displayMode == 2) newTab2[index2].sumDrain = newTab[i].sumDrain+newTab[i+nbSubX].sumDrain;
-			if(displayMode == 3) newTab2[index2].sumGradient = newTab[i].sumGradient+newTab[i+nbSubX].sumGradient;
-			if(displayMode == 4) newTab2[index2].sumNormal = newTab[i].sumNormal+newTab[i+nbSubX].sumNormal;
-			if(displayMode == 5) newTab2[index2].sumSurface = newTab[i].sumSurface+newTab[i+nbSubX].sumSurface;
-			index2++;
-		}
-	}
-	delete[] newTab;
-	//depth
-	uint32_t index3=0;
-	uint32_t tailleNewTab3 = nbSubX*nbSubY*nbSubZ; //NBZ is now divided in 2
-	VoxelData* newTab3 = new VoxelData[tailleNewTab3];
-	for(uint32_t j=0;j<2*nbSubZ;j=j+2){
-		for(uint32_t i=j*nbSubX*nbSubY;i<j*nbSubX*nbSubY+nbSubX*nbSubY;++i){
-			newTab3[index3].nbFaces = newTab2[i].nbFaces+newTab2[i+nbSubX*nbSubY].nbFaces;
-			if(displayMode == 1) newTab3[index3].sumBending = newTab2[i].sumBending+newTab2[i+nbSubX*nbSubY].sumBending;
-			if(displayMode == 2) newTab3[index3].sumDrain = newTab2[i].sumDrain+newTab2[i+nbSubX*nbSubY].sumDrain;
-			if(displayMode == 3) newTab3[index3].sumGradient = newTab2[i].sumGradient+newTab2[i+nbSubX*nbSubY].sumGradient;
-			if(displayMode == 4) newTab3[index3].sumNormal = newTab2[i].sumNormal+newTab2[i+nbSubX*nbSubY].sumNormal;
-			if(displayMode == 5) newTab3[index3].sumSurface = newTab2[i].sumSurface+newTab2[i+nbSubX*nbSubY].sumSurface;
-			index3++;
-		}
-	}
-	delete[] newTab2;
-	//update of tabVoxel
-	for(uint32_t i=0;i<nbSubX*nbSubY*nbSubZ;++i){
-		tabVoxel[i].nbFaces = newTab3[i].nbFaces;
-		if(displayMode == 1) tabVoxel[i].sumBending = newTab3[i].sumBending;
-		if(displayMode == 2) tabVoxel[i].sumDrain = newTab3[i].sumDrain;
-		if(displayMode == 3) tabVoxel[i].sumGradient = newTab3[i].sumGradient;
-		if(displayMode == 4) tabVoxel[i].sumNormal = newTab3[i].sumNormal;
-		if(displayMode == 5) tabVoxel[i].sumSurface = newTab3[i].sumSurface;
-		if(tabVoxel[i].nbFaces > nbIntersectionMax) nbIntersectionMax = tabVoxel[i].nbFaces;
-	}
-	delete[] newTab3;
-	for(uint32_t i=nbSubX*nbSubY*nbSubZ; i<8*nbSubX*nbSubY*nbSubZ; ++i){
-		tabVoxel[i].nbFaces = 0;
-		if(displayMode == 1) tabVoxel[i].sumBending = 0;
-		if(displayMode == 1) tabVoxel[i].sumDrain = 0;
-		if(displayMode == 1) tabVoxel[i].sumGradient = 0;
-		if(displayMode == 1) tabVoxel[i].sumNormal = glm::dvec3(0,0,0);
-		if(displayMode == 1) tabVoxel[i].sumSurface = 0;
-	}
-	return nbIntersectionMax;
-}
-
-uint32_t increaseTab(uint16_t nbSub, VoxelData *tabVoxel, uint16_t nbSubMax, VoxelData *tabVoxelMax, uint32_t constNbIntersectionMax, uint16_t displayMode){
-	
-	uint32_t nbSubMaxY = nbSubMax;
-	uint32_t nbIntersectionMax = constNbIntersectionMax;
-	
-	for(uint32_t i=0;i<nbSubMax*nbSubMaxY*nbSubMax;++i){
-		tabVoxel[i].nbFaces = tabVoxelMax[i].nbFaces;
-		tabVoxel[i].sumNormal = tabVoxelMax[i].sumNormal;
-	}
-	
-	if(nbSub != nbSubMax){
-		while(nbSubMax>nbSub){
-			nbSubMax /= 2;
-			nbIntersectionMax = reduceTab(nbSubMax,tabVoxel,displayMode);
-		}
-	}
-	return nbIntersectionMax;
-}
-
 void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersectionLocation, GLint &NormSumLocation, GLint &LightVectLocation){
 	glUseProgram(program);
 	
@@ -169,17 +76,13 @@ int main(int argc, char** argv){
 	test_cache = drn_read_chunk(&cache, 0, arguments);
 
 	uint16_t nbSub_lvl1 = arguments[0];
-	uint16_t nbSubMaxLeaf = arguments[1];
+	uint16_t nbSub_lvl2 = arguments[1];
 	
-	uint32_t lengthTabVoxel = nbSubMaxLeaf*nbSubMaxLeaf*nbSubMaxLeaf;
-	VoxelData* tabVoxelMax = new VoxelData[lengthTabVoxel];
+	uint32_t lengthTabVoxel = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
 	
 	size_t chunkBytesSize = lengthTabVoxel*VOXELDATA_BYTES_SIZE;
 	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
 	
-	/* Getting the first leafArray - TO RECONSIDER /!\*/
-	test_cache = drn_read_chunk(&cache, 1, tabVoxelMax);
-
 	/* Getting the leaf chunk (last chunk) */
 	uint32_t nbLeaves = nbChunks - 3;
 	std::cout<<"number of leaves saved : "<<nbLeaves << std::endl;
@@ -193,40 +96,12 @@ int main(int argc, char** argv){
 		loadedLeaf[idx] = false;
 	}
 	
-	uint32_t nbSub = nbSubMaxLeaf;
-	uint32_t nbSubExpected = nbSub;
 	uint16_t displayMode = 0; // = 0 to display the faces, = 1 to display the normals	
 	
 	test_cache = drn_close(&cache);
-	
-	VoxelData* tabVoxel = new VoxelData[lengthTabVoxel];
-	for(uint32_t i = 0; i<lengthTabVoxel; ++i){
-		tabVoxel[i].nbFaces = tabVoxelMax[i].nbFaces;
-		tabVoxel[i].sumNormal = tabVoxelMax[i].sumNormal;
-		tabVoxel[i].sumDrain = tabVoxelMax[i].sumDrain;
-		tabVoxel[i].sumBending = tabVoxelMax[i].sumBending;
-		tabVoxel[i].sumGradient = tabVoxelMax[i].sumGradient;
-		tabVoxel[i].sumSurface = tabVoxelMax[i].sumSurface;
-	}
 		
-	std::cout << "-> nbSub : " << nbSubExpected << std::endl;
+	uint32_t nbIntersectionMax = 50;
 	
-
-	uint32_t nbIntersectionMax = 0;
-	for(uint32_t i=0; i<lengthTabVoxel;++i){
-		if(tabVoxel[i].nbFaces>nbIntersectionMax){
-			nbIntersectionMax = tabVoxel[i].nbFaces;
-		}
-	}
-	uint32_t constNbIntersectionMax = nbIntersectionMax;
-	
-	
-	while(nbSub > nbSubExpected){
-		nbSub /= 2;
-		nbIntersectionMax = increaseTab(nbSub, tabVoxel, nbSubMaxLeaf, tabVoxelMax, constNbIntersectionMax, displayMode);
-	}
-	
-
 	/* ************************************************************* */
 	/* *************INITIALISATION OPENGL/SDL*********************** */
 	/* ************************************************************* */
@@ -251,7 +126,7 @@ int main(int argc, char** argv){
 	/* Differents cube size */
 	double leafSize = GRID_3D_SIZE/(double)nbSub_lvl1;
 	double halfLeafSize = leafSize*0.5;
-	double cubeSize = leafSize/(double)nbSub;
+	double cubeSize = leafSize/(double)nbSub_lvl2;
 	
 	// CREATION DU CUBE 
 	Cube aCube = createCube(-0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f);
@@ -336,8 +211,6 @@ int main(int argc, char** argv){
 	if(!programInter || !programNorm){
 		glDeleteBuffers(1, &cubeVBO);
 		glDeleteVertexArrays(1, &cubeVAO);
-		delete[] tabVoxel;
-		delete[] tabVoxelMax;
 		return (EXIT_FAILURE);
 	}
 	
@@ -372,7 +245,7 @@ int main(int argc, char** argv){
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
 	
-	size_t currentMemCache = initMemory(memory, leafArray, loadedLeaf, nbSubMaxLeaf,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
+	size_t currentMemCache = initMemory(memory, leafArray, loadedLeaf, nbSub_lvl2,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
 	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
 	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
 	
@@ -396,8 +269,6 @@ int main(int argc, char** argv){
 	float tbC_tmpAngleY = 0;
 	float ffC_angleX = 0;
 	float ffC_angleY = 0;
-	bool changeNbSubPlus = false;
-	bool changeNbSubMinus = false;
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -415,20 +286,6 @@ int main(int argc, char** argv){
 
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				
-		if(changeNbSubPlus){ //si on a appuyé sur +
-			std::cout <<"-> New number of subdivisions : "<<nbSub<<std::endl;
-			nbIntersectionMax = increaseTab(nbSub,tabVoxel,nbSubMaxLeaf,tabVoxelMax, constNbIntersectionMax, displayMode);
-			changeNbSubPlus = false;
-		}
-		
-		if(changeNbSubMinus){ //si on a appuyé sur -
-			std::cout << " > New number of subdivisions : " << nbSub << std::endl;
-			nbIntersectionMax = reduceTab(nbSub,tabVoxel, displayMode);
-			changeNbSubMinus = false;
-		}
-
-
 
 		ms.push();
 			// Choose the camera
@@ -447,13 +304,13 @@ int main(int argc, char** argv){
 				if(d<THRESHOLD_DISTANCE){
 					if(!loadedLeaf[idx]){
 						freeInMemory(memory, loadedLeaf);
-						loadInMemory(memory, leafArray[idx], idx, d, nbSubMaxLeaf);
+						loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2);
 						loadedLeaf[idx] = true;
 						std::sort(memory.begin(), memory.end(), memory.front());
 					}
 					for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 						if(idx == n->idxLeaf){
-							display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, n->voxels, leafArray[idx], nbSub, cubeSize, ffCam);
+							display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, n->voxels, leafArray[idx], nbSub_lvl2, cubeSize, ffCam);
 							break;
 						}
 					}
@@ -479,22 +336,6 @@ int main(int argc, char** argv){
 					switch(e.key.keysym.sym){
 						case SDLK_ESCAPE:
 							done=true;
-							break;
-						
-						case SDLK_KP_PLUS:
-						case SDLK_p:
-							if(nbSub != nbSubMaxLeaf){
-								nbSub *= 2;
-								changeNbSubPlus = true;
-							}else std::cout << "You reached the maximum number of subdivisions." << std::endl;						
-							break;
-						
-						case SDLK_KP_MINUS:
-						case SDLK_m:
-							if(nbSub != 1){
-								nbSub /= 2;
-								changeNbSubMinus = true;
-							}else std::cout << "You reached the minimum number of subdivisions." << std::endl;						
 							break;
 						
 						//Relative to the cameras
@@ -638,9 +479,9 @@ int main(int argc, char** argv){
 						}
 					}else if(currentCam == FREE_FLY){
 						ffC_angleX = 0.6f*(WINDOW_WIDTH/2. - e.motion.x);
-	                    ffC_angleY = 0.6f*(WINDOW_HEIGHT/2. - e.motion.y);
-	                    ffCam.rotateLeft(ffC_angleX);
-	                    ffCam.rotateUp(ffC_angleY);
+	            ffC_angleY = 0.6f*(WINDOW_HEIGHT/2. - e.motion.y);
+	            ffCam.rotateLeft(ffC_angleX);
+	            ffCam.rotateUp(ffC_angleY);
 					}
 					break;
 				
@@ -673,8 +514,6 @@ int main(int argc, char** argv){
 		freeInMemory(memory, loadedLeaf);
 	}
 	
-	delete[] tabVoxel;
-	delete[] tabVoxelMax;
 	delete[] leafArray;
 	delete[] loadedLeaf;
 
