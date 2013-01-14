@@ -14,7 +14,7 @@
 
 #include "drn/drn_writer.h"
 
-static const double APPROXIM_RANGE = 2*sqrt(3)/3.;
+static const double APPROXIM_RANGE = 2*sqrt(3)/3;
 static const size_t GRID_3D_SIZE = 2;
 
 /******************************************/

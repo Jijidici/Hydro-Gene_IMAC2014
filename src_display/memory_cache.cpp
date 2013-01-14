@@ -1,6 +1,5 @@
 #include "display/memory_cache.hpp"
 
-#include <iostream>
 #include <vector>
 #include <stdint.h>
 #include <stdexcept>
@@ -10,6 +9,7 @@
 size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize){
 	size_t currentMemSize = 0;
 	uint32_t currentLeaf = 0;
+	/* TEST si pas de chunk rentré car memcache trop petite -> erreur et quitter le programme  ET  gérer le cas où tous les chunks sont chargés */
 	while(currentMemSize + chunkBytesSize < MAX_MEMORY_SIZE){
 		loadInMemory(memory, leafArray[currentLeaf], currentLeaf, computeDistanceLeafCamera(leafArray[currentLeaf], V, halfLeafSize), nbSub_lvl2);
 		loadedLeaf[currentLeaf] = true;
