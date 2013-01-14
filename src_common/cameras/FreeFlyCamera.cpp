@@ -9,7 +9,7 @@
 namespace hydrogene{
 
 	FreeFlyCamera::FreeFlyCamera(float nearDistance, float farDistance, float verticalFieldOfView){
-		m_Position = glm::vec3(0.f, 0.f, 0.f);
+		m_Position = glm::vec3(0.f, 0.1f, 0.f);
 		m_fPhi = PI;
 		m_fTheta = 0;
 		
