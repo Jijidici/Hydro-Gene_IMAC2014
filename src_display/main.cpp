@@ -269,8 +269,10 @@ int main(int argc, char** argv){
 	float tbC_angleY = 0;
 	float tbC_tmpAngleX = 0;
 	float tbC_tmpAngleY = 0;
-	float ffC_angleX = 0;
 	float ffC_angleY = 0;
+	float old_positionX = 0.;
+	float new_positionX = 0.;
+	float new_positionY = 0.;
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -325,7 +327,10 @@ int main(int argc, char** argv){
 
 		// Mise à jour de l'affichage
 		SDL_GL_SwapBuffers();
-
+		if(currentCam == FREE_FLY){
+			SDL_WM_GrabInput(SDL_GRAB_ON);
+			SDL_ShowCursor(SDL_DISABLE);
+		}
 		// Boucle de gestion des évenements
 		SDL_Event e;
 		while(SDL_PollEvent(&e)) {
@@ -512,10 +517,12 @@ int main(int argc, char** argv){
 							tbCam.rotateUp(tbC_angleY + tbC_tmpAngleY);
 						}
 					}else if(currentCam == FREE_FLY){
-						ffC_angleX = 0.6f*(WINDOW_WIDTH/2. - e.motion.x);
-	            ffC_angleY = 0.6f*(WINDOW_HEIGHT/2. - e.motion.y);
-	            ffCam.rotateLeft(ffC_angleX);
-	            ffCam.rotateUp(ffC_angleY);
+						new_positionX = e.motion.x;
+						new_positionY = e.motion.y;
+						ffC_angleY = 0.6f*(WINDOW_HEIGHT/2. - e.motion.y);
+						if(ffC_angleY >= 90) ffC_angleY = 90;
+						if(ffC_angleY <= -90) ffC_angleY = -90;
+	          ffCam.rotateUp(ffC_angleY);
 					}
 					break;
 				
@@ -530,6 +537,18 @@ int main(int argc, char** argv){
 		if(is_uKeyPressed){ ffCam.moveFront(0.01); }
 		if(is_dKeyPressed){ ffCam.moveFront(-0.01); }
 
+		if(currentCam == FREE_FLY){
+			if(new_positionX >= WINDOW_WIDTH-1){
+				SDL_WarpMouse(0, new_positionY);
+				old_positionX = 0-(old_positionX - new_positionX);
+				new_positionX = 0;
+			}else if(new_positionX <= 0){
+				SDL_WarpMouse(WINDOW_WIDTH, new_positionY);
+				old_positionX = WINDOW_WIDTH+(old_positionX - new_positionX);
+				new_positionX = WINDOW_WIDTH;
+			}
+			ffCam.rotateLeft((old_positionX - new_positionX)*0.6);
+		}
 		// Gestion compteur
 		end = SDL_GetTicks();
 		ellapsedTime = end - start;
