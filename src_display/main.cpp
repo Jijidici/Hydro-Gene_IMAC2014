@@ -312,7 +312,7 @@ int main(int argc, char** argv){
 					}
 					for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 						if(idx == n->idxLeaf){
-							display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, n->voxels, leafArray[idx], nbSub_lvl2, cubeSize, ffCam);
+							display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, n->voxels, leafArray[idx], nbSub_lvl2, cubeSize, ffCam, currentCam);
 							break;
 						}
 					}
