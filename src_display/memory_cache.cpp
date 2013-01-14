@@ -1,5 +1,6 @@
 #include "display/memory_cache.hpp"
 
+#include <iostream>
 #include <vector>
 #include <stdint.h>
 #include <stdexcept>

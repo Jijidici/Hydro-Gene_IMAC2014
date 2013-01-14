@@ -6,11 +6,12 @@
 #include "data_types.hpp"
 #include "tools/MatrixStack.hpp"
 #include "cameras/FreeFlyCamera.hpp"
+#include "display_types.hpp"
 
 
 using namespace hydrogene;
 
-void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize, FreeFlyCamera& ffCam);
+void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize, FreeFlyCamera& ffCam, CamType camType);
 
 void display_lvl1(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, glm::dvec3 pos, double halfLeafSize);
 
