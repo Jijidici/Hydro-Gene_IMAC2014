@@ -72,7 +72,9 @@ int main(int argc, char** argv){
 		//4 : gradient
 		//5 : normal
 		//6 : surface
-
+	
+	std::cout<<"//-> NB_SUB1 : "<<arguments[0]<<" | "<<arguments[1]<<std::endl;
+	
 	test_cache = drn_read_chunk(&cache, 0, arguments);
 
 	uint16_t nbSub_lvl1 = arguments[0];
@@ -223,7 +225,7 @@ int main(int argc, char** argv){
 	GLint MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
 	
 	float verticalFieldOfView = 90.0;
-	float nearDistance = 0.1;
+	float nearDistance = 0.001;
 	float farDistance = 100.;
 	glm::mat4 P = glm::perspective(verticalFieldOfView, WINDOW_WIDTH / (float) WINDOW_HEIGHT, nearDistance, farDistance);
 	
@@ -376,6 +378,38 @@ int main(int argc, char** argv){
 								is_uKeyPressed = true;
 							}
 							break;
+						
+						case SDLK_g:
+								std::cout << "near normal : " << std::endl;
+								std::cout << ffCam.m_frustumNearPlaneNormal.x << std::endl;
+								std::cout << ffCam.m_frustumNearPlaneNormal.y << std::endl;
+								std::cout << ffCam.m_frustumNearPlaneNormal.z << std::endl << std::endl;
+								
+								std::cout << "far normal : " << std::endl;
+								std::cout << ffCam.m_frustumFarPlaneNormal.x << std::endl;
+								std::cout << ffCam.m_frustumFarPlaneNormal.y << std::endl;
+								std::cout << ffCam.m_frustumFarPlaneNormal.z << std::endl << std::endl;
+								
+								std::cout << "left normal : " << std::endl;
+								std::cout << ffCam.m_frustumLeftPlaneNormal.x << std::endl;
+								std::cout << ffCam.m_frustumLeftPlaneNormal.y << std::endl;
+								std::cout << ffCam.m_frustumLeftPlaneNormal.z << std::endl << std::endl;
+								
+								std::cout << "right normal : " << std::endl;
+								std::cout << ffCam.m_frustumRightPlaneNormal.x << std::endl;
+								std::cout << ffCam.m_frustumRightPlaneNormal.y << std::endl;
+								std::cout << ffCam.m_frustumRightPlaneNormal.z << std::endl << std::endl;
+								
+								std::cout << "top normal : " << std::endl;
+								std::cout << ffCam.m_frustumTopPlaneNormal.x << std::endl;
+								std::cout << ffCam.m_frustumTopPlaneNormal.y << std::endl;
+								std::cout << ffCam.m_frustumTopPlaneNormal.z << std::endl << std::endl;
+								
+								std::cout << "bottom normal : " << std::endl;
+								std::cout << ffCam.m_frustumBottomPlaneNormal.x << std::endl;
+								std::cout << ffCam.m_frustumBottomPlaneNormal.y << std::endl;
+								std::cout << ffCam.m_frustumBottomPlaneNormal.z << std::endl << std::endl;
+								break;
 
 						case SDLK_s:
 							if(currentCam == FREE_FLY){
