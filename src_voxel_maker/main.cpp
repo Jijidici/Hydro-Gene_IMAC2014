@@ -363,6 +363,9 @@ int main(int argc, char** argv) {
 	Leaf currentLeaf;
 	currentLeaf.id = 1;
 	
+	/* Initialize the vertices per leaf vector */
+	std::vector<Vertex> l_storedVertices;
+	
 	//INTERSECTION PROCESSING
 	/* Range approximation for voxelisation */
 	double Rc = voxelSize * APPROXIM_RANGE;
@@ -453,6 +456,9 @@ int main(int argc, char** argv) {
 						}//end foreach voxel
 						/* add the triangle to the chunck */
 						if(is_triangle_in){
+							l_storedVertices.push_back(*(tabF[n].s1));
+							l_storedVertices.push_back(*(tabF[n].s2));
+							l_storedVertices.push_back(*(tabF[n].s3));
 							currentLeaf.nbVertices+=3;
 							is_triangle_in = false;
 						}			
@@ -460,8 +466,12 @@ int main(int argc, char** argv) {
 				}//end foreach face
 				/* if the leaf is not empty, save its voxels */
 				if(is_intersec){
+					/* Save the VoxelData array */
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
 					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
+					
+					/* Save the vertices */
+					test_cache = drn_writer_add_chunk(&cache, l_storedVertices.data(), currentLeaf.nbVertices*sizeof(Vertex));
 					
 					/* updade the Leaf indexation */
 					currentLeaf.nbIntersection /= l_voxArrLength;
@@ -471,6 +481,7 @@ int main(int argc, char** argv) {
 					currentLeaf.id++;
 					currentLeaf.nbIntersection = 0;
 					currentLeaf.nbVertices = 0;
+					l_storedVertices.clear();
 					is_intersec = false;
 				}
 			}
