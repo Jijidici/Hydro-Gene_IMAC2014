@@ -12,7 +12,7 @@ size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf,
 
 void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double distance, uint16_t nbSub_lvl2, GLuint idxVbo);
 
-void freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf);
+GLuint freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf);
 
 double computeDistanceLeafCamera(Leaf currentLeaf, glm::mat4& view, double halfLeafSize);
 

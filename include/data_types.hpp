@@ -29,7 +29,7 @@ typedef struct s_chunk{
 	glm::dvec3 pos;
 	uint16_t idxLeaf;
 	double d;
-	GLuint idxVbo;
+	GLuint vbo;
 	
 	bool operator()(const s_chunk chk1, const s_chunk chk2){
 		return chk1.d < chk2.d;

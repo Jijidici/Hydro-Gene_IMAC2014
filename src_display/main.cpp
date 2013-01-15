@@ -306,8 +306,8 @@ int main(int argc, char** argv){
 				double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
 				if(d<THRESHOLD_DISTANCE){
 					if(!loadedLeaf[idx]){
-						freeInMemory(memory, loadedLeaf);
-						loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2, 0);
+						GLuint freeVbo = freeInMemory(memory, loadedLeaf);
+						loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2, freeVbo);
 						loadedLeaf[idx] = true;
 						std::sort(memory.begin(), memory.end(), memory.front());
 					}
@@ -564,7 +564,7 @@ int main(int argc, char** argv){
 	//free cache memory
 	uint16_t nbLoadedLeaves = memory.size();
 	for(uint16_t idx=0;idx<nbLoadedLeaves;++idx){
-		freeInMemory(memory, loadedLeaf);
+		GLuint tmpVBO = freeInMemory(memory, loadedLeaf);
 	}
 	
 	delete[] leafArray;

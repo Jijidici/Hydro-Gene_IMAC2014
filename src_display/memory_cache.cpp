@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include "drn/drn_reader.h"
 #include "data_types.hpp"
+#include "geom_types.hpp"
 
 size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint32_t nbLeaves, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize){
 	//if the memcache is to tiny for the chunks
@@ -44,6 +45,15 @@ void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double dis
 	test_cache = drn_read_chunk(&cache, l.id, voxArray);
 	if(test_cache <0){ throw std::runtime_error("unable to read data file"); }
 	
+	/* load the triangles and send them to th GPU */
+	Vertex* vertices = NULL;
+	vertices = new Vertex[l.nbVertices];
+	test_cache = drn_read_chunk(&cache, l.id+1, vertices);
+	glBindBuffer(GL_ARRAY_BUFFER, idxVbo);
+		glBufferData(GL_ARRAY_BUFFER, l.nbVertices*sizeof(Vertex), vertices, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	delete[] vertices;
+	
 	test_cache = drn_close(&cache);
 	if(test_cache <0){ throw std::runtime_error("unable to close data file"); }
 	
@@ -53,14 +63,18 @@ void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double dis
 	newChunk.pos = l.pos;
 	newChunk.idxLeaf = l_idx;
 	newChunk.d = distance;
+	newChunk.vbo = idxVbo;
 	memory.push_back(newChunk);
 }
 
-void freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
+GLuint freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
 	Chunk lastElt = memory.back();
+	GLuint freeVbo = lastElt.vbo;
 	loadedLeaf[lastElt.idxLeaf] = false;
 	delete[] lastElt.voxels;
 	memory.pop_back();
+	
+	return freeVbo;
 }
 
 double computeDistanceLeafCamera(Leaf currentLeaf, glm::mat4& view, double halfLeafSize){
