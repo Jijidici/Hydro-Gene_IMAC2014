@@ -3,23 +3,37 @@
 #include <vector>
 #include <stdint.h>
 #include <stdexcept>
+#include <GL/glew.h>
 #include "drn/drn_reader.h"
 #include "data_types.hpp"
 
-size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize){
+size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint32_t nbLeaves, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize){
+	//if the memcache is to tiny for the chunks
+	if(chunkBytesSize >= MAX_MEMORY_SIZE){
+		throw std::logic_error("the memcache is to little compare with the chunk size");
+	}
+	
+	//generate the VBO index array
+	uint32_t nbVbo = MAX_MEMORY_SIZE/chunkBytesSize;
+	GLuint* vbos = new GLuint[nbVbo];
+	
 	size_t currentMemSize = 0;
 	uint32_t currentLeaf = 0;
-	/* TEST si pas de chunk rentré car memcache trop petite -> erreur et quitter le programme  ET  gérer le cas où tous les chunks sont chargés */
-	while(currentMemSize + chunkBytesSize < MAX_MEMORY_SIZE){
-		loadInMemory(memory, leafArray[currentLeaf], currentLeaf, computeDistanceLeafCamera(leafArray[currentLeaf], V, halfLeafSize), nbSub_lvl2);
+	while(currentMemSize + chunkBytesSize < MAX_MEMORY_SIZE && currentLeaf < nbLeaves){
+		glGenBuffers(1, &(vbos[currentLeaf]));
+		loadInMemory(memory, leafArray[currentLeaf], currentLeaf, computeDistanceLeafCamera(leafArray[currentLeaf], V, halfLeafSize), nbSub_lvl2, vbos[currentLeaf]);
 		loadedLeaf[currentLeaf] = true;
 		currentLeaf++;
 		currentMemSize+= chunkBytesSize; 
 	}
+	
+	//free ressources
+	delete[] vbos;
+	
 	return currentMemSize;
 }
 
-void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double distance, uint16_t nbSub_lvl2){
+void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double distance, uint16_t nbSub_lvl2, GLuint idxVbo){
 	drn_t cache;
 	uint32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
 	if(test_cache <0){ throw std::runtime_error("unable to open data file"); }

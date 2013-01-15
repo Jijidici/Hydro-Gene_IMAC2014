@@ -478,7 +478,7 @@ int main(int argc, char** argv) {
 					l_queue.push_back(currentLeaf);
 					
 					/* init for next leaf */
-					currentLeaf.id++;
+					currentLeaf.id+=2;
 					currentLeaf.nbIntersection = 0;
 					currentLeaf.nbVertices = 0;
 					l_storedVertices.clear();

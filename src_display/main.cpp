@@ -87,7 +87,7 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
 	
 	/* Getting the leaf chunk (last chunk) */
-	uint32_t nbLeaves = nbChunks-2;
+	uint32_t nbLeaves = (nbChunks-2)*0.5;
 	std::cout<<"//-> Nb Leaves saved : "<<nbLeaves<<std::endl;
 
 	Leaf* leafArray = new Leaf[nbLeaves];
@@ -246,7 +246,7 @@ int main(int argc, char** argv){
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
 	
-	size_t currentMemCache = initMemory(memory, leafArray, loadedLeaf, nbSub_lvl2,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
+	size_t currentMemCache = initMemory(memory, leafArray, loadedLeaf, nbLeaves, nbSub_lvl2,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
 	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
 	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
 	
@@ -307,7 +307,7 @@ int main(int argc, char** argv){
 				if(d<THRESHOLD_DISTANCE){
 					if(!loadedLeaf[idx]){
 						freeInMemory(memory, loadedLeaf);
-						loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2);
+						loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2, 0);
 						loadedLeaf[idx] = true;
 						std::sort(memory.begin(), memory.end(), memory.front());
 					}

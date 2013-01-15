@@ -2,6 +2,7 @@
 #define __DATA_TYPES__
 
 #include <stdint.h>
+#include <GL/glew.h>
 #include <drn/drn_types.h>
 #include <glm/glm.hpp>
 
@@ -28,6 +29,7 @@ typedef struct s_chunk{
 	glm::dvec3 pos;
 	uint16_t idxLeaf;
 	double d;
+	GLuint idxVbo;
 	
 	bool operator()(const s_chunk chk1, const s_chunk chk2){
 		return chk1.d < chk2.d;
