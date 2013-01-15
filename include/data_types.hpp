@@ -19,7 +19,7 @@ typedef struct s_voxelData{ //voxels dans tabVoxel
 typedef struct s_leaf{
 	drn_chunk_id_t id;
 	glm::dvec3 pos;
-	float nbIntersection;
+	uint32_t nbIntersection;
 	uint32_t nbVertices;
 }Leaf;
 

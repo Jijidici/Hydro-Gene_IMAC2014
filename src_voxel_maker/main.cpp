@@ -355,6 +355,8 @@ int main(int argc, char** argv) {
 	
 	/* Intersection flag to know if a leaf have at least one intersection - if it is not the case, we do not save the leaf */
 	bool is_intersec = false;
+	/* Triangle flag to know if we have to save the triangle inside the leaf */
+	bool is_triangle_in = false;
 	
 	/* Initialize the Leaves vector */
 	std::vector<Leaf> l_queue;
@@ -433,33 +435,47 @@ int main(int argc, char** argv) {
 									Voxel vox = createVoxel(i*voxelSize + currentLeaf.pos.x + voxelSize*0.5, j*voxelSize + currentLeaf.pos.y + voxelSize*0.5, k*voxelSize + currentLeaf.pos.z + voxelSize*0.5, voxelSize);
 									if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
 										is_intersec = true;
+										is_triangle_in = true;
+										/* update the voxel array */
 										uint32_t currentIndex = i + nbSub_lvl2*j + k*nbSub_lvl2*nbSub_lvl2;
 										l_voxelArray[currentIndex].nbFaces++;
 										if(normal) 	l_voxelArray[currentIndex].sumNormal = glm::dvec3(l_voxelArray[currentIndex].sumNormal.x + tabF[n].normal.x, l_voxelArray[currentIndex].sumNormal.y + tabF[n].normal.y, l_voxelArray[currentIndex].sumNormal.z + tabF[n].normal.z);
 										if(drain) 	l_voxelArray[currentIndex].sumDrain = l_voxelArray[currentIndex].sumDrain + tabF[n].drain;
 										if(gradient)l_voxelArray[currentIndex].sumGradient = l_voxelArray[currentIndex].sumGradient + tabF[n].gradient;
 										if(surface) l_voxelArray[currentIndex].sumSurface = l_voxelArray[currentIndex].sumSurface + tabF[n].surface;
-										if(bending) l_voxelArray[currentIndex].sumBending = l_voxelArray[currentIndex].sumBending + tabF[n].bending;	
+										if(bending) l_voxelArray[currentIndex].sumBending = l_voxelArray[currentIndex].sumBending + tabF[n].bending;
+										
+										/* update the leaf info */
+										currentLeaf.nbIntersection++;
 									}
 								}
 							}
-						}					
+						}//end foreach voxel
+						/* add the triangle to the chunck */
+						if(is_triangle_in){
+							currentLeaf.nbVertices+=3;
+							is_triangle_in = false;
+						}			
 					}
-				}
+				}//end foreach face
 				/* if the leaf is not empty, save its voxels */
 				if(is_intersec){
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
 					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 					
-					/* Upgrade the Leaf indexation */
+					/* updade the Leaf indexation */
+					currentLeaf.nbIntersection /= l_voxArrLength;
 					l_queue.push_back(currentLeaf);
-					currentLeaf.id++;
 					
+					/* init for next leaf */
+					currentLeaf.id++;
+					currentLeaf.nbIntersection = 0;
+					currentLeaf.nbVertices = 0;
 					is_intersec = false;
 				}
 			}
 		}
-	}
+	}//end foreach leaf
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
 	
 	std::cout << "Number of leaves saved : "<< l_queue.size() << std::endl;

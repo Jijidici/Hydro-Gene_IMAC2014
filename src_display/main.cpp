@@ -217,9 +217,7 @@ int main(int argc, char** argv){
 		return (EXIT_FAILURE);
 	}
 	
-	GLuint program = programInter;
-	//program = programNorm;
-	
+	GLuint program = programInter;	
 	glUseProgram(program);
 
 	// Creation des Matrices
@@ -320,6 +318,7 @@ int main(int argc, char** argv){
 						}
 					}
 				}else{
+					glUniform2i(NbIntersectionLocation, leafArray[idx].nbIntersection, nbIntersectionMax);
 					display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
 				}
 			}
