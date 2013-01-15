@@ -1,6 +1,6 @@
 CC = g++
 CC_OLD = gcc
-CFLAGS = -Wall -ansi -pedantic -I include -O2 -g -fopenmp
+CFLAGS = -Wall -ansi -pedantic -Wno-long-long -I include -O2 -g -fopenmp
 LDFLAGS = -lSDL -lGL -fopenmp
 
 SRC_VOXEL_PATH = src_voxel_maker
