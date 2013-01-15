@@ -21,80 +21,6 @@ static const size_t GRID_3D_SIZE = 2;
 /*          FUNCTIONS                     */
 /******************************************/
 
-/**********************TO REMOVE**********************/
-/**************EXAMPLE OF CHUNK USING*****************/
-/*void tryingWritingChunk(){
-	drn_writer_t f;
-	int32_t t = drn_open_writer(&f, "./test/files/toto.data", "Super file !!!"); // chemin, description
-	if(t == 0){
-		std::cout<<"//-> Open writer ok"<<std::endl;
-	}else{
-		std::cout<<"//-> Problem to open writer"<<std::endl;
-	}
-	
-	uint32_t conf[] = {16, 128, 1, 0, 1, 0, 1}; 
-	VoxelData* data = new VoxelData[3];
-	
-	data[0].sumNormal = glm::dvec3(1., 1., 1.5);
-	data[0].sumBending = 0.4;
-	data[0].sumGradient = 0.4;
-	data[0].sumSurface = 0.4;
-	data[0].sumDrain = 5;
-	data[0].nbFaces = 10;
-	
-	data[1].sumNormal = glm::dvec3(1., 1., 1.5);
-	data[1].sumBending = 0.3;
-	data[1].sumGradient = 0.3;
-	data[1].sumSurface = 0.3;
-	data[1].sumDrain = 4;
-	data[1].nbFaces = 8;
-	
-	data[2].sumNormal = glm::dvec3(1., 1., 1.5);
-	data[2].sumBending = 0.6;
-	data[2].sumGradient = 0.6;
-	data[2].sumSurface = 0.6;
-	data[2].sumDrain = 7;
-	data[2].nbFaces = 9;
-	
-	//ecriture
-	t = drn_writer_add_chunk(&f, conf, 7*sizeof(uint32_t)); // cache, pointeur vers les données, taille des données // chunck 0
-	t = drn_writer_add_chunk(&f, data, 3*sizeof(VoxelData)); // chunck 1
-	
-	t = drn_close_writer(&f);
-	if(t == 0){
-		std::cout<<"//-> Close writer ok"<<std::endl;
-	}else{
-		std::cout<<"//-> Problem to close writer"<<std::endl;
-	}
-}
-
-void tryingReadingChunk(){
-	drn_t f; // cache
-	int32_t t = drn_open(&f, "./test/files/toto.data", DRN_READ_NOLOAD);
-	if(t == 0){
-		std::cout<<"//-> Open reader ok"<<std::endl;
-	}else{
-		std::cout<<"//-> Problem to open reader"<<std::endl;
-	}
-	
-	//lecture
-	VoxelData* tab = new VoxelData[3];
-	t = drn_read_chunk(&f, 1, tab);
-	for(int i=0;i<3;++i){
-		std::cout<<"//-> SumGradient : "<<tab[i].sumGradient<<std::endl;
-	}
-	
-	t = drn_close(&f);
-	if(t == 0){
-		std::cout<<"//-> Close reader ok"<<std::endl;
-	}else{
-		std::cout<<"//-> Problem to close reader"<<std::endl;
-	}
-}
-*/
-
-/*******************************************************/
-
 void printHelp(){
 	std::cout << std::endl << "############## HELP ##############" << std::endl;
 	std::cout << "usage : ./bin/hg_voxel_maker <number of subdivisions> -<option>" << std::endl << std::endl;
@@ -440,6 +366,7 @@ int main(int argc, char** argv) {
 	double Rc = voxelSize * APPROXIM_RANGE;
 	
 	//For each leaf
+	//#pragma omp parallel for
 	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
 		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
 			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
@@ -456,10 +383,10 @@ int main(int argc, char** argv) {
 				
 				/* Fix the current leaf */
 				currentLeaf.pos = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
-				//std::cout<<"//-> Leaf origin : ["<<currentLeaf.pos.x<<"|"<<currentLeaf.pos.y<<"|"<<currentLeaf.pos.z<<"]"<<std::endl;
+				currentLeaf.nbIntersection = 0;
+				currentLeaf.nbVertices = 0;
 				
 				//For each Face
-				#pragma omp parallel for
 				for(uint32_t n=0;n<nbFace;++n){
 					/* Face properties */
 					/* min and max */

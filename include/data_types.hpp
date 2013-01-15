@@ -1,6 +1,7 @@
 #ifndef __DATA_TYPES__
 #define __DATA_TYPES__
 
+#include <stdint.h>
 #include <drn/drn_types.h>
 #include <glm/glm.hpp>
 
@@ -18,6 +19,8 @@ typedef struct s_voxelData{ //voxels dans tabVoxel
 typedef struct s_leaf{
 	drn_chunk_id_t id;
 	glm::dvec3 pos;
+	float nbIntersection;
+	uint32_t nbVertices;
 }Leaf;
 
 typedef struct s_chunk{

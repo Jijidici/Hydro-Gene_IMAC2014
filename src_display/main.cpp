@@ -60,8 +60,8 @@ int main(int argc, char** argv){
 	if(test_cache < 0){ throw std::runtime_error("unable to open data file"); }
 
 	/* Getting the number of chunks saved in the voxel_data file */
-	uint64_t nbChunks = drn_get_chunk_count(&cache);
-	std::cout << "number of chunks :" << nbChunks-1 << std::endl;
+	uint64_t nbChunks = drn_get_chunk_count(&cache) - 1;
+	std::cout<<"//-> Nb chunks :"<<nbChunks<<std::endl;
 
 	/* Getting the config data */
 	uint16_t arguments[7];
@@ -73,12 +73,13 @@ int main(int argc, char** argv){
 		//5 : normal
 		//6 : surface
 	
-	std::cout<<"//-> NB_SUB1 : "<<arguments[0]<<" | "<<arguments[1]<<std::endl;
-	
 	test_cache = drn_read_chunk(&cache, 0, arguments);
 
 	uint16_t nbSub_lvl1 = arguments[0];
 	uint16_t nbSub_lvl2 = arguments[1];
+	
+	std::cout<<"//-> Nb Subdivision lvl 1 : "<<nbSub_lvl1<<std::endl;
+	std::cout<<"//-> Nb Subdivision lvl 2 : "<<nbSub_lvl2<<std::endl;
 	
 	uint32_t lengthTabVoxel = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
 	
@@ -86,11 +87,11 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
 	
 	/* Getting the leaf chunk (last chunk) */
-	uint32_t nbLeaves = nbChunks - 3;
-	std::cout<<"number of leaves saved : "<<nbLeaves << std::endl;
+	uint32_t nbLeaves = nbChunks-2;
+	std::cout<<"//-> Nb Leaves saved : "<<nbLeaves<<std::endl;
 
 	Leaf* leafArray = new Leaf[nbLeaves];
-	test_cache = drn_read_chunk(&cache, nbChunks-2, leafArray);
+	test_cache = drn_read_chunk(&cache, nbChunks-1, leafArray);
 	
 	/* Array which know if a leaf grid is loaded or not */
 	bool* loadedLeaf = new bool[nbLeaves];
