@@ -8,21 +8,36 @@
 #include "data_types.hpp"
 #include "geom_types.hpp"
 
+#define POSITION_LOCATION 0
+
 size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint32_t nbLeaves, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize){
 	//if the memcache is to tiny for the chunks
 	if(chunkBytesSize >= MAX_MEMORY_SIZE){
 		throw std::logic_error("the memcache is to little compare with the chunk size");
 	}
 	
-	//generate the VBO index array
-	uint32_t nbVbo = MAX_MEMORY_SIZE/chunkBytesSize;
-	GLuint* vbos = new GLuint[nbVbo];
+	//generate the VAO index array
+	uint32_t nbVao = MAX_MEMORY_SIZE/chunkBytesSize;
+	GLuint* vaos = new GLuint[nbVao];
 	
+	//generate the VBO index array
+	uint32_t nbVbo = nbVao;
+	GLuint* vbos = new GLuint[nbVbo];
+		
 	size_t currentMemSize = 0;
 	uint32_t currentLeaf = 0;
 	while(currentMemSize + chunkBytesSize < MAX_MEMORY_SIZE && currentLeaf < nbLeaves){
 		glGenBuffers(1, &(vbos[currentLeaf]));
-		loadInMemory(memory, leafArray[currentLeaf], currentLeaf, computeDistanceLeafCamera(leafArray[currentLeaf], V, halfLeafSize), nbSub_lvl2, vbos[currentLeaf]);
+		glGenVertexArrays(1, &(vaos[currentLeaf]));
+		
+		glBindVertexArray(vaos[currentLeaf]);
+			glEnableVertexAttribArray(POSITION_LOCATION);
+			glBindBuffer(GL_ARRAY_BUFFER, vbos[currentLeaf]);
+				glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, 0, NULL);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		
+		loadInMemory(memory, leafArray[currentLeaf], currentLeaf, computeDistanceLeafCamera(leafArray[currentLeaf], V, halfLeafSize), nbSub_lvl2, vaos[currentLeaf], vbos[currentLeaf]);
 		loadedLeaf[currentLeaf] = true;
 		currentLeaf++;
 		currentMemSize+= chunkBytesSize; 
@@ -34,7 +49,7 @@ size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf,
 	return currentMemSize;
 }
 
-void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double distance, uint16_t nbSub_lvl2, GLuint idxVbo){
+void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double distance, uint16_t nbSub_lvl2, GLuint idxVao, GLuint idxVbo){
 	drn_t cache;
 	uint32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
 	if(test_cache <0){ throw std::runtime_error("unable to open data file"); }
@@ -63,18 +78,19 @@ void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double dis
 	newChunk.pos = l.pos;
 	newChunk.idxLeaf = l_idx;
 	newChunk.d = distance;
+	newChunk.vao = idxVao;
 	newChunk.vbo = idxVbo;
 	memory.push_back(newChunk);
 }
 
-GLuint freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
+Chunk freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
 	Chunk lastElt = memory.back();
-	GLuint freeVbo = lastElt.vbo;
 	loadedLeaf[lastElt.idxLeaf] = false;
 	delete[] lastElt.voxels;
+	lastElt.voxels = NULL;
 	memory.pop_back();
 	
-	return freeVbo;
+	return lastElt;
 }
 
 double computeDistanceLeafCamera(Leaf currentLeaf, glm::mat4& view, double halfLeafSize){

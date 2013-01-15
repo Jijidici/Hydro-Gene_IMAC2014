@@ -103,7 +103,7 @@ int main(int argc, char** argv){
 	
 	test_cache = drn_close(&cache);
 		
-	uint32_t nbIntersectionMax = 50;
+	uint32_t nbIntersectionMax = 5000000000;
 	
 	/* ************************************************************* */
 	/* *************INITIALISATION OPENGL/SDL*********************** */
@@ -246,6 +246,7 @@ int main(int argc, char** argv){
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
 	
+	/* init memory */
 	size_t currentMemCache = initMemory(memory, leafArray, loadedLeaf, nbLeaves, nbSub_lvl2,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
 	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
 	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
@@ -306,14 +307,15 @@ int main(int argc, char** argv){
 				double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
 				if(d<THRESHOLD_DISTANCE){
 					if(!loadedLeaf[idx]){
-						GLuint freeVbo = freeInMemory(memory, loadedLeaf);
-						loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2, freeVbo);
+						Chunk voidChunk = freeInMemory(memory, loadedLeaf);
+						loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
 						loadedLeaf[idx] = true;
 						std::sort(memory.begin(), memory.end(), memory.front());
 					}
 					for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 						if(idx == n->idxLeaf){
-							display_lvl2(cubeVAO, ms, MVPLocation, NbIntersectionLocation, NormSumLocation, nbIntersectionMax, aCube.nbVertices, n->voxels, leafArray[idx], nbSub_lvl2, cubeSize, ffCam, currentCam);
+							glUniform2i(NbIntersectionLocation, leafArray[idx].nbIntersection, nbIntersectionMax);
+							display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices);
 							break;
 						}
 					}
@@ -564,9 +566,13 @@ int main(int argc, char** argv){
 	//free cache memory
 	uint16_t nbLoadedLeaves = memory.size();
 	for(uint16_t idx=0;idx<nbLoadedLeaves;++idx){
-		GLuint tmpVBO = freeInMemory(memory, loadedLeaf);
+		Chunk tmpChunk = freeInMemory(memory, loadedLeaf);
+		glDeleteVertexArrays(1, &(tmpChunk.vao));
+		glDeleteBuffers(1, &(tmpChunk.vbo));
 	}
 	
+	glDeleteBuffers(1, &cubeVBO);
+	glDeleteVertexArrays(1, &cubeVAO);
 	delete[] leafArray;
 	delete[] loadedLeaf;
 

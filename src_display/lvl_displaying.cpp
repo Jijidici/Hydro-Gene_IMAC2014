@@ -62,6 +62,13 @@ void display_lvl1(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, glm::dvec
 	ms.pop();
 }
 
+void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices){
+	glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+	
+	glBindVertexArray(meshVAO);
+		glDrawArrays(GL_TRIANGLES, 0, nbVertices);
+	glBindVertexArray(0);
+}
 
 bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, FreeFlyCamera& ffCam){
 	
