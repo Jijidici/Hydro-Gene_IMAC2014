@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdexcept>
 #include <vector>
+#include <sstream>
 #include <algorithm>
 
 #include <glm/glm.hpp>
@@ -103,7 +104,7 @@ int main(int argc, char** argv){
 	
 	test_cache = drn_close(&cache);
 		
-	uint32_t nbIntersectionMax = 5000000000;
+	uint32_t nbIntersectionMax = 5000000;
 	
 	/* ************************************************************* */
 	/* *************INITIALISATION OPENGL/SDL*********************** */
@@ -273,6 +274,7 @@ int main(int argc, char** argv){
 	float old_positionX = 0.;
 	float new_positionX = 0.;
 	float new_positionY = 0.;
+	uint8_t cpt_displayFPS = 0;
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -551,12 +553,27 @@ int main(int argc, char** argv){
 			}
 			ffCam.rotateLeft((old_positionX - new_positionX)*0.6);
 		}
+		
 		// Gestion compteur
 		end = SDL_GetTicks();
 		ellapsedTime = end - start;
-		if(ellapsedTime < MIN_LOOP_TIME){
-			SDL_Delay(MIN_LOOP_TIME - ellapsedTime);
-		}
+		
+		/* Compute the framerate */
+		cpt_displayFPS++;
+		if(cpt_displayFPS >= FRAME_RATE){
+			cpt_displayFPS = 0;
+			float frameRate = 0;
+			if(ellapsedTime != 0){
+				frameRate = 1000.f/ellapsedTime;
+			}
+			std::stringstream title;
+			title << "Hydro-Gene Project | FPS: " <<frameRate;
+			SDL_WM_SetCaption(title.str().c_str(),  NULL);
+			
+			if(ellapsedTime < MIN_LOOP_TIME){
+				SDL_Delay(MIN_LOOP_TIME - ellapsedTime);
+			}
+		}		
 	}
 
 	// Destruction des ressources OpenGL
