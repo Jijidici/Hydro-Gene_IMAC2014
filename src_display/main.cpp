@@ -252,7 +252,7 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
 	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
 	
-	hydrogene::FreeFlyCamera ffCam(nearDistance, farDistance, verticalFieldOfView);
+	hydrogene::FreeFlyCamera ffCam(nearDistance, farDistance, verticalFieldOfView, leafSize);
 
 
 	// Creation des ressources OpenGL
@@ -316,9 +316,18 @@ int main(int argc, char** argv){
 					}
 					for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 						if(idx == n->idxLeaf){
-							glUniform2i(NbIntersectionLocation, leafArray[idx].nbIntersection, nbIntersectionMax);
-							display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices);
-							break;
+							if(currentCam == FREE_FLY){
+								/**** PLACER LE FRUSTUM ICI ****/
+								if(ffCam.leavesFrustum(leafArray[idx])){
+									glUniform2i(NbIntersectionLocation, leafArray[idx].nbIntersection, nbIntersectionMax);
+									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices);
+									break;
+								}
+							}else{
+								glUniform2i(NbIntersectionLocation, leafArray[idx].nbIntersection, nbIntersectionMax);
+								display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices);
+								break;
+							}
 						}
 					}
 				}else{
