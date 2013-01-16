@@ -181,8 +181,8 @@ int main(int argc, char** argv) {
 	fclose(normalFile);
 	
 	//CHARGEMENT PAGE4.DATA
-	int* drainData;
-	double* otherData;
+	int* drainData = NULL;
+	double* otherData = NULL;
 	if(p4Requested){
 		drainData = new int[nbFace];
 		otherData = new double[3*nbFace];

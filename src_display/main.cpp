@@ -210,15 +210,14 @@ int main(int argc, char** argv){
 	glBindVertexArray(0);
 
 	// Creation des Shaders
-	GLuint programInter = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/basic.fs.glsl");
 	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl");
-	if(!programInter || !programNorm){
+	if(!programNorm){
 		glDeleteBuffers(1, &cubeVBO);
 		glDeleteVertexArrays(1, &cubeVAO);
 		return (EXIT_FAILURE);
 	}
 	
-	GLuint program = programInter;	
+	GLuint program = programNorm;	
 	glUseProgram(program);
 
 	// Creation des Matrices
@@ -257,6 +256,7 @@ int main(int argc, char** argv){
 
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.5f, 0.5f, 0.5f, 1.f);
 	
 	//Creation des ressources d'evenements
 	bool is_lClicPressed = false;
@@ -274,7 +274,6 @@ int main(int argc, char** argv){
 	float old_positionX = 0.;
 	float new_positionX = 0.;
 	float new_positionY = 0.;
-	uint8_t cpt_displayFPS = 0;
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -356,18 +355,6 @@ int main(int argc, char** argv){
 							}else if(currentCam == FREE_FLY){
 								currentCam = TRACK_BALL;
 							}
-							break;
-
-						case SDLK_n:
-							if(arguments[5]){
-								resetShaderProgram(programNorm, MVPLocation, NbIntersectionLocation, NormSumLocation, LightVectLocation);
-								displayMode = 4;
-							}
-							break;
-							
-						case SDLK_i:
-							resetShaderProgram(programInter, MVPLocation, NbIntersectionLocation, NormSumLocation, LightVectLocation);
-							displayMode = 0;
 							break;
 						
 						case SDLK_q:
@@ -559,21 +546,17 @@ int main(int argc, char** argv){
 		ellapsedTime = end - start;
 		
 		/* Compute the framerate */
-		cpt_displayFPS++;
-		if(cpt_displayFPS >= FRAME_RATE){
-			cpt_displayFPS = 0;
-			float frameRate = 0;
-			if(ellapsedTime != 0){
-				frameRate = 1000.f/ellapsedTime;
-			}
-			std::stringstream title;
-			title << "Hydro-Gene Project | FPS: " <<frameRate;
-			SDL_WM_SetCaption(title.str().c_str(),  NULL);
-			
-			if(ellapsedTime < MIN_LOOP_TIME){
-				SDL_Delay(MIN_LOOP_TIME - ellapsedTime);
-			}
-		}		
+		float frameRate = 0;
+		if(ellapsedTime != 0){
+			frameRate = 1000.f/ellapsedTime;
+		}
+		std::stringstream title;
+		title << "Hydro-Gene Project | FPS: " <<frameRate;
+		SDL_WM_SetCaption(title.str().c_str(),  NULL);
+		
+		if(ellapsedTime < MIN_LOOP_TIME){
+			SDL_Delay(MIN_LOOP_TIME - ellapsedTime);
+		}	
 	}
 
 	// Destruction des ressources OpenGL
