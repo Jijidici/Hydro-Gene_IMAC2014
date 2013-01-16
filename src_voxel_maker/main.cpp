@@ -45,72 +45,6 @@ int main(int argc, char** argv) {
 	/* ************************************************************* */
 	
 	std::cout << std::endl << "############################# INITIALISATION #############################" << std::endl;
-
-	//CHARGEMENT PAGE1.DATA
-
-	size_t test_fic = 0;
-
-	FILE *dataFile = NULL;
-	dataFile = fopen("terrain_data/page_1.data", "rb");
-	if(NULL == dataFile){
-		std::cout << "[!] > Unable to load the file dataFile" << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	//lecture du nombre de vertex et de faces, puis affichage ds la console
-	uint32_t nbVertice = 0, nbFace = 0;	
-	test_fic = fread(&nbVertice, sizeof(nbVertice), 1, dataFile);
-	test_fic =fread(&nbFace, sizeof(nbFace), 1, dataFile);
-
-	// altitudes min et max de la carte
-	double altMin = 0;
-	double altMax = 0;
-	
-	double * positionsData = new double[3*nbVertice];
-	test_fic = fread(positionsData, sizeof(double), 3*nbVertice, dataFile); // to read the positions of the vertices
-	
-	uint32_t * facesData = new uint32_t[3*nbFace];
-	test_fic = fread(facesData, sizeof(uint32_t), 3*nbFace, dataFile); // to read the indexes of the vertices which compose each face
-	
-	fclose(dataFile);
-
-	//CONSTRUCTION OF THE DATA STRUCTURES
-	Vertex * tabV = new Vertex[nbVertice];
-	
-	for(uint32_t n=0;n<nbVertice;++n){ // to create the vertices tab
-		tabV[n].pos.x = positionsData[3*n];
-		tabV[n].pos.z = positionsData[3*n+1];
-		tabV[n].pos.y = positionsData[3*n+2];
-		
-		// on récupère les altitudes extremes
-		if(tabV[n].pos.y > altMax){
-			altMax = tabV[n].pos.y;
-		}else{
-			if(tabV[n].pos.y < altMin){
-				altMin = tabV[n].pos.y;
-			}
-		}
-	}
-
-	Face * tabF = new Face[nbFace];
-	uint32_t vertexCoordsOffset[3];
-	
-	// creation of the faces
-	for(uint32_t n=0;n<nbFace;++n){
-		for(size_t i = 0; i < 3; ++i){
-			vertexCoordsOffset[i] = facesData[3*n+i];
-		}
-		tabF[n].s1 = tabV + vertexCoordsOffset[0] -1;
-		tabF[n].s2 = tabV + vertexCoordsOffset[1] -1;
-		tabF[n].s3 = tabV + vertexCoordsOffset[2] -1;
-		tabF[n].normal = glm::dvec3(0,0,0);
-		tabF[n].bending = 0;
-		tabF[n].drain = 0;
-		tabF[n].gradient = 0;
-		tabF[n].surface = 0;
-	}
-
-	//VOXELS ARRAY CREATION
 	
 	//getting the arguments
 
@@ -123,7 +57,8 @@ int main(int argc, char** argv) {
 	uint16_t bending = 0;
 	uint16_t normal = 0;
 	uint16_t mode = 0;
-
+	
+	//Managing of the console arguments
 	if(argc > 1){
 		char** tabArguments = new char*[argc];
 
@@ -202,7 +137,37 @@ int main(int argc, char** argv) {
 		printHelp();
 		return EXIT_FAILURE;
 	}
+	
+	//BEGIN LOADING DATA
+	//CHARGEMENT PAGE1.DATA
 
+	size_t test_fic = 0;
+
+	FILE *dataFile = NULL;
+	dataFile = fopen("terrain_data/page_1.data", "rb");
+	if(NULL == dataFile){
+		std::cout << "[!] > Unable to load the file dataFile" << std::endl;
+		return EXIT_FAILURE;
+	}
+	
+	//lecture du nombre de vertex et de faces, puis affichage ds la console
+	uint32_t nbVertice = 0, nbFace = 0;	
+	test_fic = fread(&nbVertice, sizeof(nbVertice), 1, dataFile);
+	test_fic =fread(&nbFace, sizeof(nbFace), 1, dataFile);
+
+	// altitudes min et max de la carte
+	double altMin = 0;
+	double altMax = 0;
+	
+	double * positionsData = new double[3*nbVertice];
+	test_fic = fread(positionsData, sizeof(double), 3*nbVertice, dataFile); // to read the positions of the vertices
+	
+	uint32_t * facesData = new uint32_t[3*nbFace];
+	test_fic = fread(facesData, sizeof(uint32_t), 3*nbFace, dataFile); // to read the indexes of the vertices which compose each face
+	
+	fclose(dataFile);
+	
+	//CHARGEMENT PAGE2.DATA
 	FILE* normalFile = NULL;
 	normalFile = fopen("terrain_data/page_2.data", "rb");
 	if(NULL == normalFile){
@@ -210,26 +175,17 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 
-	//moving to the beginning of face normals in the file
-	test_fic = fseek(normalFile, nbVertice*3*sizeof(double), SEEK_SET);
-	if(test_fic != 0){
-		std::cout<<"[!] -> Unable to move inside the second data page"<<std::endl;
-		return EXIT_FAILURE;
-	}
-
-	double * normalData = new double[3*nbFace];
-	test_fic = fread(normalData, sizeof(double), 3*nbFace, normalFile);
-
-	for(uint32_t n=0;n<nbFace;++n){
-		tabF[n].normal = glm::dvec3(normalData[3*n], normalData[3*n+2], normalData[3*n+1]);
-	}
-
+	double * normalData = new double[3*nbFace+3*nbVertice];
+	test_fic = fread(normalData, sizeof(double), 3*nbFace+3*nbVertice, normalFile);
+	
 	fclose(normalFile);
-	delete[] normalData;
-
+	
+	//CHARGEMENT PAGE4.DATA
+	int* drainData;
+	double* otherData;
 	if(p4Requested){
-		int* drainData = new int[nbFace];
-		double* otherData = new double[3*nbFace];
+		drainData = new int[nbFace];
+		otherData = new double[3*nbFace];
 
 		FILE* page4File = NULL;
 		page4File = fopen("terrain_data/page_4.data", "rb");
@@ -249,21 +205,85 @@ int main(int argc, char** argv) {
 			test_fic = fread(&(drainData[n]), sizeof(int), 1, page4File);
 			test_fic = fread(&(otherData[3*n]), sizeof(double), 3, page4File);
 		}
-
-		if(drain){
-			for(uint32_t n=0;n<nbFace;++n) tabF[n].drain = drainData[n];
+		
+		fclose(page4File);
+	}
+	
+	//CONSTRUCTION OF THE DATA STRUCTURES
+	uint32_t cptNormals = 0;
+	
+	//VERTICES
+	Vertex * tabV = new Vertex[nbVertice];
+	
+	for(uint32_t n=0;n<nbVertice;++n){ // to create the vertices tab
+		tabV[n].pos.x = positionsData[3*n];
+		tabV[n].pos.z = positionsData[3*n+1];
+		tabV[n].pos.y = positionsData[3*n+2];
+		tabV[n].normal.x = normalData[3*cptNormals];
+		tabV[n].normal.y = normalData[3*cptNormals+1];
+		tabV[n].normal.z = normalData[3*cptNormals+2];
+		cptNormals++;
+		
+		// on récupère les altitudes extremes
+		if(tabV[n].pos.y > altMax){
+			altMax = tabV[n].pos.y;
+		}else{
+			if(tabV[n].pos.y < altMin){
+				altMin = tabV[n].pos.y;
+			}
 		}
-		if(bending){	
-			for(uint32_t n=0;n<nbFace;++n) tabF[n].bending = otherData[n*3];
+	}
+	
+	//FACES
+	Face * tabF = new Face[nbFace];
+	uint32_t vertexCoordsOffset[3];
+	
+	for(uint32_t n=0;n<nbFace;++n){
+		for(size_t i = 0; i < 3; ++i){
+			vertexCoordsOffset[i] = facesData[3*n+i];
 		}
-		if(surface){
-			for(uint32_t n=0;n<nbFace;++n) tabF[n].surface = otherData[n*3+1];
+		tabF[n].s1 = tabV + vertexCoordsOffset[0] -1;
+		tabF[n].s2 = tabV + vertexCoordsOffset[1] -1;
+		tabF[n].s3 = tabV + vertexCoordsOffset[2] -1;
+		tabF[n].normal.x = normalData[3*cptNormals];
+		tabF[n].normal.y = normalData[3*cptNormals+1];
+		tabF[n].normal.z = normalData[3*cptNormals+2];
+		cptNormals++;
+		
+		if(p4Requested && drain){
+			tabF[n].drain = drainData[n];
+		}else{
+			tabF[n].drain = 0;
 		}
-		if(gradient){
-			for(uint32_t n=0;n<nbFace;++n) tabF[n].gradient = otherData[n*3+2];
+		
+		if(p4Requested && bending){	
+			tabF[n].bending = otherData[n*3];
+		}else{
+			tabF[n].bending = 0;
+		}
+		
+		if(p4Requested && surface){
+			tabF[n].surface = otherData[n*3+1];
+		}else{
+			tabF[n].surface = 0;
+		}
+		
+		if(p4Requested && gradient){
+			tabF[n].gradient = otherData[n*3+2];
+		}else{
+			tabF[n].gradient = 0;
 		}
 	}
 
+	delete[] positionsData;
+	delete[] facesData;
+	delete[] normalData;
+	if(p4Requested){
+		delete[] drainData;
+		delete[] otherData;
+	}
+	//END LOADING DATA
+	
 	uint16_t test_lvl1 = nbSub_lvl1;
 	uint16_t test_lvl2 = nbSub_lvl2;
 	uint16_t power_lvl1 = 0;
@@ -492,25 +512,15 @@ int main(int argc, char** argv) {
 	std::cout << "Number of leaves saved : "<< l_queue.size() << std::endl;
 
 	/* writing the Leaf chunck */
-	Leaf* leafArray = new Leaf[l_queue.size()];
-	uint16_t cpt = 0;
-	for(std::vector<Leaf>::iterator idx=l_queue.begin();idx!=l_queue.end();++idx){
-		leafArray[cpt] = *idx;
-		cpt++;
-	}
-	test_cache = drn_writer_add_chunk(&cache, leafArray, l_queue.size()*sizeof(Leaf));
+	test_cache = drn_writer_add_chunk(&cache, l_queue.data(), l_queue.size()*sizeof(Leaf));
 	
 	/* Close the DATA file */
 	test_cache = drn_close_writer(&cache);
 	if(test_cache < 0){ throw std::runtime_error("unable to close the data file"); }
-	
-	delete[] positionsData;
-	delete[] facesData;
 
 	delete[] tabV;
 	delete[] tabF;
 	delete[] l_voxelArray;
-	delete[] leafArray;
 
 	return EXIT_SUCCESS;
 }
