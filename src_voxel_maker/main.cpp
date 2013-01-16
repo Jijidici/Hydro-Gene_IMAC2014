@@ -220,8 +220,8 @@ int main(int argc, char** argv) {
 		tabV[n].pos.z = positionsData[3*n+1];
 		tabV[n].pos.y = positionsData[3*n+2];
 		tabV[n].normal.x = normalData[3*cptNormals];
-		tabV[n].normal.y = normalData[3*cptNormals+1];
-		tabV[n].normal.z = normalData[3*cptNormals+2];
+		tabV[n].normal.z = normalData[3*cptNormals+1];
+		tabV[n].normal.y = normalData[3*cptNormals+2];
 		cptNormals++;
 		
 		// on récupère les altitudes extremes
@@ -246,8 +246,8 @@ int main(int argc, char** argv) {
 		tabF[n].s2 = tabV + vertexCoordsOffset[1] -1;
 		tabF[n].s3 = tabV + vertexCoordsOffset[2] -1;
 		tabF[n].normal.x = normalData[3*cptNormals];
-		tabF[n].normal.y = normalData[3*cptNormals+1];
-		tabF[n].normal.z = normalData[3*cptNormals+2];
+		tabF[n].normal.z = normalData[3*cptNormals+1];
+		tabF[n].normal.y = normalData[3*cptNormals+2];
 		cptNormals++;
 		
 		if(p4Requested && drain){

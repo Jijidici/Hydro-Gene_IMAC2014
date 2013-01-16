@@ -222,7 +222,7 @@ int main(int argc, char** argv){
 	GLint LightVectLocation = glGetUniformLocation(program, "uLightVect");
 	
 	// Creation Light
-	glm::vec3 light(-1.f,0.5f,0.f);
+	glm::vec3 light(-1.f,-1.f,0.f);
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
