@@ -87,9 +87,6 @@ bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, F
 	if(glm::dot(ffCam.m_frustumBottomPlaneNormal, (glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.) - ffCam.m_frustumBottomPlanePoint)) < 0.){
 		return false;
 	}
-	//~ if(glm::dot(ffCam.m_frustumFarPlaneNormal, (ffCam.m_frustumFarPlanePoint - glm::vec3(l.pos.x + i*cubeSize + cubeSize/2., l.pos.y + j*cubeSize + cubeSize/2., l.pos.z + k*cubeSize + cubeSize/2.))) < 0.){
-		//~ return false;
-	//~ }
 	
 	return true;
 }

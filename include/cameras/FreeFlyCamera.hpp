@@ -3,6 +3,8 @@
 
 #include <glm/glm.hpp>
 
+#include "data_types.hpp"
+
 namespace hydrogene{
 
 class FreeFlyCamera{
@@ -15,6 +17,7 @@ class FreeFlyCamera{
 		glm::vec3 m_UpVector;
 		
 		float m_nearDistance, m_farDistance, m_verticalFieldOfView;
+		double m_leafSize;
 
 		void computeDirectionVectors();
 		void computeFrustumPlanes();
@@ -36,12 +39,13 @@ class FreeFlyCamera{
 		glm::vec3 m_frustumLeftPlaneNormal;
 	
 	
-		FreeFlyCamera(float nearDistance, float farDistance, float verticalFieldOfView);
+		FreeFlyCamera(float nearDistance, float farDistance, float verticalFieldOfView, double leafSize);
 		//~ FreeFlyCamera();
 		void moveLeft(float const t);
 		void moveFront(float const t);
 		void rotateLeft(float degree);
 		void rotateUp(float degree);
+		bool leavesFrustum(Leaf& l);
 		glm::mat4 getViewMatrix() const;
 };
 
