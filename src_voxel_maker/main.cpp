@@ -466,6 +466,71 @@ int main(int argc, char** argv) {
 				}//end foreach face
 				/* if the leaf is not empty, save its voxels */
 				if(is_intersec){
+					/*** TRIANGULARISATION HERE ***/
+					
+					/* compute leaf's corners */
+					glm::dvec3 vert0 = currentLeaf.pos;
+					glm::dvec3 vert1 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z);
+					glm::dvec3 vert2 = glm::dvec3(vert0.x + l_size, vert0.y + l_size, vert0.z);
+					glm::dvec3 vert3 = glm::dvec3(vert0.x, vert0.y + l_size, vert0.z);
+					glm::dvec3 vert4 = glm::dvec3(vert0.x, vert0.y, vert0.z - l_size);
+					glm::dvec3 vert5 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z - l_size);
+					glm::dvec3 vert6 = glm::dvec3(vert0.x + l_size, vert0.y + l_size, vert0.z - l_size);
+					glm::dvec3 vert7 = glm::dvec3(vert0.x, vert0.y + l_size, vert0.z - l_size);
+					
+					/* Leaf's edges are :
+					 * [vert0 - vert1]
+					 * [vert1 - vert2]
+					 * [vert2 - vert3]
+					 * [vert3 - vert0]
+					 * [vert4 - vert5]
+					 * [vert5 - vert6]
+					 * [vert6 - vert7]
+					 * [vert7 - vert4]
+					 * [vert0 - vert4]
+					 * [vert1 - vert5]
+					 * [vert2 - vert6]
+					 * [vert3 - vert7]
+					 */
+					
+					/* compute leaf's edges */
+					Edge e0; e0.dir = vert1 - vert0; e0.length = l_size;
+					Edge e1; e1.dir = vert2 - vert1; e1.length = l_size;
+					Edge e2; e2.dir = vert3 - vert2; e2.length = l_size;
+					Edge e3; e3.dir = vert0 - vert3; e3.length = l_size;
+					Edge e4; e4.dir = vert5 - vert4; e4.length = l_size;
+					Edge e5; e5.dir = vert6 - vert5; e5.length = l_size;
+					Edge e6; e6.dir = vert7 - vert6; e6.length = l_size;
+					Edge e7; e7.dir = vert4 - vert7; e7.length = l_size;
+					Edge e8; e8.dir = vert4 - vert0; e8.length = l_size;
+					Edge e9; e9.dir = vert5 - vert1; e9.length = l_size;
+					Edge e10; e10.dir = vert6 - vert2; e10.length = l_size;
+					Edge e11; e11.dir = vert7 - vert3; e11.length = l_size;
+					std::vector<Edge> leafEdges;
+					leafEdges.push_back(e0);
+					leafEdges.push_back(e1);
+					leafEdges.push_back(e2);
+					leafEdges.push_back(e3);
+					leafEdges.push_back(e4);
+					leafEdges.push_back(e5);
+					leafEdges.push_back(e6);
+					leafEdges.push_back(e7);
+					leafEdges.push_back(e8);
+					leafEdges.push_back(e9);
+					leafEdges.push_back(e10);
+					leafEdges.push_back(e11);
+					
+					
+					/* Intersection triangle - edge */
+					/* browse edges */
+					for(std::vector<Edge>::iterator e_it = leafEdges.begin(); e_it < leafEdges.end(); ++e_it){
+						/* browse saved triangles */
+						for(size_t i = 0; i < l_storedVertices.size(); i += 3){
+							Face tempFace; tempFace.s1 = &l_storedVertices[i]; tempFace.s2 = &l_storedVertices[i+1]; tempFace.s3 = &l_storedVertices[i+2];
+							/*** test intersection edge - tempFace ***/
+						}
+					}
+					
 					/* Save the VoxelData array */
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
 					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
