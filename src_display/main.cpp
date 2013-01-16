@@ -45,15 +45,6 @@ void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersecti
 }
 
 int main(int argc, char** argv){
-	
-	// OPEN AND READ THE VOXEL-INTERSECTION FILE
-	FILE* voxelFile = NULL;
-	size_t test_fic = 0;
-	voxelFile = fopen("voxels_data/voxel_intersec_1.data", "rb");
-	if(NULL == voxelFile){
-		std::cout << "[!]-> Unable to load the file voxelFile" << std::endl;
-		return EXIT_FAILURE;
-	}
 
 	/* Open DATA file */
 	drn_t cache;
@@ -100,11 +91,7 @@ int main(int argc, char** argv){
 		loadedLeaf[idx] = false;
 	}
 	
-	uint16_t displayMode = 0; // = 0 to display the faces, = 1 to display the normals	
-	
 	test_cache = drn_close(&cache);
-		
-	uint32_t nbIntersectionMax = 5000000;
 	
 	/* ************************************************************* */
 	/* *************INITIALISATION OPENGL/SDL*********************** */
@@ -232,8 +219,6 @@ int main(int argc, char** argv){
 	ms.set(P);
 
 	// Recuperation des variables uniformes
-	GLint NbIntersectionLocation = glGetUniformLocation(program, "uNbIntersection");
-	GLint NormSumLocation = glGetUniformLocation(program, "uNormSum");
 	GLint LightVectLocation = glGetUniformLocation(program, "uLightVect");
 	
 	// Creation Light
@@ -301,7 +286,7 @@ int main(int argc, char** argv){
 				V = ffCam.getViewMatrix();
 			}
 			ms.mult(V);
-			glUniform3f(LightVectLocation, light.x, light.y, light.z);
+			glUniform3fv(LightVectLocation, 1, glm::value_ptr(light));
 			
 			//For each leaf
 			for(uint16_t idx=0;idx<nbLeaves;++idx){
@@ -315,13 +300,11 @@ int main(int argc, char** argv){
 					}
 					for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 						if(idx == n->idxLeaf){
-							glUniform2i(NbIntersectionLocation, leafArray[idx].nbIntersection, nbIntersectionMax);
 							display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices);
 							break;
 						}
 					}
 				}else{
-					glUniform2i(NbIntersectionLocation, leafArray[idx].nbIntersection, nbIntersectionMax);
 					display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
 				}
 			}
