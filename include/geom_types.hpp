@@ -6,6 +6,7 @@
 
 typedef struct s_vertex{
 	glm::dvec3 pos;
+	glm::dvec3 normal;
 }Vertex;
 
 typedef struct s_face{

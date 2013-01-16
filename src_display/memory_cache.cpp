@@ -9,6 +9,7 @@
 #include "geom_types.hpp"
 
 #define POSITION_LOCATION 0
+#define NORMAL_LOCATION 1
 
 size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint32_t nbLeaves, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize){
 	//if the memcache is to tiny for the chunks
@@ -32,8 +33,10 @@ size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf,
 		
 		glBindVertexArray(vaos[currentLeaf]);
 			glEnableVertexAttribArray(POSITION_LOCATION);
+			glEnableVertexAttribArray(NORMAL_LOCATION);
 			glBindBuffer(GL_ARRAY_BUFFER, vbos[currentLeaf]);
-				glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, 0, NULL);
+				glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
+				glVertexAttribPointer(NORMAL_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3*sizeof(GLdouble)));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 		

@@ -45,15 +45,6 @@ void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersecti
 }
 
 int main(int argc, char** argv){
-	
-	// OPEN AND READ THE VOXEL-INTERSECTION FILE
-	FILE* voxelFile = NULL;
-	size_t test_fic = 0;
-	voxelFile = fopen("voxels_data/voxel_intersec_1.data", "rb");
-	if(NULL == voxelFile){
-		std::cout << "[!]-> Unable to load the file voxelFile" << std::endl;
-		return EXIT_FAILURE;
-	}
 
 	/* Open DATA file */
 	drn_t cache;
@@ -100,11 +91,7 @@ int main(int argc, char** argv){
 		loadedLeaf[idx] = false;
 	}
 	
-	uint16_t displayMode = 0; // = 0 to display the faces, = 1 to display the normals	
-	
 	test_cache = drn_close(&cache);
-		
-	uint32_t nbIntersectionMax = 5000000;
 	
 	/* ************************************************************* */
 	/* *************INITIALISATION OPENGL/SDL*********************** */
@@ -210,15 +197,14 @@ int main(int argc, char** argv){
 	glBindVertexArray(0);
 
 	// Creation des Shaders
-	GLuint programInter = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/basic.fs.glsl");
 	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl");
-	if(!programInter || !programNorm){
+	if(!programNorm){
 		glDeleteBuffers(1, &cubeVBO);
 		glDeleteVertexArrays(1, &cubeVAO);
 		return (EXIT_FAILURE);
 	}
 	
-	GLuint program = programInter;	
+	GLuint program = programNorm;	
 	glUseProgram(program);
 
 	// Creation des Matrices
@@ -233,8 +219,6 @@ int main(int argc, char** argv){
 	ms.set(P);
 
 	// Recuperation des variables uniformes
-	GLint NbIntersectionLocation = glGetUniformLocation(program, "uNbIntersection");
-	GLint NormSumLocation = glGetUniformLocation(program, "uNormSum");
 	GLint LightVectLocation = glGetUniformLocation(program, "uLightVect");
 	
 	// Creation Light
@@ -257,6 +241,7 @@ int main(int argc, char** argv){
 
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.5f, 0.5f, 0.5f, 1.f);
 	
 	//Creation des ressources d'evenements
 	bool is_lClicPressed = false;
@@ -274,7 +259,6 @@ int main(int argc, char** argv){
 	float old_positionX = 0.;
 	float new_positionX = 0.;
 	float new_positionY = 0.;
-	uint8_t cpt_displayFPS = 0;
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -302,7 +286,7 @@ int main(int argc, char** argv){
 				V = ffCam.getViewMatrix();
 			}
 			ms.mult(V);
-			glUniform3f(LightVectLocation, light.x, light.y, light.z);
+			glUniform3fv(LightVectLocation, 1, glm::value_ptr(light));
 			
 			//For each leaf
 			for(uint16_t idx=0;idx<nbLeaves;++idx){
@@ -317,21 +301,18 @@ int main(int argc, char** argv){
 					for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 						if(idx == n->idxLeaf){
 							if(currentCam == FREE_FLY){
-								/**** PLACER LE FRUSTUM ICI ****/
+								//FRUSTUM CULLING
 								if(ffCam.leavesFrustum(leafArray[idx])){
-									glUniform2i(NbIntersectionLocation, leafArray[idx].nbIntersection, nbIntersectionMax);
 									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices);
 									break;
 								}
 							}else{
-								glUniform2i(NbIntersectionLocation, leafArray[idx].nbIntersection, nbIntersectionMax);
 								display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices);
 								break;
 							}
 						}
 					}
 				}else{
-					glUniform2i(NbIntersectionLocation, leafArray[idx].nbIntersection, nbIntersectionMax);
 					display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
 				}
 			}
@@ -365,18 +346,6 @@ int main(int argc, char** argv){
 							}else if(currentCam == FREE_FLY){
 								currentCam = TRACK_BALL;
 							}
-							break;
-
-						case SDLK_n:
-							if(arguments[5]){
-								resetShaderProgram(programNorm, MVPLocation, NbIntersectionLocation, NormSumLocation, LightVectLocation);
-								displayMode = 4;
-							}
-							break;
-							
-						case SDLK_i:
-							resetShaderProgram(programInter, MVPLocation, NbIntersectionLocation, NormSumLocation, LightVectLocation);
-							displayMode = 0;
 							break;
 						
 						case SDLK_q:
@@ -568,21 +537,17 @@ int main(int argc, char** argv){
 		ellapsedTime = end - start;
 		
 		/* Compute the framerate */
-		cpt_displayFPS++;
-		if(cpt_displayFPS >= FRAME_RATE){
-			cpt_displayFPS = 0;
-			float frameRate = 0;
-			if(ellapsedTime != 0){
-				frameRate = 1000.f/ellapsedTime;
-			}
-			std::stringstream title;
-			title << "Hydro-Gene Project | FPS: " <<frameRate;
-			SDL_WM_SetCaption(title.str().c_str(),  NULL);
-			
-			if(ellapsedTime < MIN_LOOP_TIME){
-				SDL_Delay(MIN_LOOP_TIME - ellapsedTime);
-			}
-		}		
+		float frameRate = 0;
+		if(ellapsedTime != 0){
+			frameRate = 1000.f/ellapsedTime;
+		}
+		std::stringstream title;
+		title << "Hydro-Gene Project | FPS: " <<frameRate;
+		SDL_WM_SetCaption(title.str().c_str(),  NULL);
+		
+		if(ellapsedTime < MIN_LOOP_TIME){
+			SDL_Delay(MIN_LOOP_TIME - ellapsedTime);
+		}	
 	}
 
 	// Destruction des ressources OpenGL

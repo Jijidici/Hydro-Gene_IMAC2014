@@ -1,15 +1,17 @@
 #version 330
 
-uniform ivec2 uNbIntersection = ivec2(1.f);
-uniform vec3 uNormSum = vec3(1.);
+in vec3 vNormal;
+
 uniform vec3 uLightVect = vec3(-1.,1.,1.);
 
 out vec4 fFragColor;
 
 void main() {
+	float dCoeff = max(0, dot(normalize(vNormal), -normalize(uLightVect)));
+
+	vec3 aColor = vec3(0.02f, 0.02f, 0.f);
+	vec3 dColor = vec3(0.88f, 0.7f, 0.23f);
+	vec3 color = aColor + dColor*dCoeff;
 	
-	vec3 light = vec3(cos(uLightVect.x), uLightVect.y, uLightVect.z);
-	float NdotL = dot(normalize(uNormSum/uNbIntersection[0]), normalize(light)) / 2.f;
-	
-	fFragColor = vec4(1.f * NdotL, 1.f * NdotL, 1.f * NdotL, 1.f);
+	fFragColor = vec4(color, 1.f);
 }
