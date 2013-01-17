@@ -27,9 +27,10 @@
 #define FRAME_RATE 60
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
-static const size_t WINDOW_WIDTH = 600, WINDOW_HEIGHT = 600;
+static const size_t WINDOW_WIDTH = 1060, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
 static const size_t POSITION_LOCATION = 0;
+static const size_t NORMAL_LOCATION = 1;
 static const size_t GRID_3D_SIZE = 2;
 
 void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersectionLocation, GLint &NormSumLocation, GLint &LightVectLocation){
@@ -90,8 +91,6 @@ int main(int argc, char** argv){
 	for(uint16_t idx=0;idx<nbLeaves;++idx){
 		loadedLeaf[idx] = false;
 	}
-	
-	test_cache = drn_close(&cache);
 	
 	/* ************************************************************* */
 	/* *************INITIALISATION OPENGL/SDL*********************** */
@@ -176,7 +175,6 @@ int main(int argc, char** argv){
 		aCube.right, aCube.bottom, aCube.far,
 		aCube.left, aCube.bottom, aCube.far
 	};
-
 	/* ******************************** */
 	/* 		Creation des VBO, VAO 		*/
 	/* ******************************** */
@@ -195,12 +193,48 @@ int main(int argc, char** argv){
 			glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, 0, NULL);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
+	
+	/* Leaves VBOs & VAOs creation */
+	GLuint* l_VBOs = new GLuint[nbLeaves];
+	glGenBuffers(nbLeaves, l_VBOs);
+	
+	GLuint* l_VAOs = new GLuint[nbLeaves];
+	glGenVertexArrays(nbLeaves, l_VAOs);
+	
+	for(uint32_t l_idx=0;l_idx<nbLeaves;++l_idx){
+		//load the vertices
+		Vertex* trVertices = new Vertex[leafArray[l_idx].nbVertices_lvl2];
+		test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+2, trVertices);
+	
+		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]);
+			glBufferData(GL_ARRAY_BUFFER, leafArray[l_idx].nbVertices_lvl2, trVertices, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		
+		glBindVertexArray(l_VAOs[l_idx]);
+			glEnableVertexAttribArray(POSITION_LOCATION);
+			glEnableVertexAttribArray(NORMAL_LOCATION);
+			glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]);
+				glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
+				glVertexAttribPointer(NORMAL_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3*sizeof(GLdouble)));
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+		
+		delete[] trVertices;
+	}
+	
+	test_cache = drn_close(&cache);
+	
 	// Creation des Shaders
 	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl");
 	if(!programNorm){
 		glDeleteBuffers(1, &cubeVBO);
+		glDeleteBuffers(nbLeaves, l_VBOs);
 		glDeleteVertexArrays(1, &cubeVAO);
+		glDeleteVertexArrays(nbLeaves, l_VAOs);
+		delete[] l_VAOs;
+		delete[] l_VBOs;
+		delete[] leafArray;
+		delete[] loadedLeaf;
 		return (EXIT_FAILURE);
 	}
 	
@@ -303,17 +337,21 @@ int main(int argc, char** argv){
 							if(currentCam == FREE_FLY){
 								//FRUSTUM CULLING
 								if(ffCam.leavesFrustum(leafArray[idx])){
-									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices);
+									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
 									break;
 								}
 							}else{
-								display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices);
+								display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
 								break;
 							}
 						}
 					}
 				}else{
-					display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
+					//display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
+					/* display the triangularized leaf */
+					glBindVertexArray(l_VAOs[idx]);
+						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl2);
+					glBindVertexArray(0);
 				}
 			}
 			
@@ -563,7 +601,11 @@ int main(int argc, char** argv){
 	}
 	
 	glDeleteBuffers(1, &cubeVBO);
+	glDeleteBuffers(nbLeaves, l_VBOs);
 	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteVertexArrays(nbLeaves, l_VAOs);
+	delete[] l_VAOs;
+	delete[] l_VBOs;
 	delete[] leafArray;
 	delete[] loadedLeaf;
 

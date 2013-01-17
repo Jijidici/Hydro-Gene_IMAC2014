@@ -409,7 +409,8 @@ int main(int argc, char** argv) {
 				/* Fix the current leaf */
 				currentLeaf.pos = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
 				currentLeaf.nbIntersection = 0;
-				currentLeaf.nbVertices = 0;
+				currentLeaf.nbVertices_lvl1 = 0;
+				currentLeaf.nbVertices_lvl2 = 0;
 				
 				//For each Face
 				for(uint32_t n=0;n<nbFace;++n){
@@ -479,7 +480,7 @@ int main(int argc, char** argv) {
 							l_storedVertices.push_back(*(tabF[n].s1));
 							l_storedVertices.push_back(*(tabF[n].s2));
 							l_storedVertices.push_back(*(tabF[n].s3));
-							currentLeaf.nbVertices+=3;
+							currentLeaf.nbVertices_lvl2+=3;
 							is_triangle_in = false;
 						}			
 					}
@@ -490,8 +491,11 @@ int main(int argc, char** argv) {
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
 					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 					
-					/* Save the vertices */
-					test_cache = drn_writer_add_chunk(&cache, l_storedVertices.data(), currentLeaf.nbVertices*sizeof(Vertex));
+					/* Save the vertices lvl2 */
+					test_cache = drn_writer_add_chunk(&cache, l_storedVertices.data(), currentLeaf.nbVertices_lvl2*sizeof(Vertex));
+					
+					/* Save the vetrices lvl1 */
+					/******* HERE SAVE THE VERTICES GET WITH TRIANGULARISATION **********/
 					
 					/* updade the Leaf indexation */
 					currentLeaf.nbIntersection /= l_voxArrLength;
@@ -500,7 +504,8 @@ int main(int argc, char** argv) {
 					/* init for next leaf */
 					currentLeaf.id+=2;
 					currentLeaf.nbIntersection = 0;
-					currentLeaf.nbVertices = 0;
+					currentLeaf.nbVertices_lvl1 = 0;
+					currentLeaf.nbVertices_lvl2 = 0;
 					l_storedVertices.clear();
 					is_intersec = false;
 				}

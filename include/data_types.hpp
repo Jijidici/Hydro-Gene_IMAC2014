@@ -21,7 +21,8 @@ typedef struct s_leaf{
 	drn_chunk_id_t id;
 	glm::dvec3 pos;
 	uint32_t nbIntersection;
-	uint32_t nbVertices;
+	uint32_t nbVertices_lvl1;
+	uint32_t nbVertices_lvl2;
 }Leaf;
 
 typedef struct s_chunk{
