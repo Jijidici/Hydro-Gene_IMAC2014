@@ -494,18 +494,19 @@ int main(int argc, char** argv) {
 					 */
 					
 					/* compute leaf's edges */
-					Edge e0; e0.dir = vert1 - vert0; e0.length = l_size;
-					Edge e1; e1.dir = vert2 - vert1; e1.length = l_size;
-					Edge e2; e2.dir = vert3 - vert2; e2.length = l_size;
-					Edge e3; e3.dir = vert0 - vert3; e3.length = l_size;
-					Edge e4; e4.dir = vert5 - vert4; e4.length = l_size;
-					Edge e5; e5.dir = vert6 - vert5; e5.length = l_size;
-					Edge e6; e6.dir = vert7 - vert6; e6.length = l_size;
-					Edge e7; e7.dir = vert4 - vert7; e7.length = l_size;
-					Edge e8; e8.dir = vert4 - vert0; e8.length = l_size;
-					Edge e9; e9.dir = vert5 - vert1; e9.length = l_size;
-					Edge e10; e10.dir = vert6 - vert2; e10.length = l_size;
-					Edge e11; e11.dir = vert7 - vert3; e11.length = l_size;
+					Edge e0 = createEdge(vert0, vert1);
+					Edge e1 = createEdge(vert1, vert2);
+					Edge e2 = createEdge(vert2, vert3);
+					Edge e3 = createEdge(vert3, vert0);
+					Edge e4 = createEdge(vert4, vert5);
+					Edge e5 = createEdge(vert5, vert6);
+					Edge e6 = createEdge(vert6, vert7);
+					Edge e7 = createEdge(vert7, vert4);
+					Edge e8 = createEdge(vert0, vert4);
+					Edge e9 = createEdge(vert1, vert5);
+					Edge e10 = createEdge(vert2, vert6);
+					Edge e11 = createEdge(vert3, vert7);
+					
 					std::vector<Edge> leafEdges;
 					leafEdges.push_back(e0);
 					leafEdges.push_back(e1);
@@ -523,13 +524,20 @@ int main(int argc, char** argv) {
 					
 					/* Intersection triangle - edge */
 					/* browse edges */
+					int countTest = 0;
 					for(std::vector<Edge>::iterator e_it = leafEdges.begin(); e_it < leafEdges.end(); ++e_it){
 						/* browse saved triangles */
 						for(size_t i = 0; i < l_storedVertices.size(); i += 3){
 							Face tempFace; tempFace.s1 = &l_storedVertices[i]; tempFace.s2 = &l_storedVertices[i+1]; tempFace.s3 = &l_storedVertices[i+2];
 							/*** test intersection edge - tempFace ***/
+							if((*e_it).faceIntersectionTest(tempFace)){
+								++countTest;
+								break;
+							}
 						}
 					}
+					
+					std::cout << "countTest : " << countTest << std::endl;
 					
 					/* Save the VoxelData array */
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
