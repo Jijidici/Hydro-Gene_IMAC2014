@@ -527,14 +527,19 @@ int main(int argc, char** argv) {
 					int countTest = 0;
 					for(std::vector<Edge>::iterator e_it = leafEdges.begin(); e_it < leafEdges.end(); ++e_it){
 						/* browse saved triangles */
+						std::cout << "Edge : " << std::endl; 
+						std::cout << "Origin : " << (*e_it).origin.x << " " << (*e_it).origin.y << " " << (*e_it).origin.z << std::endl;
+						std::cout << "Dir : " << (*e_it).dir.x << " " << (*e_it).dir.y << " " << (*e_it).dir.z << std::endl;
 						for(size_t i = 0; i < l_storedVertices.size(); i += 3){
 							Face tempFace; tempFace.s1 = &l_storedVertices[i]; tempFace.s2 = &l_storedVertices[i+1]; tempFace.s3 = &l_storedVertices[i+2];
 							/*** test intersection edge - tempFace ***/
 							if((*e_it).faceIntersectionTest(tempFace)){
 								++countTest;
+								std::cout << "Face : " << tempFace.s1->pos.x << " " << tempFace.s1->pos.y << " " << tempFace.s1->pos.z << std::endl;
 								break;
 							}
 						}
+						std::cout << std::endl;
 					}
 					
 					std::cout << "countTest : " << countTest << std::endl;
