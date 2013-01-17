@@ -473,25 +473,10 @@ int main(int argc, char** argv) {
 					glm::dvec3 vert1 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z);
 					glm::dvec3 vert2 = glm::dvec3(vert0.x + l_size, vert0.y + l_size, vert0.z);
 					glm::dvec3 vert3 = glm::dvec3(vert0.x, vert0.y + l_size, vert0.z);
-					glm::dvec3 vert4 = glm::dvec3(vert0.x, vert0.y, vert0.z - l_size);
-					glm::dvec3 vert5 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z - l_size);
-					glm::dvec3 vert6 = glm::dvec3(vert0.x + l_size, vert0.y + l_size, vert0.z - l_size);
-					glm::dvec3 vert7 = glm::dvec3(vert0.x, vert0.y + l_size, vert0.z - l_size);
-					
-					/* Leaf's edges are :
-					 * [vert0 - vert1]
-					 * [vert1 - vert2]
-					 * [vert2 - vert3]
-					 * [vert3 - vert0]
-					 * [vert4 - vert5]
-					 * [vert5 - vert6]
-					 * [vert6 - vert7]
-					 * [vert7 - vert4]
-					 * [vert0 - vert4]
-					 * [vert1 - vert5]
-					 * [vert2 - vert6]
-					 * [vert3 - vert7]
-					 */
+					glm::dvec3 vert4 = glm::dvec3(vert0.x, vert0.y, vert0.z + l_size);
+					glm::dvec3 vert5 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z + l_size);
+					glm::dvec3 vert6 = glm::dvec3(vert0.x + l_size, vert0.y + l_size, vert0.z + l_size);
+					glm::dvec3 vert7 = glm::dvec3(vert0.x, vert0.y + l_size, vert0.z + l_size);
 					
 					/* compute leaf's edges */
 					Edge e0 = createEdge(vert0, vert1);
@@ -524,7 +509,10 @@ int main(int argc, char** argv) {
 					
 					/* Intersection triangle - edge */
 					/* browse edges */
-					int countTest = 0;
+					
+					std::vector<Vertex> intersectionPoints;
+					
+					std::cout << "---- LEAF ----" << std::endl;
 					for(std::vector<Edge>::iterator e_it = leafEdges.begin(); e_it < leafEdges.end(); ++e_it){
 						/* browse saved triangles */
 						std::cout << "Edge : " << std::endl; 
@@ -534,15 +522,37 @@ int main(int argc, char** argv) {
 							Face tempFace; tempFace.s1 = &l_storedVertices[i]; tempFace.s2 = &l_storedVertices[i+1]; tempFace.s3 = &l_storedVertices[i+2];
 							/*** test intersection edge - tempFace ***/
 							if((*e_it).faceIntersectionTest(tempFace)){
-								++countTest;
-								std::cout << "Face : " << tempFace.s1->pos.x << " " << tempFace.s1->pos.y << " " << tempFace.s1->pos.z << std::endl;
+								std::cout << "Face : " << std::endl;
+								std::cout << "s1 : " << tempFace.s1->pos.x << " " << tempFace.s1->pos.y << " " << tempFace.s1->pos.z << std::endl;
+								std::cout << "s2 : " << tempFace.s2->pos.x << " " << tempFace.s2->pos.y << " " << tempFace.s2->pos.z << std::endl;
+								std::cout << "s3 : " << tempFace.s3->pos.x << " " << tempFace.s3->pos.y << " " << tempFace.s3->pos.z << std::endl;
+								
+								glm::dvec3 u = createVector(tempFace.s1->pos, tempFace.s2->pos);
+								glm::dvec3 v = createVector(tempFace.s1->pos, tempFace.s3->pos);
+								
+								glm::dvec3 normale = glm::normalize(glm::cross(u, v));
+								std::cout << "Normale : " << normale.x << " " << normale.y << " " << normale.z << std::endl;
+								
+								/* intersection point */								
+								glm::dvec3 intPoint = (*e_it).computeIntersectionPoint(u, v, tempFace.s1->pos);
+								std::cout << "Intersection Point : " << intPoint.x << " " << intPoint.y << " " << intPoint.z << std::endl;
+								
+								Vertex intVertex;
+								intVertex.pos = intPoint;
+								intVertex.normal = normale;
+								
+								/* add the intersection point to the vector */
+								intersectionPoints.push_back(intVertex);
+								
 								break;
 							}
 						}
 						std::cout << std::endl;
 					}
 					
-					std::cout << "countTest : " << countTest << std::endl;
+					/* Compute the "dual-vertex" */
+					
+					
 					
 					/* Save the VoxelData array */
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));

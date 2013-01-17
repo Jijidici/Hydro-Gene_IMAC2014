@@ -6,6 +6,7 @@
 
 typedef struct s_vertex{
 	glm::dvec3 pos;
+	glm::dvec3 normal;
 }Vertex;
 
 typedef struct s_face{
@@ -42,6 +43,7 @@ typedef struct s_edge{
 	double length;
 	glm::dvec3 origin;
 	bool faceIntersectionTest(Face &face);
+	glm::dvec3 computeIntersectionPoint(glm::dvec3& u, glm::dvec3& v, glm::dvec3& s1);
 }Edge;
 
 /******************************************/
