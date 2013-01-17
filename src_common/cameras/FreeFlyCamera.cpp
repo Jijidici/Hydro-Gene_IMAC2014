@@ -121,4 +121,8 @@ namespace hydrogene{
 		return true;
 	}
 
+	glm::vec3 FreeFlyCamera::getCameraPosition(){
+		return m_Position;
+	}
+
 }

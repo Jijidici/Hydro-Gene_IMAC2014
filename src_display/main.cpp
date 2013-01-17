@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
 #include <GL/glew.h>
 #include <stdint.h>
 #include <stdexcept>
@@ -21,15 +22,17 @@
 #include "cameras/FreeFlyCamera.hpp"
 #include "display/lvl_displaying.hpp"
 #include "display/memory_cache.hpp"
+#include "display/cube_model.hpp"
 
 #include "drn/drn_reader.h"
 
 #define FRAME_RATE 60
+#define SKYBOX 0
+#define TRIANGLES 1
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
 static const size_t WINDOW_WIDTH = 600, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
-static const size_t POSITION_LOCATION = 0;
 static const size_t GRID_3D_SIZE = 2;
 
 void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersectionLocation, GLint &NormSumLocation, GLint &LightVectLocation){
@@ -43,6 +46,7 @@ void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersecti
 	NormSumLocation = glGetUniformLocation(program, "uNormSum");
 	LightVectLocation = glGetUniformLocation(program, "uLightVect");
 }
+
 
 int main(int argc, char** argv){
 
@@ -119,82 +123,13 @@ int main(int argc, char** argv){
 	double halfLeafSize = leafSize*0.5;
 	double cubeSize = leafSize/(double)nbSub_lvl2;
 	
-	// CREATION DU CUBE 
-	Cube aCube = createCube(-0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f);
-	
-	GLdouble cubeVertices[] = {//
-		aCube.left, aCube.bottom, aCube.near,
-		aCube.right, aCube.bottom, aCube.near,
-		aCube.left, aCube.top, aCube.near,
-
-		aCube.right, aCube.bottom, aCube.near,
-		aCube.right, aCube.top, aCube.near,
-		aCube.left, aCube.top, aCube.near,
-
-		//
-		aCube.right, aCube.bottom, aCube.near,
-		aCube.right, aCube.bottom, aCube.far,
-		aCube.right, aCube.top, aCube.far,
-
-		aCube.right, aCube.bottom, aCube.near,
-		aCube.right, aCube.top, aCube.far,
-		aCube.right, aCube.top, aCube.near,
-
-		//
-		aCube.left, aCube.top, aCube.near,
-		aCube.right, aCube.top, aCube.near,
-		aCube.right, aCube.top, aCube.far,
-
-		aCube.left, aCube.top, aCube.near,
-		aCube.right, aCube.top, aCube.far,
-		aCube.left, aCube.top, aCube.far,
-
-		////
-		aCube.left, aCube.bottom, aCube.far,
-		aCube.right, aCube.bottom, aCube.far,
-		aCube.left, aCube.top, aCube.far,
-
-		aCube.right, aCube.bottom, aCube.far,
-		aCube.right, aCube.top, aCube.far,
-		aCube.left, aCube.top, aCube.far,
-
-		//
-		aCube.left, aCube.bottom, aCube.near,
-		aCube.left, aCube.bottom, aCube.far,
-		aCube.left, aCube.top, aCube.far,
-
-		aCube.left, aCube.bottom, aCube.near,
-		aCube.left, aCube.top, aCube.far,
-		aCube.left, aCube.top, aCube.near,
-
-		//
-		aCube.left, aCube.bottom, aCube.near,
-		aCube.right, aCube.bottom, aCube.near,
-		aCube.right, aCube.bottom, aCube.far,
-
-		aCube.left, aCube.bottom, aCube.near,
-		aCube.right, aCube.bottom, aCube.far,
-		aCube.left, aCube.bottom, aCube.far
-	};
-
 	/* ******************************** */
 	/* 		Creation des VBO, VAO 		*/
 	/* ******************************** */
+	GLuint cubeVBO = CreateCubeVBO();
+	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
 
-	GLuint cubeVBO = 0;
-	glGenBuffers(1, &cubeVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	GLuint cubeVAO = 0;
-	glGenVertexArrays(1, &cubeVAO);  
-	glBindVertexArray(cubeVAO);  
-		glEnableVertexAttribArray(POSITION_LOCATION);
-		glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-			glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, 0, NULL);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	GLuint texture_test = CreateTexture("textures/ground.jpg");
 
 	// Creation des Shaders
 	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl");
@@ -220,7 +155,9 @@ int main(int argc, char** argv){
 
 	// Recuperation des variables uniformes
 	GLint LightVectLocation = glGetUniformLocation(program, "uLightVect");
-	
+	GLint TextureLocation = glGetUniformLocation(program, "uTexture");
+	GLint ModeLocation = glGetUniformLocation(program, "uMode");
+
 	// Creation Light
 	glm::vec3 light(-1.f,-1.f,0.f);
 	
@@ -237,7 +174,6 @@ int main(int argc, char** argv){
 	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
 	
 	hydrogene::FreeFlyCamera ffCam(nearDistance, farDistance, verticalFieldOfView, leafSize);
-
 
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
@@ -287,7 +223,8 @@ int main(int argc, char** argv){
 			}
 			ms.mult(V);
 			glUniform3fv(LightVectLocation, 1, glm::value_ptr(light));
-			
+			glUniform1i(ModeLocation, TRIANGLES);
+
 			//For each leaf
 			for(uint16_t idx=0;idx<nbLeaves;++idx){
 				double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
@@ -316,7 +253,6 @@ int main(int argc, char** argv){
 					display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
 				}
 			}
-			
 		ms.pop();
 
 		// Mise à jour de l'affichage
@@ -332,13 +268,13 @@ int main(int argc, char** argv){
 				case SDL_QUIT:
 					done=true;
 					break;
-				
+
 				case SDL_KEYDOWN:
 					switch(e.key.keysym.sym){
 						case SDLK_ESCAPE:
 							done=true;
 							break;
-						
+
 						//Relative to the cameras
 						case SDLK_TAB:
 							if(currentCam == TRACK_BALL){
@@ -553,6 +489,7 @@ int main(int argc, char** argv){
 	// Destruction des ressources OpenGL
 	glDeleteBuffers(1, &cubeVBO);
 	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteTextures(1, &texture_test);
 	
 	//free cache memory
 	uint16_t nbLoadedLeaves = memory.size();
@@ -562,8 +499,6 @@ int main(int argc, char** argv){
 		glDeleteBuffers(1, &(tmpChunk.vbo));
 	}
 	
-	glDeleteBuffers(1, &cubeVBO);
-	glDeleteVertexArrays(1, &cubeVAO);
 	delete[] leafArray;
 	delete[] loadedLeaf;
 

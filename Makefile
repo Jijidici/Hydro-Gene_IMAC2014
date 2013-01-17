@@ -1,7 +1,7 @@
 CC = g++
 CC_OLD = gcc
 CFLAGS = -Wall -ansi -pedantic -Wno-long-long -I include -O2 -g -fopenmp
-LDFLAGS = -lSDL -lGL -fopenmp
+LDFLAGS = -lSDL -lSDL_image -lGL -fopenmp
 
 SRC_VOXEL_PATH = src_voxel_maker
 SRC_TERRAIN_PATH = src_terrain_builder
