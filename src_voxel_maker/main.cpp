@@ -486,6 +486,94 @@ int main(int argc, char** argv) {
 				}//end foreach face
 				/* if the leaf is not empty, save its voxels */
 				if(is_intersec){
+					/*** TRIANGULARISATION HERE ***/
+					
+					/* compute leaf's corners */
+					glm::dvec3 vert0 = currentLeaf.pos;
+					glm::dvec3 vert1 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z);
+					glm::dvec3 vert2 = glm::dvec3(vert0.x + l_size, vert0.y + l_size, vert0.z);
+					glm::dvec3 vert3 = glm::dvec3(vert0.x, vert0.y + l_size, vert0.z);
+					glm::dvec3 vert4 = glm::dvec3(vert0.x, vert0.y, vert0.z + l_size);
+					glm::dvec3 vert5 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z + l_size);
+					glm::dvec3 vert6 = glm::dvec3(vert0.x + l_size, vert0.y + l_size, vert0.z + l_size);
+					glm::dvec3 vert7 = glm::dvec3(vert0.x, vert0.y + l_size, vert0.z + l_size);
+					
+					/* compute leaf's edges */
+					Edge e0 = createEdge(vert0, vert1);
+					Edge e1 = createEdge(vert1, vert2);
+					Edge e2 = createEdge(vert2, vert3);
+					Edge e3 = createEdge(vert3, vert0);
+					Edge e4 = createEdge(vert4, vert5);
+					Edge e5 = createEdge(vert5, vert6);
+					Edge e6 = createEdge(vert6, vert7);
+					Edge e7 = createEdge(vert7, vert4);
+					Edge e8 = createEdge(vert0, vert4);
+					Edge e9 = createEdge(vert1, vert5);
+					Edge e10 = createEdge(vert2, vert6);
+					Edge e11 = createEdge(vert3, vert7);
+					
+					std::vector<Edge> leafEdges;
+					leafEdges.push_back(e0);
+					leafEdges.push_back(e1);
+					leafEdges.push_back(e2);
+					leafEdges.push_back(e3);
+					leafEdges.push_back(e4);
+					leafEdges.push_back(e5);
+					leafEdges.push_back(e6);
+					leafEdges.push_back(e7);
+					leafEdges.push_back(e8);
+					leafEdges.push_back(e9);
+					leafEdges.push_back(e10);
+					leafEdges.push_back(e11);
+					
+					
+					/* Intersection triangle - edge */
+					/* browse edges */
+					
+					std::vector<Vertex> intersectionPoints;
+					
+					std::cout << "---- LEAF ----" << std::endl;
+					for(std::vector<Edge>::iterator e_it = leafEdges.begin(); e_it < leafEdges.end(); ++e_it){
+						/* browse saved triangles */
+						std::cout << "Edge : " << std::endl; 
+						std::cout << "Origin : " << (*e_it).origin.x << " " << (*e_it).origin.y << " " << (*e_it).origin.z << std::endl;
+						std::cout << "Dir : " << (*e_it).dir.x << " " << (*e_it).dir.y << " " << (*e_it).dir.z << std::endl;
+						for(size_t i = 0; i < l_storedVertices.size(); i += 3){
+							Face tempFace; tempFace.s1 = &l_storedVertices[i]; tempFace.s2 = &l_storedVertices[i+1]; tempFace.s3 = &l_storedVertices[i+2];
+							/*** test intersection edge - tempFace ***/
+							if((*e_it).faceIntersectionTest(tempFace)){
+								std::cout << "Face : " << std::endl;
+								std::cout << "s1 : " << tempFace.s1->pos.x << " " << tempFace.s1->pos.y << " " << tempFace.s1->pos.z << std::endl;
+								std::cout << "s2 : " << tempFace.s2->pos.x << " " << tempFace.s2->pos.y << " " << tempFace.s2->pos.z << std::endl;
+								std::cout << "s3 : " << tempFace.s3->pos.x << " " << tempFace.s3->pos.y << " " << tempFace.s3->pos.z << std::endl;
+								
+								glm::dvec3 u = createVector(tempFace.s1->pos, tempFace.s2->pos);
+								glm::dvec3 v = createVector(tempFace.s1->pos, tempFace.s3->pos);
+								
+								glm::dvec3 normale = glm::normalize(glm::cross(u, v));
+								std::cout << "Normale : " << normale.x << " " << normale.y << " " << normale.z << std::endl;
+								
+								/* intersection point */								
+								glm::dvec3 intPoint = (*e_it).computeIntersectionPoint(u, v, tempFace.s1->pos);
+								std::cout << "Intersection Point : " << intPoint.x << " " << intPoint.y << " " << intPoint.z << std::endl;
+								
+								Vertex intVertex;
+								intVertex.pos = intPoint;
+								intVertex.normal = normale;
+								
+								/* add the intersection point to the vector */
+								intersectionPoints.push_back(intVertex);
+								
+								break;
+							}
+						}
+						std::cout << std::endl;
+					}
+					
+					/* Compute the "dual-vertex" */
+					
+					
+					
 					/* Save the VoxelData array */
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
 					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
