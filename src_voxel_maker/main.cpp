@@ -368,8 +368,6 @@ int main(int argc, char** argv) {
 	std::cout << "-> Number of leave subdivisions : " << nbSub_lvl2 << std::endl;
 	std::cout << std::endl << "##########################################################################" << std::endl << std::endl;
 	
-	glm::dvec3 inter =  triangleCubefaceIntersection(glm::dvec3(0.4f,0.f,1.f), glm::dvec3(2.7f,1.f,0.3f), 0, glm::dvec3(0.f,0.f,0.f), 2.0);
-
 	/* Grid from level 1 : grid of leaves */
 	double l_size = GRID_3D_SIZE/(double)nbSub_lvl1;
 	
