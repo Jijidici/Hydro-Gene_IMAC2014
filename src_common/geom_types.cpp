@@ -48,85 +48,12 @@ Edge createEdge(glm::dvec3 inS1, glm::dvec3 inS2){
 	return newEdge;
 }
 
-bool Edge::faceIntersectionTest(Face &face){
-	if(dir.x != 0){
-		double minY = face.s1->pos.y;
-		double maxY = face.s1->pos.y;
-		
-		if(face.s2->pos.y < minY) minY = face.s2->pos.y;
-		if(face.s3->pos.y < minY) minY = face.s3->pos.y;
-		if(face.s2->pos.y > maxY) maxY = face.s3->pos.y;
-		if(face.s3->pos.y > maxY) maxY = face.s3->pos.y;
-		
-		if(minY <= origin.y && maxY >= origin.y){
-			double minZ = face.s1->pos.z;
-			double maxZ = face.s1->pos.z;
-			
-			if(face.s2->pos.z < minZ) minZ = face.s2->pos.z;
-			if(face.s3->pos.z < minZ) minZ = face.s3->pos.z;
-			if(face.s2->pos.z > maxZ) maxZ = face.s3->pos.z;
-			if(face.s3->pos.z > maxZ) maxZ = face.s3->pos.z;
-			
-			if(minZ <= origin.z && maxZ >= origin.z){
-				return true;
-			}
-		}
-	}
-	if(dir.y != 0){
-		double minX = face.s1->pos.x;
-		double maxX = face.s1->pos.x;
-		
-		if(face.s2->pos.x < minX) minX = face.s2->pos.x;
-		if(face.s3->pos.x < minX) minX = face.s3->pos.x;
-		if(face.s2->pos.x > maxX) maxX = face.s3->pos.x;
-		if(face.s3->pos.x > maxX) maxX = face.s3->pos.x;
-		
-		if(minX <= origin.x && maxX >= origin.x){
-			double minZ = face.s1->pos.z;
-			double maxZ = face.s1->pos.z;
-			
-			if(face.s2->pos.z < minZ) minZ = face.s2->pos.z;
-			if(face.s3->pos.z < minZ) minZ = face.s3->pos.z;
-			if(face.s2->pos.z > maxZ) maxZ = face.s3->pos.z;
-			if(face.s3->pos.z > maxZ) maxZ = face.s3->pos.z;
-			
-			if(minZ <= origin.z && maxZ >= origin.z){
-				return true;
-			}
-		}
-	}
-	if(dir.z != 0){
-		double minY = face.s1->pos.y;
-		double maxY = face.s1->pos.y;
-		
-		if(face.s2->pos.y < minY) minY = face.s2->pos.y;
-		if(face.s3->pos.y < minY) minY = face.s3->pos.y;
-		if(face.s2->pos.y > maxY) maxY = face.s3->pos.y;
-		if(face.s3->pos.y > maxY) maxY = face.s3->pos.y;
-		
-		if(minY <= origin.y && maxY >= origin.y){
-			double minX = face.s1->pos.x;
-			double maxX = face.s1->pos.x;
-			
-			if(face.s2->pos.x < minX) minX = face.s2->pos.x;
-			if(face.s3->pos.x < minX) minX = face.s3->pos.x;
-			if(face.s2->pos.x > maxX) maxX = face.s3->pos.x;
-			if(face.s3->pos.x > maxX) maxX = face.s3->pos.x;
-			
-			if(minX <= origin.x && maxX >= origin.x){
-				return true;
-			}
-		}
-	}
-	
-	return false;
-}
 
-glm::dvec3 Edge::computeIntersectionPoint(glm::dvec3& u, glm::dvec3& v, glm::dvec3& s1){
+bool Edge::computeIntersectionPoint(glm::dvec3& u, glm::dvec3& v, glm::dvec3& s1, glm::dvec3& result){
 	/*** WARNING : no %0 test ! ***/
-	//~ if(u.x == 0 || u.y == 0 || u.z == 0 || v.x == 0 || v.y == 0 || v.z == 0){
-		//~ exit(1);
-	//~ }
+	if(u.x == 0 || u.y == 0 || u.z == 0 || v.x == 0 || v.y == 0 || v.z == 0){
+		return false;
+	}
 	if(dir.x != 0){
 		glm::dvec2 row1(u.y, u.z);
 		glm::dvec2 row2(v.y, v.z);
@@ -139,7 +66,13 @@ glm::dvec3 Edge::computeIntersectionPoint(glm::dvec3& u, glm::dvec3& v, glm::dve
 		double b = rowSol.y / row2.y;
 		double a = (rowSol.x - b*row2.x)/row1.x;
 		
-		return (s1 + a*u + b*v);
+		if(a < 0 || b < 0 || a + b > 1){
+			return false;
+		}
+		
+		result = (s1 + a*u + b*v);
+		
+		return true;
 	}
 	
 	if(dir.y != 0){
@@ -154,7 +87,13 @@ glm::dvec3 Edge::computeIntersectionPoint(glm::dvec3& u, glm::dvec3& v, glm::dve
 		double b = rowSol.y / row2.y;
 		double a = (rowSol.x - b*row2.x)/row1.x;
 		
-		return (s1 + a*u + b*v);
+		if(a < 0 || b < 0 || a + b > 1){
+			return false;
+		}
+		
+		result = (s1 + a*u + b*v);
+		
+		return true;
 	}
 	
 	if(dir.z != 0){
@@ -169,10 +108,16 @@ glm::dvec3 Edge::computeIntersectionPoint(glm::dvec3& u, glm::dvec3& v, glm::dve
 		double b = rowSol.y / row2.y;
 		double a = (rowSol.x - b*row2.x)/row1.x;
 		
-		return (s1 + a*u + b*v);
+		if(a < 0 || b < 0 || a + b > 1){
+			return false;
+		}
+		
+		result = (s1 + a*u + b*v);
+		
+		return true;
 	}
 	
-	return glm::dvec3(0.,0.,0.);
+	return false;
 }
 
 

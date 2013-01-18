@@ -42,8 +42,7 @@ typedef struct s_edge{
 	glm::dvec3 dir;
 	double length;
 	glm::dvec3 origin;
-	bool faceIntersectionTest(Face &face);
-	glm::dvec3 computeIntersectionPoint(glm::dvec3& u, glm::dvec3& v, glm::dvec3& s1);
+	bool computeIntersectionPoint(glm::dvec3& u, glm::dvec3& v, glm::dvec3& s1, glm::dvec3& result);
 }Edge;
 
 /******************************************/
