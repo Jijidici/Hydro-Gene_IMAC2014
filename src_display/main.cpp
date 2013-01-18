@@ -129,7 +129,7 @@ int main(int argc, char** argv){
 	GLuint cubeVBO = CreateCubeVBO();
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
 
-	GLuint texture_test = CreateTexture("textures/ground.jpg");
+	GLuint texture_test = CreateTexture("textures/sky.jpg");
 
 	// Creation des Shaders
 	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl");
@@ -253,6 +253,27 @@ int main(int argc, char** argv){
 					display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
 				}
 			}
+		ms.pop();
+
+		ms.push();
+			if(currentCam == FREE_FLY){
+				ms.mult(ffCam.getViewMatrix());
+				ms.translate(ffCam.getCameraPosition());
+			}
+			if(currentCam == TRACK_BALL){
+
+			}
+			ms.push();
+				ms.scale(glm::vec3(2.f, 2.f, 2.f));
+				glUniform1i(ModeLocation, SKYBOX);
+				glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+				glUniform1i(TextureLocation,0);
+				BindTexture(texture_test);
+					glBindVertexArray(cubeVAO);
+						glDrawArrays(GL_TRIANGLES, 0, 36);
+					glBindVertexArray(0);
+				BindTexture(0);
+			ms.pop();
 		ms.pop();
 
 		// Mise à jour de l'affichage

@@ -23,95 +23,97 @@ GLuint CreateCubeVBO(){
 	Cube aCube = createCube(-0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f);
 	
 	GLdouble cubeVertices[] = {
-		//up
+
+		//near
 		aCube.left, aCube.bottom, aCube.near,
-		0.f, 0.f,
+		0.01f, 0.01f,
 		aCube.right, aCube.bottom, aCube.near,
-		1.f/6.f, 0.f,
+		0.16f, 0.01f,
 		aCube.left, aCube.top, aCube.near,
-		0.f, 1.f,
+		0.01f, 0.99f,
 
 		aCube.right, aCube.bottom, aCube.near,
-		1.f/6.f, 0.f,
+		0.16f, 0.01f,
 		aCube.right, aCube.top, aCube.near,
-		1.f/6.f, 1.f,
+		0.16f, 0.99f,
 		aCube.left, aCube.top, aCube.near,
-		0.f, 1.f,
+		0.01f, 0.99f,
 
-		//
+		//right
 		aCube.right, aCube.bottom, aCube.near,
-		1.f/6.f, 0.f,
+		0.16f, 0.01f,
 		aCube.right, aCube.bottom, aCube.far,
-		2.f/6.f, 0.f,
-		aCube.right, aCube.top, aCube.far,
-		1.f/6.f, 1.f,
-
-		aCube.right, aCube.bottom, aCube.near,
-		2.f/6.f, 0.f,
-		aCube.right, aCube.top, aCube.far,
-		2.f/6.f, 1.f,
+		0.33f, 0.01f,
 		aCube.right, aCube.top, aCube.near,
-		1.f/6.f, 1.f,
+		0.16f, 0.99f,
 
-		//
-		aCube.left, aCube.top, aCube.near,
-		2.f/6.f, 0.f,
+		aCube.right, aCube.bottom, aCube.far,
+		0.33f, 0.01f,
+		aCube.right, aCube.top, aCube.far,
+		0.33f, 0.99f,
 		aCube.right, aCube.top, aCube.near,
-		3.f/6.f, 0.f,
-		aCube.right, aCube.top, aCube.far,
-		2.f/6.f, 1.f,
+		0.16f, 0.99f,
 
-		aCube.left, aCube.top, aCube.near,
-		3.f/6.f, 0.f,
-		aCube.right, aCube.top, aCube.far,
-		3.f/6.f, 1.f,
-		aCube.left, aCube.top, aCube.far,
-		2.f/6.f, 1.f,
-
-		//
+		//left
+		aCube.left, aCube.bottom, aCube.near,
+		0.33f, 0.01f,
 		aCube.left, aCube.bottom, aCube.far,
-		3.f/6.f, 0.f,
-		aCube.right, aCube.bottom, aCube.far,
-		4.f/6.f, 0.f,
-		aCube.left, aCube.top, aCube.far,
-		3.f/6.f, 1.f,
-
-		aCube.right, aCube.bottom, aCube.far,
-		4.f/6.f, 0.f,
-		aCube.right, aCube.top, aCube.far,
-		4.f/6.f, 1.f,
-		aCube.left, aCube.top, aCube.far,
-		3.f/6.f, 1.f,
-
-		//
-		aCube.left, aCube.bottom, aCube.near,
-		4.f/6.f, 0.f,
-		aCube.left, aCube.bottom, aCube.far,
-		5.f/6.f, 0.f,
-		aCube.left, aCube.top, aCube.far,
-		4.f/6.f, 1.f,
-
-		aCube.left, aCube.bottom, aCube.near,
-		5.f/6.f, 0.f,
-		aCube.left, aCube.top, aCube.far,
-		5.f/6.f, 1.f,
+		0.5f, 0.01f,
 		aCube.left, aCube.top, aCube.near,
-		4.f/6.f, 1.f,
+		0.33f, 0.99f,
+
+		aCube.left, aCube.bottom, aCube.far,
+		0.5f, 0.01f,
+		aCube.left, aCube.top, aCube.far,
+		0.5f, 0.99f,
+		aCube.left, aCube.top, aCube.near,
+		0.33f, 0.99f,
+
+		//far
+		aCube.left, aCube.bottom, aCube.far,
+		0.5f, 0.01f,
+		aCube.right, aCube.bottom, aCube.far,
+		0.66f, 0.01f,
+		aCube.left, aCube.top, aCube.far,
+		0.5f, 0.99f,
+
+		aCube.right, aCube.bottom, aCube.far,
+		0.66f, 0.01f,
+		aCube.right, aCube.top, aCube.far,
+		0.66f, 0.99f,
+		aCube.left, aCube.top, aCube.far,
+		0.5f, 0.99f,
 
 		//down
 		aCube.left, aCube.bottom, aCube.near,
-		5.f/6.f, 0.f,
+		0.66f, 0.01f,
 		aCube.right, aCube.bottom, aCube.near,
-		1.f, 0.f,
+		0.83f, 0.01f,
 		aCube.left, aCube.bottom, aCube.far,
-		5.f/6.f, 1.f,
+		0.66f, 0.99f,
 
 		aCube.right, aCube.bottom, aCube.near,
-		1.f, 0.f,
+		0.83f, 0.01f,
 		aCube.right, aCube.bottom, aCube.far,
-		1.f, 1.f,
+		0.83f, 0.99f,
 		aCube.left, aCube.bottom, aCube.far,
-		5.f/6.f, 1.f
+		0.66f, 0.99f,
+
+
+		//up
+		aCube.left, aCube.top, aCube.near,
+		0.83f, 0.01f,
+		aCube.right, aCube.top, aCube.near,
+		0.99f, 0.01f,
+		aCube.left, aCube.top, aCube.far,
+		0.83f, 0.99f,
+
+		aCube.right, aCube.top, aCube.near,
+		0.99f, 0.01f,
+		aCube.right, aCube.top, aCube.far,
+		0.99f, 0.99f,
+		aCube.left, aCube.top, aCube.far,
+		0.83f, 0.99f,
 	};
 
 	GLuint cubeVBO = 0;
