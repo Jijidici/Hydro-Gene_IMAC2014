@@ -177,6 +177,7 @@ int main(int argc, char** argv){
 
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.f);
 	
 	//Creation des ressources d'evenements
@@ -281,6 +282,9 @@ int main(int argc, char** argv){
 		if(currentCam == FREE_FLY){
 			SDL_WM_GrabInput(SDL_GRAB_ON);
 			SDL_ShowCursor(SDL_DISABLE);
+		}else if(currentCam == TRACK_BALL){
+			SDL_WM_GrabInput(SDL_GRAB_OFF);
+			SDL_ShowCursor(SDL_ENABLE);
 		}
 		// Boucle de gestion des évenements
 		SDL_Event e;

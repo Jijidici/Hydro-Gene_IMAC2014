@@ -13,7 +13,7 @@ uniform int uMode;
 out vec4 fFragColor;
 
 void main() {
-	if(uMode == 1){
+	if(uMode == TRIANGLES){
 		float dCoeff = max(0, dot(normalize(vNormal), -normalize(uLightVect)));
 
 		vec3 aColor = vec3(0.02f, 0.02f, 0.f);
@@ -22,5 +22,5 @@ void main() {
 		
 		fFragColor = vec4(color, 1.f);
 
-	}else if(uMode == 0)	fFragColor = texture(uTexture, vTexCoords);
+	}else if(uMode == SKYBOX)	fFragColor = texture(uTexture, vTexCoords);
 }
