@@ -541,6 +541,9 @@ int main(int argc, char** argv) {
 					
 					std::cout << "---- LEAF ----" << std::endl;
 					for(std::vector<Edge>::iterator e_it = leafEdges.begin(); e_it < leafEdges.end(); ++e_it){
+						std::vector<Vertex> edgeIntPoints;
+						bool edgeIntersected = false;
+						
 						/* browse saved triangles */
 						std::cout << "Edge : " << std::endl; 
 						std::cout << "Origin : " << (*e_it).origin.x << " " << (*e_it).origin.y << " " << (*e_it).origin.z << std::endl;
@@ -548,31 +551,57 @@ int main(int argc, char** argv) {
 						for(size_t i = 0; i < l_storedVertices.size(); i += 3){
 							Face tempFace; tempFace.s1 = &l_storedVertices[i]; tempFace.s2 = &l_storedVertices[i+1]; tempFace.s3 = &l_storedVertices[i+2];
 							/*** test intersection edge - tempFace ***/
-							if((*e_it).faceIntersectionTest(tempFace)){
-								std::cout << "Face : " << std::endl;
-								std::cout << "s1 : " << tempFace.s1->pos.x << " " << tempFace.s1->pos.y << " " << tempFace.s1->pos.z << std::endl;
-								std::cout << "s2 : " << tempFace.s2->pos.x << " " << tempFace.s2->pos.y << " " << tempFace.s2->pos.z << std::endl;
-								std::cout << "s3 : " << tempFace.s3->pos.x << " " << tempFace.s3->pos.y << " " << tempFace.s3->pos.z << std::endl;
+							//~ if((*e_it).faceIntersectionTest(tempFace)){
+								//~ std::cout << "Face : " << std::endl;
+								//~ std::cout << "s1 : " << tempFace.s1->pos.x << " " << tempFace.s1->pos.y << " " << tempFace.s1->pos.z << std::endl;
+								//~ std::cout << "s2 : " << tempFace.s2->pos.x << " " << tempFace.s2->pos.y << " " << tempFace.s2->pos.z << std::endl;
+								//~ std::cout << "s3 : " << tempFace.s3->pos.x << " " << tempFace.s3->pos.y << " " << tempFace.s3->pos.z << std::endl;
 								
 								glm::dvec3 u = createVector(tempFace.s1->pos, tempFace.s2->pos);
 								glm::dvec3 v = createVector(tempFace.s1->pos, tempFace.s3->pos);
 								
 								glm::dvec3 normale = glm::normalize(glm::cross(v, u));
-								std::cout << "Normale : " << normale.x << " " << normale.y << " " << normale.z << std::endl;
+								
 								
 								/* intersection point */								
-								glm::dvec3 intPoint = (*e_it).computeIntersectionPoint(u, v, tempFace.s1->pos);
-								std::cout << "Intersection Point : " << intPoint.x << " " << intPoint.y << " " << intPoint.z << std::endl;
-								
-								Vertex intVertex;
-								intVertex.pos = intPoint;
-								intVertex.normal = normale;
-								
-								/* add the intersection point to the vector */
-								intersectionPoints.push_back(intVertex);
-								
-								break;
+								glm::dvec3 intPoint;
+								if((*e_it).computeIntersectionPoint(u, v, tempFace.s1->pos, intPoint)){
+									std::cout << "Intersection Point : " << intPoint.x << " " << intPoint.y << " " << intPoint.z << std::endl;
+									
+									//~ std::cout << "Normale : " << normale.x << " " << normale.y << " " << normale.z << std::endl;
+									
+									Vertex intVertex;
+									intVertex.pos = intPoint;
+									intVertex.normal = normale;
+									
+									edgeIntPoints.push_back(intVertex);
+									
+									edgeIntersected = true;
+									//~ break;
+								}
+							//~ }
+						}
+						
+						if(edgeIntersected){
+							/* average of the faces intersecting the edge */
+							Vertex averageVertex;
+							
+							glm::dvec3 averagePos(0.,0.,0.);
+							glm::dvec3 averageNorm(0.,0.,0.);
+							for(unsigned int i = 0; i < edgeIntPoints.size(); ++i){
+								averagePos += edgeIntPoints[i].pos;
+								averageNorm += edgeIntPoints[i].normal;
 							}
+							averagePos /= edgeIntPoints.size();
+							averageNorm /= edgeIntPoints.size();
+							std::cout << "Average Pos : " << averagePos.x << " " << averagePos.y << " " << averagePos.z << std::endl;
+							std::cout << "Average Norm : " << averageNorm.x << " " << averageNorm.y << " " << averageNorm.z << std::endl;
+							
+							averageVertex.pos = averagePos;
+							averageVertex.normal = averageNorm;
+							
+							/* add the average intersection point to the vector */
+							intersectionPoints.push_back(averageVertex);
 						}
 					}
 					
