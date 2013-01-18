@@ -17,6 +17,37 @@
 static const double APPROXIM_RANGE = 2*sqrt(3)/3;
 static const size_t GRID_3D_SIZE = 2;
 
+glm::dvec3 triangleCubefaceIntersection(glm::dvec3 average_current, glm::dvec3 average_compared, uint16_t face, glm::dvec3 position_current, double leafSize){
+
+	double t = 0;
+	glm::dvec3 normal;
+
+	switch(face){
+
+		case 0 : //right cube face
+			normal = glm::dvec3(1.f, 0.f, 0.f);
+			if(glm::dot(normal,average_current) != 0)	t = (position_current.x+leafSize - average_current.x)/(average_compared.x - average_current.x);
+			break;
+
+		case 1 : //near cube face
+			normal = glm::dvec3(0.f,0.f,1.f);
+			if(glm::dot(normal,average_current) != 0) t = (position_current.y+leafSize - average_current.y)/(average_compared.y - average_current.y);
+			break;
+
+		case 2 : //top cube face
+			normal = glm::dvec3(0.f,1.f,0.f);
+			if(glm::dot(normal,average_current) != 0) t = (position_current.z+leafSize - average_current.z)/(average_compared.z - average_current.z);
+			break;
+
+	}
+
+	double x_inter = average_current.x + t*(average_compared.x - average_current.x);
+	double y_inter = average_current.y + t*(average_compared.y - average_current.y);
+	double z_inter = average_current.z + t*(average_compared.z - average_current.z);
+
+	return glm::dvec3(x_inter,y_inter,z_inter);
+}
+
 /******************************************/
 /*          FUNCTIONS                     */
 /******************************************/
@@ -336,7 +367,8 @@ int main(int argc, char** argv) {
 	std::cout << "-> Number of leave subdivisions : " << nbSub_lvl2 << std::endl;
 	std::cout << std::endl << "##########################################################################" << std::endl << std::endl;
 	
-	
+	glm::dvec3 inter =  triangleCubefaceIntersection(glm::dvec3(0.4f,0.f,1.f), glm::dvec3(2.7f,1.f,0.3f), 0, glm::dvec3(0.f,0.f,0.f), 2.0);
+
 	/* Grid from level 1 : grid of leaves */
 	double l_size = GRID_3D_SIZE/(double)nbSub_lvl1;
 	
@@ -389,7 +421,7 @@ int main(int argc, char** argv) {
 	//INTERSECTION PROCESSING
 	/* Range approximation for voxelisation */
 	double Rc = voxelSize * APPROXIM_RANGE;
-	
+
 	//For each leaf
 	//#pragma omp parallel for
 	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
@@ -596,7 +628,7 @@ int main(int argc, char** argv) {
 		}
 	}//end foreach leaf
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
-	
+
 	std::cout << "Number of leaves saved : "<< l_queue.size() << std::endl;
 
 	/* writing the Leaf chunck */
