@@ -7,6 +7,7 @@
 #include <string.h>
 #include <vector>
 #include <omp.h>
+#include <Eigen/SVD>
 #include "geom_types.hpp"
 #include "data_types.hpp"
 #include "voxel_maker/geometrics.hpp"
@@ -454,10 +455,12 @@ int main(int argc, char** argv) {
 					uint16_t minVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
 					uint16_t maxVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
 
-					//Test if the triangle is inside the current 
+					//Test if the triangle is inside the current leaf
 					if(maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
 					   maxVoxelY >= 0 && minVoxelY < nbSub_lvl2 &&
 					   maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){
+					   
+					   is_triangle_in = true;
 					   
 						//case where triangle overlap 2 leaves
 						if(maxVoxelX > nbSub_lvl2){ maxVoxelX = nbSub_lvl2 - 1; } 
@@ -490,7 +493,7 @@ int main(int argc, char** argv) {
 									Voxel vox = createVoxel(i*voxelSize + currentLeaf.pos.x + voxelSize*0.5, j*voxelSize + currentLeaf.pos.y + voxelSize*0.5, k*voxelSize + currentLeaf.pos.z + voxelSize*0.5, voxelSize);
 									if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
 										is_intersec = true;
-										is_triangle_in = true;
+										
 										/* update the voxel array */
 										uint32_t currentIndex = i + nbSub_lvl2*j + k*nbSub_lvl2*nbSub_lvl2;
 										l_voxelArray[currentIndex].nbFaces++;
@@ -519,6 +522,10 @@ int main(int argc, char** argv) {
 				/* if the leaf is not empty, save its voxels */
 				if(is_intersec){
 					/*** TRIANGULARISATION HERE ***/
+					
+					/* -------------------------------- */
+					/* ----- DOESN'T WORK FOR NOW ----- */
+					/* -------------------------------- */
 					
 					/* compute leaf's corners */
 					glm::dvec3 vert0 = currentLeaf.pos;
@@ -582,7 +589,7 @@ int main(int argc, char** argv) {
 								glm::dvec3 u = createVector(tempFace.s1->pos, tempFace.s2->pos);
 								glm::dvec3 v = createVector(tempFace.s1->pos, tempFace.s3->pos);
 								
-								glm::dvec3 normale = glm::normalize(glm::cross(u, v));
+								glm::dvec3 normale = glm::normalize(glm::cross(v, u));
 								std::cout << "Normale : " << normale.x << " " << normale.y << " " << normale.z << std::endl;
 								
 								/* intersection point */								
@@ -599,10 +606,43 @@ int main(int argc, char** argv) {
 								break;
 							}
 						}
-						std::cout << std::endl;
 					}
 					
-					/* Compute the "dual-vertex" */
+					/* "mass-point" */
+					glm::dvec3 massPoint(0., 0., 0.);
+					for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
+						massPoint += intersectionPoints[i].pos;
+					}
+					massPoint /= intersectionPoints.size();
+					
+					std::cout << std::endl << "mass point : " << massPoint.x << " " << massPoint.y << " " << massPoint.z << std::endl;
+					
+					/* Compute the "averagePoint" (Eigen) */
+					Eigen::MatrixXd MatA = Eigen::MatrixXd::Zero(intersectionPoints.size(), 3);
+					Eigen::VectorXd VecB = Eigen::VectorXd::Zero(intersectionPoints.size());
+					
+					for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
+						MatA(i, 0) = intersectionPoints[i].normal.x;
+						MatA(i, 1) = intersectionPoints[i].normal.y;
+						MatA(i, 2) = intersectionPoints[i].normal.z;
+						
+						VecB(i) = (double)glm::dot(intersectionPoints[i].pos - massPoint, intersectionPoints[i].normal);
+					}
+					
+					//~ std::cout << "MatA : " << std::endl << MatA << std::endl;
+					std::cout << "VecB : " << std::endl << VecB << std::endl;
+					
+					Eigen::JacobiSVD<Eigen::MatrixXd> MatSVD(MatA, Eigen::ComputeThinU | Eigen::ComputeThinV);
+					Eigen::VectorXd eigenAveragePoint = MatSVD.solve(VecB);
+					
+					//~ std::cout << std::endl << "matV : " << MatSVD.matrixV() << std::endl;
+					//~ Eigen::VectorXd eigenAveragePoint = MatSVD.matrixV().col(intersectionPoints.size() - 1);
+					
+					glm::dvec3 averagePoint(eigenAveragePoint(0), eigenAveragePoint(1), eigenAveragePoint(2));
+					averagePoint += massPoint;
+					
+					std::cout << std::endl << "average point : " << averagePoint.x << " " << averagePoint.y << " " << averagePoint.z << std::endl;
+					
 					
 					
 					
