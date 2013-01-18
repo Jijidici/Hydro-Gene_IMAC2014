@@ -256,15 +256,12 @@ int main(int argc, char** argv){
 			}
 		ms.pop();
 
+		//Skybox
 		ms.push();
 			if(currentCam == FREE_FLY){
 				ms.mult(ffCam.getViewMatrix());
 				ms.translate(ffCam.getCameraPosition());
 			}
-			if(currentCam == TRACK_BALL){
-
-			}
-			ms.push();
 				ms.scale(glm::vec3(2.f, 2.f, 2.f));
 				glUniform1i(ModeLocation, SKYBOX);
 				glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
@@ -274,7 +271,6 @@ int main(int argc, char** argv){
 						glDrawArrays(GL_TRIANGLES, 0, 36);
 					glBindVertexArray(0);
 				BindTexture(0);
-			ms.pop();
 		ms.pop();
 
 		// Mise à jour de l'affichage
