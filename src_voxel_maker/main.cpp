@@ -731,17 +731,29 @@ int main(int argc, char** argv) {
 					std::cout << "lkj:lkj" << std::endl;
 					//corner edge
 					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[diagonalRightLeaf].nbIntersection != 0)&&(leafArray[frontLeaf].nbIntersection != 0)){
+						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
 						l_computed_vertices.push_back(leafArray[rightLeaf].optimal);
 						l_computed_vertices.push_back(leafArray[diagonalRightLeaf].optimal);
+						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
 						l_computed_vertices.push_back(leafArray[frontLeaf].optimal);
+						l_computed_vertices.push_back(leafArray[diagonalRightLeaf].optimal);
 					}
 					//right edge
 					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[topRightLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)){
+						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
+						l_computed_vertices.push_back(leafArray[rightLeaf].optimal);
 						l_computed_vertices.push_back(leafArray[topRightLeaf].optimal);
+						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
 						l_computed_vertices.push_back(leafArray[topLeaf].optimal);
+						l_computed_vertices.push_back(leafArray[topRightLeaf].optimal);
 					}
 					//front edge
 					if((leafArray[frontLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)&&(leafArray[topFrontLeaf].nbIntersection != 0)){
+						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
+						l_computed_vertices.push_back(leafArray[frontLeaf].optimal);
+						l_computed_vertices.push_back(leafArray[topFrontLeaf].optimal);
+						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
+						l_computed_vertices.push_back(leafArray[topLeaf].optimal);
 						l_computed_vertices.push_back(leafArray[topFrontLeaf].optimal);
 					}
 					test_cache = drn_writer_add_chunk(&cache, l_computed_vertices.data(), l_computed_vertices.size()*sizeof(glm::dvec3));
