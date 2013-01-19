@@ -187,9 +187,13 @@ int main(int argc, char** argv) {
 	test_fic = fread(&nbVertice, sizeof(nbVertice), 1, dataFile);
 	test_fic =fread(&nbFace, sizeof(nbFace), 1, dataFile);
 
-	// altitudes min et max de la carte
-	double altMin = 1.;
-	double altMax = -1.;
+	// terrain minimal and maximum
+	double terrainMinX = 1.;
+	double terrainMaxX = -1.;
+	double terrainMinY = 1.;
+	double terrainMaxY = -1.;
+	double terrainMinZ = 1.;
+	double terrainMaxZ = -1.;
 	
 	double * positionsData = new double[3*nbVertice];
 	test_fic = fread(positionsData, sizeof(double), 3*nbVertice, dataFile); // to read the positions of the vertices
@@ -257,14 +261,13 @@ int main(int argc, char** argv) {
 		tabV[n].normal.y = normalData[3*cptNormals+2];
 		cptNormals++;
 		
-		// on récupère les altitudes extremes
-		if(tabV[n].pos.y > altMax){
-			altMax = tabV[n].pos.y;
-		}else{
-			if(tabV[n].pos.y < altMin){
-				altMin = tabV[n].pos.y;
-			}
-		}
+		// Compute the terrain min and max
+		if(tabV[n].pos.x < terrainMinX){ terrainMinX = tabV[n].pos.x; }
+		if(tabV[n].pos.y < terrainMinY){ terrainMinY = tabV[n].pos.y; }
+		if(tabV[n].pos.z < terrainMinZ){ terrainMinZ = tabV[n].pos.z; }
+		if(tabV[n].pos.x > terrainMaxX){ terrainMaxX = tabV[n].pos.x; }
+		if(tabV[n].pos.y > terrainMaxY){ terrainMaxY = tabV[n].pos.y; }
+		if(tabV[n].pos.z > terrainMaxZ){ terrainMaxZ = tabV[n].pos.z; }
 	}
 	
 	//FACES
@@ -333,7 +336,9 @@ int main(int argc, char** argv) {
 	
 	std::cout << "-> Number of vertices : " << nbVertice << std::endl;
 	std::cout << "-> Number of faces : " << nbFace << std::endl;
-	std::cout <<"-> Altitude max : "<< altMax<< " - Altitude min : "<< altMin << std::endl << std::endl;
+	std::cout <<"-> Terrain min & max : X[min:"<<terrainMinX<<" | max:"<<terrainMaxX<<"]"<< std::endl;
+	std::cout <<"-> Terrain min & max : Y[min:"<<terrainMinY<<" | max:"<<terrainMaxY<<"]"<< std::endl;
+	std::cout <<"-> Terrain min & max : Z[min:"<<terrainMinZ<<" | max:"<<terrainMaxZ<<"]"<< std::endl;
 
 	if(nbSub_lvl1 == 0){
 		nbSub_lvl1 = 16;
@@ -414,7 +419,7 @@ int main(int argc, char** argv) {
 	uint32_t sizeLeafArray = nbSub_lvl1*nbSub_lvl1*nbSub_lvl1;
 	Leaf* leafArray = new Leaf[sizeLeafArray];
 	Leaf currentLeaf;
-	currentLeaf.id = 1;
+	currentLeaf.id = 0;
 	currentLeaf.size = l_size;
 	
 	/* Initialize the vertices per leaf vector */
@@ -445,7 +450,8 @@ int main(int argc, char** argv) {
 				/* Fix the current leaf */
 				currentLeaf.pos = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
 				currentLeaf.nbIntersection = 0;
-				currentLeaf.nbVertices = 0;
+				currentLeaf.nbVertices_lvl1 = 0;
+				currentLeaf.nbVertices_lvl2 = 0;
 				
 				//For each Face
 				for(uint32_t n=0;n<nbFace;++n){
@@ -517,7 +523,7 @@ int main(int argc, char** argv) {
 							l_storedVertices.push_back(*(tabF[n].s1));
 							l_storedVertices.push_back(*(tabF[n].s2));
 							l_storedVertices.push_back(*(tabF[n].s3));
-							currentLeaf.nbVertices+=3;
+							currentLeaf.nbVertices_lvl2+=3;
 							is_triangle_in = false;
 						}			
 					}
@@ -691,16 +697,20 @@ int main(int argc, char** argv) {
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
 					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 					
-					/* Save the vertices */
-					test_cache = drn_writer_add_chunk(&cache, l_storedVertices.data(), currentLeaf.nbVertices*sizeof(Vertex));
+					/* Save the vertices lvl2 */
+					test_cache = drn_writer_add_chunk(&cache, l_storedVertices.data(), currentLeaf.nbVertices_lvl2*sizeof(Vertex));
+					
+					/* Save the vetrices lvl1 */
+					/******* HERE SAVE THE VERTICES GET WITH TRIANGULARISATION **********/
 					
 					/* updade the Leaf indexation */
 					leafArray[currentLeafIndex] = currentLeaf;
 					
 					/* init for next leaf */
-					currentLeaf.id+=2;
+					currentLeaf.id++;
 					currentLeaf.nbIntersection = 0;
-					currentLeaf.nbVertices = 0;
+					currentLeaf.nbVertices_lvl1 = 0;
+					currentLeaf.nbVertices_lvl2 = 0;
 					l_storedVertices.clear();
 					is_intersec = false;
 				}
@@ -745,7 +755,9 @@ int main(int argc, char** argv) {
 						l_computed_vertices.push_back(leafArray[topFrontLeaf].optimal);
 					}
 					test_cache = drn_writer_add_chunk(&cache, l_computed_vertices.data(), l_computed_vertices.size()*sizeof(glm::dvec3));
+					leafArray[currentLeafIndex].nbVertices_lvl1 = l_computed_vertices.size();
 					l_queue.push_back(leafArray[currentLeafIndex]);
+					l_computed_vertices.clear();
 				}
 			}
 		}

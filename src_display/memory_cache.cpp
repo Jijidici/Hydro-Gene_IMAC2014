@@ -47,6 +47,7 @@ size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf,
 	}
 	
 	//free ressources
+	delete[] vaos;
 	delete[] vbos;
 	
 	return currentMemSize;
@@ -60,15 +61,15 @@ void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double dis
 	/* load the voxel data */
 	VoxelData* voxArray = NULL;
 	voxArray = new VoxelData[nbSub_lvl2*nbSub_lvl2*nbSub_lvl2];
-	test_cache = drn_read_chunk(&cache, l.id, voxArray);
+	test_cache = drn_read_chunk(&cache, 2*l.id + CONFIGCHUNK_OFFSET, voxArray);
 	if(test_cache <0){ throw std::runtime_error("unable to read data file"); }
 	
 	/* load the triangles and send them to th GPU */
 	Vertex* vertices = NULL;
-	vertices = new Vertex[l.nbVertices];
-	test_cache = drn_read_chunk(&cache, l.id+1, vertices);
+	vertices = new Vertex[l.nbVertices_lvl2];
+	test_cache = drn_read_chunk(&cache,  2*l.id+1 + CONFIGCHUNK_OFFSET, vertices);
 	glBindBuffer(GL_ARRAY_BUFFER, idxVbo);
-		glBufferData(GL_ARRAY_BUFFER, l.nbVertices*sizeof(Vertex), vertices, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, l.nbVertices_lvl2*sizeof(Vertex), vertices, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	delete[] vertices;
 	

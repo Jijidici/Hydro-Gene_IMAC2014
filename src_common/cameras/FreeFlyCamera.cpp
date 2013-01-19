@@ -53,13 +53,7 @@ namespace hydrogene{
 		m_frustumFarPlanePoint = frustumPosition + (m_FrontVector*m_farDistance);
 		m_frustumFarPlaneNormal = glm::normalize(m_frustumFarPlanePoint - frustumPosition);
 		
-		float ratio = 1.; /* ratio between height and width, can change with the window size */
-		
 		float nearHalfHeight = tan(m_verticalFieldOfView/2.) * m_nearDistance;
-		float nearHalfWidth = nearHalfHeight * ratio;
-		
-		float farHalfHeight = tan(m_verticalFieldOfView/2.) * m_farDistance;
-		float farHalfWidth = farHalfHeight * ratio;
 		
 		m_frustumTopPlanePoint = frustumPosition;
 		m_frustumTopPlaneNormal = glm::normalize(glm::cross(m_LeftVector, (m_frustumNearPlanePoint + m_UpVector*nearHalfHeight) - frustumPosition));
