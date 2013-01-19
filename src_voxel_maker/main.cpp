@@ -18,7 +18,7 @@
 static const double APPROXIM_RANGE = 2*sqrt(3)/3;
 static const size_t GRID_3D_SIZE = 2;
 
-glm::dvec3 triangleCubefaceIntersection(glm::dvec3 average_current, glm::dvec3 average_compared, uint16_t face, glm::dvec3 position_current, double leafSize){
+glm::dvec3 triangleCubefaceIntersection(glm::dvec3 optimal_current, glm::dvec3 optimal_compared, uint16_t face, glm::dvec3 position_current, double leafSize){
 
 	double t = 0;
 	glm::dvec3 normal;
@@ -27,24 +27,24 @@ glm::dvec3 triangleCubefaceIntersection(glm::dvec3 average_current, glm::dvec3 a
 
 		case 0 : //right cube face
 			normal = glm::dvec3(1.f, 0.f, 0.f);
-			if(glm::dot(normal,average_current) != 0)	t = (position_current.x+leafSize - average_current.x)/(average_compared.x - average_current.x);
+			if(glm::dot(normal,optimal_current) != 0)	t = (position_current.x+leafSize - optimal_current.x)/(optimal_compared.x - optimal_current.x);
 			break;
 
 		case 1 : //near cube face
 			normal = glm::dvec3(0.f,0.f,1.f);
-			if(glm::dot(normal,average_current) != 0) t = (position_current.y+leafSize - average_current.y)/(average_compared.y - average_current.y);
+			if(glm::dot(normal,optimal_current) != 0) t = (position_current.y+leafSize - optimal_current.y)/(optimal_compared.y - optimal_current.y);
 			break;
 
 		case 2 : //top cube face
 			normal = glm::dvec3(0.f,1.f,0.f);
-			if(glm::dot(normal,average_current) != 0) t = (position_current.z+leafSize - average_current.z)/(average_compared.z - average_current.z);
+			if(glm::dot(normal,optimal_current) != 0) t = (position_current.z+leafSize - optimal_current.z)/(optimal_compared.z - optimal_current.z);
 			break;
 
 	}
 
-	double x_inter = average_current.x + t*(average_compared.x - average_current.x);
-	double y_inter = average_current.y + t*(average_compared.y - average_current.y);
-	double z_inter = average_current.z + t*(average_compared.z - average_current.z);
+	double x_inter = optimal_current.x + t*(optimal_compared.x - optimal_current.x);
+	double y_inter = optimal_current.y + t*(optimal_compared.y - optimal_current.y);
+	double z_inter = optimal_current.z + t*(optimal_compared.z - optimal_current.z);
 
 	return glm::dvec3(x_inter,y_inter,z_inter);
 }
@@ -410,7 +410,8 @@ int main(int argc, char** argv) {
 	bool is_triangle_in = false;
 	
 	/* Initialize the Leaves vector */
-	std::vector<Leaf> l_queue;
+	uint32_t sizeLeafArray = nbSub_lvl1*nbSub_lvl1*nbSub_lvl1;
+	Leaf* leafArray = new Leaf[sizeLeafArray];
 	Leaf currentLeaf;
 	currentLeaf.id = 1;
 	
@@ -427,6 +428,8 @@ int main(int argc, char** argv) {
 		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
 			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
 				
+				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
+
 				/* Init leaf voxel array */	
 				for(uint32_t n=0;n<l_voxArrLength;++n){
 					l_voxelArray[n].nbFaces=0;
@@ -517,6 +520,7 @@ int main(int argc, char** argv) {
 						}			
 					}
 				}//end foreach face
+
 				/* if the leaf is not empty, save its voxels */
 				if(is_intersec){
 					/*** TRIANGULARISATION HERE ***/
@@ -613,25 +617,25 @@ int main(int argc, char** argv) {
 						}
 						
 						if(edgeIntersected){
-							/* average of the faces intersecting the edge */
-							Vertex averageVertex;
+							/* optimal of the faces intersecting the edge */
+							Vertex optimalVertex;
 							
-							glm::dvec3 averagePos(0.,0.,0.);
-							glm::dvec3 averageNorm(0.,0.,0.);
+							glm::dvec3 optimalPos(0.,0.,0.);
+							glm::dvec3 optimalNorm(0.,0.,0.);
 							for(unsigned int i = 0; i < edgeIntPoints.size(); ++i){
-								averagePos += edgeIntPoints[i].pos;
-								averageNorm += edgeIntPoints[i].normal;
+								optimalPos += edgeIntPoints[i].pos;
+								optimalNorm += edgeIntPoints[i].normal;
 							}
-							averagePos /= edgeIntPoints.size();
-							averageNorm /= edgeIntPoints.size();
-							std::cout << "Average Pos : " << averagePos.x << " " << averagePos.y << " " << averagePos.z << std::endl;
-							std::cout << "Average Norm : " << averageNorm.x << " " << averageNorm.y << " " << averageNorm.z << std::endl;
+							optimalPos /= edgeIntPoints.size();
+							optimalNorm /= edgeIntPoints.size();
+							std::cout << "optimal Pos : " << optimalPos.x << " " << optimalPos.y << " " << optimalPos.z << std::endl;
+							std::cout << "optimal Norm : " << optimalNorm.x << " " << optimalNorm.y << " " << optimalNorm.z << std::endl;
 							
-							averageVertex.pos = averagePos;
-							averageVertex.normal = averageNorm;
+							optimalVertex.pos = optimalPos;
+							optimalVertex.normal = optimalNorm;
 							
-							/* add the average intersection point to the vector */
-							intersectionPoints.push_back(averageVertex);
+							/* add the optimal intersection point to the vector */
+							intersectionPoints.push_back(optimalVertex);
 						}
 					}
 					
@@ -644,7 +648,7 @@ int main(int argc, char** argv) {
 					
 					std::cout << std::endl << "mass point : " << massPoint.x << " " << massPoint.y << " " << massPoint.z << std::endl;
 					
-					/* Compute the "averagePoint" (Eigen) */
+					/* Compute the "optimalPoint" (Eigen) */
 					Eigen::MatrixXd MatA = Eigen::MatrixXd::Zero(intersectionPoints.size(), 3);
 					Eigen::VectorXd VecB = Eigen::VectorXd::Zero(intersectionPoints.size());
 					
@@ -660,15 +664,15 @@ int main(int argc, char** argv) {
 					std::cout << "VecB : " << std::endl << VecB << std::endl;
 					
 					Eigen::JacobiSVD<Eigen::MatrixXd> MatSVD(MatA, Eigen::ComputeThinU | Eigen::ComputeThinV);
-					Eigen::VectorXd eigenAveragePoint = MatSVD.solve(VecB);
+					Eigen::VectorXd eigenoptimalPoint = MatSVD.solve(VecB);
 					
 					//~ std::cout << std::endl << "matV : " << MatSVD.matrixV() << std::endl;
-					//~ Eigen::VectorXd eigenAveragePoint = MatSVD.matrixV().col(intersectionPoints.size() - 1);
+					//~ Eigen::VectorXd eigenoptimalPoint = MatSVD.matrixV().col(intersectionPoints.size() - 1);
 					
-					glm::dvec3 averagePoint(eigenAveragePoint(0), eigenAveragePoint(1), eigenAveragePoint(2));
-					averagePoint += massPoint;
+					glm::dvec3 optimalPoint(eigenoptimalPoint(0), eigenoptimalPoint(1), eigenoptimalPoint(2));
+					optimalPoint += massPoint;
 					
-					std::cout << std::endl << "average point : " << averagePoint.x << " " << averagePoint.y << " " << averagePoint.z << std::endl;
+					std::cout << std::endl << "optimal point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
 					
 					
 					
@@ -681,8 +685,7 @@ int main(int argc, char** argv) {
 					test_cache = drn_writer_add_chunk(&cache, l_storedVertices.data(), currentLeaf.nbVertices*sizeof(Vertex));
 					
 					/* updade the Leaf indexation */
-					currentLeaf.nbIntersection /= l_voxArrLength;
-					l_queue.push_back(currentLeaf);
+					leafArray[currentLeafIndex] = currentLeaf;
 					
 					/* init for next leaf */
 					currentLeaf.id+=2;
@@ -696,11 +699,49 @@ int main(int argc, char** argv) {
 	}//end foreach leaf
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
 
+	std::vector<Leaf> l_queue;
+	std::vector<glm::dvec3> l_computed_vertices;
+
+	for(uint16_t l_i=0;l_i<nbSub_lvl1-1;++l_i){
+		for(uint16_t l_j=0;l_j<nbSub_lvl1-1;++l_j){
+			for(uint16_t l_k=0;l_k<nbSub_lvl1-1;++l_k){
+				
+				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
+				uint32_t rightLeaf = (l_i+1) + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
+				uint32_t diagonalRightLeaf = (l_i+1) + nbSub_lvl1*l_j + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
+				uint32_t frontLeaf = l_i + nbSub_lvl1*l_j + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
+				uint32_t topRightLeaf = (l_i+1) + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
+				uint32_t topLeaf = l_i + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
+				uint32_t topFrontLeaf = l_i + nbSub_lvl1*(l_j+1) + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
+
+				if(leafArray[currentLeafIndex].nbIntersection != 0){
+					//corner edge
+					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[diagonalRightLeaf].nbIntersection != 0)&&(leafArray[frontLeaf].nbIntersection != 0)){
+						l_computed_vertices.push_back(leafArray[rightLeaf].optimal);
+						l_computed_vertices.push_back(leafArray[diagonalRightLeaf].optimal);
+						l_computed_vertices.push_back(leafArray[frontLeaf].optimal);
+					}
+					//right edge
+					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[topRightLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)){
+						l_computed_vertices.push_back(leafArray[topRightLeaf].optimal);
+						l_computed_vertices.push_back(leafArray[topLeaf].optimal);
+					}
+					//front edge
+					if((leafArray[frontLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)&&(leafArray[topFrontLeaf].nbIntersection != 0)){
+						l_computed_vertices.push_back(leafArray[topFrontLeaf].optimal);
+					}
+					test_cache = drn_writer_add_chunk(&cache, l_computed_vertices.data(), l_computed_vertices.size()*sizeof(glm::dvec3));
+					l_queue.push_back(leafArray[currentLeafIndex]);
+				}
+			}
+		}
+	}
+
 	std::cout << "Number of leaves saved : "<< l_queue.size() << std::endl;
 
 	/* writing the Leaf chunck */
 	test_cache = drn_writer_add_chunk(&cache, l_queue.data(), l_queue.size()*sizeof(Leaf));
-	
+
 	/* Close the DATA file */
 	test_cache = drn_close_writer(&cache);
 	if(test_cache < 0){ throw std::runtime_error("unable to close the data file"); }
