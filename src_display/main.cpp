@@ -80,7 +80,7 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
 	
 	/* Getting the leaf chunk (last chunk) */
-	uint32_t nbLeaves = (nbChunks-2)*0.5;
+	uint32_t nbLeaves = (nbChunks-2)/3;
 	std::cout<<"//-> Nb Leaves saved : "<<nbLeaves<<std::endl;
 
 	Leaf* leafArray = new Leaf[nbLeaves];

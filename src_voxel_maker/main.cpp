@@ -381,7 +381,7 @@ int main(int argc, char** argv) {
 	/* Initialize the Leaves vector */
 	std::vector<Leaf> l_queue;
 	Leaf currentLeaf;
-	currentLeaf.id = 1;
+	currentLeaf.id = 0;
 	
 	/* Initialize the vertices per leaf vector */
 	std::vector<Vertex> l_storedVertices;
@@ -502,7 +502,7 @@ int main(int argc, char** argv) {
 					l_queue.push_back(currentLeaf);
 					
 					/* init for next leaf */
-					currentLeaf.id+=2;
+					currentLeaf.id++;
 					currentLeaf.nbIntersection = 0;
 					currentLeaf.nbVertices_lvl1 = 0;
 					currentLeaf.nbVertices_lvl2 = 0;
