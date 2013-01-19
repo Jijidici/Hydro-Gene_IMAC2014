@@ -188,8 +188,8 @@ int main(int argc, char** argv) {
 	test_fic =fread(&nbFace, sizeof(nbFace), 1, dataFile);
 
 	// altitudes min et max de la carte
-	double altMin = 0;
-	double altMax = 0;
+	double altMin = 1.;
+	double altMax = -1.;
 	
 	double * positionsData = new double[3*nbVertice];
 	test_fic = fread(positionsData, sizeof(double), 3*nbVertice, dataFile); // to read the positions of the vertices
@@ -246,11 +246,12 @@ int main(int argc, char** argv) {
 	
 	//VERTICES
 	Vertex * tabV = new Vertex[nbVertice];
+	double offsetY = 0.2; //Here is an offset on y to avoid problem with triangle on the 0,0,0 plane
 	
 	for(uint32_t n=0;n<nbVertice;++n){ // to create the vertices tab
 		tabV[n].pos.x = positionsData[3*n];
 		tabV[n].pos.z = positionsData[3*n+1];
-		tabV[n].pos.y = positionsData[3*n+2];
+		tabV[n].pos.y = positionsData[3*n+2] + offsetY;
 		tabV[n].normal.x = normalData[3*cptNormals];
 		tabV[n].normal.z = normalData[3*cptNormals+1];
 		tabV[n].normal.y = normalData[3*cptNormals+2];
@@ -413,6 +414,7 @@ int main(int argc, char** argv) {
 	std::vector<Leaf> l_queue;
 	Leaf currentLeaf;
 	currentLeaf.id = 1;
+	currentLeaf.size = l_size;
 	
 	/* Initialize the vertices per leaf vector */
 	std::vector<Vertex> l_storedVertices;
@@ -660,18 +662,24 @@ int main(int argc, char** argv) {
 					std::cout << "VecB : " << std::endl << VecB << std::endl;
 					
 					Eigen::JacobiSVD<Eigen::MatrixXd> MatSVD(MatA, Eigen::ComputeThinU | Eigen::ComputeThinV);
-					Eigen::VectorXd eigenAveragePoint = MatSVD.solve(VecB);
+					Eigen::VectorXd eigenOptimalPoint = MatSVD.solve(VecB);
 					
+					//other option to find x vector in Ax=b
 					//~ std::cout << std::endl << "matV : " << MatSVD.matrixV() << std::endl;
 					//~ Eigen::VectorXd eigenAveragePoint = MatSVD.matrixV().col(intersectionPoints.size() - 1);
 					
-					glm::dvec3 averagePoint(eigenAveragePoint(0), eigenAveragePoint(1), eigenAveragePoint(2));
-					averagePoint += massPoint;
+					glm::dvec3 optimalPoint(eigenOptimalPoint(0), eigenOptimalPoint(1), eigenOptimalPoint(2));
+					optimalPoint += massPoint;
 					
-					std::cout << std::endl << "average point : " << averagePoint.x << " " << averagePoint.y << " " << averagePoint.z << std::endl;
-					
-					
-					
+					//cap the average Point
+					if(optimalPoint.x < currentLeaf.pos.x){ optimalPoint.x = currentLeaf.pos.x; }
+					if(optimalPoint.y < currentLeaf.pos.y){ optimalPoint.y = currentLeaf.pos.y; }
+					if(optimalPoint.z < currentLeaf.pos.z){ optimalPoint.z = currentLeaf.pos.z; }
+					if(optimalPoint.x > currentLeaf.pos.x + l_size){ optimalPoint.x = currentLeaf.pos.x + l_size; }
+					if(optimalPoint.y > currentLeaf.pos.y + l_size){ optimalPoint.y = currentLeaf.pos.y + l_size; }
+					if(optimalPoint.z > currentLeaf.pos.z + l_size){ optimalPoint.z = currentLeaf.pos.z + l_size; }
+					currentLeaf.optimal = optimalPoint;
+					std::cout << std::endl << "average point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
 					
 					/* Save the VoxelData array */
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));

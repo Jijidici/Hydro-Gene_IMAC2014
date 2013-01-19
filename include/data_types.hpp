@@ -23,7 +23,7 @@ typedef struct s_leaf{
 	double size;
 	uint32_t nbIntersection;
 	uint32_t nbVertices;
-	glm::dvec3 average;
+	glm::dvec3 optimal;	
 }Leaf;
 
 typedef struct s_chunk{
