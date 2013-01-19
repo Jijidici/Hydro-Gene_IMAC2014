@@ -725,8 +725,6 @@ int main(int argc, char** argv) {
 	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
 		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
 			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
-				
-				std::cout << "nb_sub lvl1 " << nbSub_lvl1 << std::endl;
 				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
 
 				uint32_t rightLeaf = (l_i+1) + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
@@ -735,10 +733,7 @@ int main(int argc, char** argv) {
 				uint32_t topRightLeaf = (l_i+1) + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
 				uint32_t topLeaf = l_i + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
 				uint32_t topFrontLeaf = l_i + nbSub_lvl1*(l_j+1) + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
-
-				std::cout << "nb intersection : " << leafArray[currentLeafIndex].nbIntersection << std::endl;
 				if(leafArray[currentLeafIndex].nbIntersection != 0){
-					std::cout << "lkj:lkj" << std::endl;
 					//corner edge
 					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[diagonalRightLeaf].nbIntersection != 0)&&(leafArray[frontLeaf].nbIntersection != 0)){
 						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
@@ -768,6 +763,7 @@ int main(int argc, char** argv) {
 					}
 					test_cache = drn_writer_add_chunk(&cache, l_computed_vertices.data(), l_computed_vertices.size()*sizeof(glm::dvec3));
 					leafArray[currentLeafIndex].nbVertices_lvl1 = l_computed_vertices.size();
+					std::cout<<"//-> NB computed triangles vertices : "<<leafArray[currentLeafIndex].nbVertices_lvl1<<std::endl;
 					l_queue.push_back(leafArray[currentLeafIndex]);
 					l_computed_vertices.clear();
 				}

@@ -139,10 +139,7 @@ int main(int argc, char** argv){
 	glGenVertexArrays(nbLeaves, l_VAOs);
 	
 	for(uint32_t l_idx=0;l_idx<nbLeaves;++l_idx){
-		//load the vertices
-		std::cout<<"//-> NB vertices lvl1 : "<<leafArray[l_idx].nbVertices_lvl1<<std::endl;
-		std::cout<<"//-> NB vertices lvl2 : "<<leafArray[l_idx].nbVertices_lvl2<<std::endl;
-		
+		//load the vertices		
 		Vertex* trVertices = new Vertex[leafArray[l_idx].nbVertices_lvl1];
 		test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices);
 	
@@ -269,6 +266,7 @@ int main(int argc, char** argv){
 			for(uint16_t idx=0;idx<nbLeaves;++idx){
 				double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
 				if(d<THRESHOLD_DISTANCE){
+					glUniform3fv(glGetUniformLocation(program, "uColor"), 1, glm::value_ptr(glm::vec3(1.f, 0.f, 0.f)));
 					if(!loadedLeaf[idx]){
 						Chunk voidChunk = freeInMemory(memory, loadedLeaf);
 						loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
@@ -280,12 +278,10 @@ int main(int argc, char** argv){
 							if(currentCam == FREE_FLY){
 								//FRUSTUM CULLING
 								if(ffCam.leavesFrustum(leafArray[idx])){
-									glUniform3fv(glGetUniformLocation(program, "uColor"), 1, glm::value_ptr(glm::vec3(1.f, 0.f, 0.f)));
 									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
 									break;
 								}
 							}else{
-								glUniform3fv(glGetUniformLocation(program, "uColor"), 1, glm::value_ptr(glm::vec3(0.f, 1.f, 0.f)));
 								display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
 								break;
 							}
@@ -294,6 +290,7 @@ int main(int argc, char** argv){
 				}else{
 					//display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
 					/* display the triangularized leaf */
+					glUniform3fv(glGetUniformLocation(program, "uColor"), 1, glm::value_ptr(glm::vec3(0.f, 1.f, 0.f)));
 					glBindVertexArray(l_VAOs[idx]);
 						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
 					glBindVertexArray(0);
