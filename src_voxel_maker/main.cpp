@@ -188,8 +188,8 @@ int main(int argc, char** argv) {
 	test_fic =fread(&nbFace, sizeof(nbFace), 1, dataFile);
 
 	// altitudes min et max de la carte
-	double altMin = 0;
-	double altMax = 0;
+	double altMin = 1.;
+	double altMax = -1.;
 	
 	double * positionsData = new double[3*nbVertice];
 	test_fic = fread(positionsData, sizeof(double), 3*nbVertice, dataFile); // to read the positions of the vertices
@@ -246,11 +246,12 @@ int main(int argc, char** argv) {
 	
 	//VERTICES
 	Vertex * tabV = new Vertex[nbVertice];
+	double offsetY = 0.2; //Here is an offset on y to avoid problem with triangle on the 0,0,0 plane
 	
 	for(uint32_t n=0;n<nbVertice;++n){ // to create the vertices tab
 		tabV[n].pos.x = positionsData[3*n];
 		tabV[n].pos.z = positionsData[3*n+1];
-		tabV[n].pos.y = positionsData[3*n+2];
+		tabV[n].pos.y = positionsData[3*n+2] + offsetY;
 		tabV[n].normal.x = normalData[3*cptNormals];
 		tabV[n].normal.z = normalData[3*cptNormals+1];
 		tabV[n].normal.y = normalData[3*cptNormals+2];
@@ -414,6 +415,7 @@ int main(int argc, char** argv) {
 	Leaf* leafArray = new Leaf[sizeLeafArray];
 	Leaf currentLeaf;
 	currentLeaf.id = 1;
+	currentLeaf.size = l_size;
 	
 	/* Initialize the vertices per leaf vector */
 	std::vector<Vertex> l_storedVertices;
@@ -617,25 +619,25 @@ int main(int argc, char** argv) {
 						}
 						
 						if(edgeIntersected){
-							/* optimal of the faces intersecting the edge */
-							Vertex optimalVertex;
+							/* average of the faces intersecting the edge */
+							Vertex averageVertex;
 							
-							glm::dvec3 optimalPos(0.,0.,0.);
-							glm::dvec3 optimalNorm(0.,0.,0.);
+							glm::dvec3 averagePos(0.,0.,0.);
+							glm::dvec3 averageNorm(0.,0.,0.);
 							for(unsigned int i = 0; i < edgeIntPoints.size(); ++i){
-								optimalPos += edgeIntPoints[i].pos;
-								optimalNorm += edgeIntPoints[i].normal;
+								averagePos += edgeIntPoints[i].pos;
+								averageNorm += edgeIntPoints[i].normal;
 							}
-							optimalPos /= edgeIntPoints.size();
-							optimalNorm /= edgeIntPoints.size();
-							std::cout << "optimal Pos : " << optimalPos.x << " " << optimalPos.y << " " << optimalPos.z << std::endl;
-							std::cout << "optimal Norm : " << optimalNorm.x << " " << optimalNorm.y << " " << optimalNorm.z << std::endl;
+							averagePos /= edgeIntPoints.size();
+							averageNorm /= edgeIntPoints.size();
+							std::cout << "average Pos : " << averagePos.x << " " << averagePos.y << " " << averagePos.z << std::endl;
+							std::cout << "average Norm : " << averageNorm.x << " " << averageNorm.y << " " << averageNorm.z << std::endl;
 							
-							optimalVertex.pos = optimalPos;
-							optimalVertex.normal = optimalNorm;
+							averageVertex.pos = averagePos;
+							averageVertex.normal = averageNorm;
 							
-							/* add the optimal intersection point to the vector */
-							intersectionPoints.push_back(optimalVertex);
+							/* add the average intersection point to the vector */
+							intersectionPoints.push_back(averageVertex);
 						}
 					}
 					
@@ -664,18 +666,26 @@ int main(int argc, char** argv) {
 					std::cout << "VecB : " << std::endl << VecB << std::endl;
 					
 					Eigen::JacobiSVD<Eigen::MatrixXd> MatSVD(MatA, Eigen::ComputeThinU | Eigen::ComputeThinV);
-					Eigen::VectorXd eigenoptimalPoint = MatSVD.solve(VecB);
+					Eigen::VectorXd eigenOptimalPoint = MatSVD.solve(VecB);
 					
+					//other option to find x vector in Ax=b
 					//~ std::cout << std::endl << "matV : " << MatSVD.matrixV() << std::endl;
 					//~ Eigen::VectorXd eigenoptimalPoint = MatSVD.matrixV().col(intersectionPoints.size() - 1);
 					
-					glm::dvec3 optimalPoint(eigenoptimalPoint(0), eigenoptimalPoint(1), eigenoptimalPoint(2));
+					glm::dvec3 optimalPoint(eigenOptimalPoint(0), eigenOptimalPoint(1), eigenOptimalPoint(2));
 					optimalPoint += massPoint;
 					
 					std::cout << std::endl << "optimal point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
 					
-					
-					
+					//cap the average Point
+					if(optimalPoint.x < currentLeaf.pos.x){ optimalPoint.x = currentLeaf.pos.x; }
+					if(optimalPoint.y < currentLeaf.pos.y){ optimalPoint.y = currentLeaf.pos.y; }
+					if(optimalPoint.z < currentLeaf.pos.z){ optimalPoint.z = currentLeaf.pos.z; }
+					if(optimalPoint.x > currentLeaf.pos.x + l_size){ optimalPoint.x = currentLeaf.pos.x + l_size; }
+					if(optimalPoint.y > currentLeaf.pos.y + l_size){ optimalPoint.y = currentLeaf.pos.y + l_size; }
+					if(optimalPoint.z > currentLeaf.pos.z + l_size){ optimalPoint.z = currentLeaf.pos.z + l_size; }
+					currentLeaf.optimal = optimalPoint;
+					std::cout << std::endl << "average point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
 					
 					/* Save the VoxelData array */
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
@@ -702,11 +712,13 @@ int main(int argc, char** argv) {
 	std::vector<Leaf> l_queue;
 	std::vector<glm::dvec3> l_computed_vertices;
 
-	for(uint16_t l_i=0;l_i<nbSub_lvl1-1;++l_i){
-		for(uint16_t l_j=0;l_j<nbSub_lvl1-1;++l_j){
-			for(uint16_t l_k=0;l_k<nbSub_lvl1-1;++l_k){
+	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
+		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
+			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
 				
+				std::cout << "nb_sub lvl1 " << nbSub_lvl1 << std::endl;
 				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
+
 				uint32_t rightLeaf = (l_i+1) + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
 				uint32_t diagonalRightLeaf = (l_i+1) + nbSub_lvl1*l_j + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
 				uint32_t frontLeaf = l_i + nbSub_lvl1*l_j + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
@@ -714,7 +726,9 @@ int main(int argc, char** argv) {
 				uint32_t topLeaf = l_i + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
 				uint32_t topFrontLeaf = l_i + nbSub_lvl1*(l_j+1) + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
 
+				std::cout << "nb intersection : " << leafArray[currentLeafIndex].nbIntersection << std::endl;
 				if(leafArray[currentLeafIndex].nbIntersection != 0){
+					std::cout << "lkj:lkj" << std::endl;
 					//corner edge
 					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[diagonalRightLeaf].nbIntersection != 0)&&(leafArray[frontLeaf].nbIntersection != 0)){
 						l_computed_vertices.push_back(leafArray[rightLeaf].optimal);
@@ -749,6 +763,7 @@ int main(int argc, char** argv) {
 	delete[] tabV;
 	delete[] tabF;
 	delete[] l_voxelArray;
+	delete[] leafArray;
 
 	return EXIT_SUCCESS;
 }

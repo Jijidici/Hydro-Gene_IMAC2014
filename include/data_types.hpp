@@ -26,7 +26,6 @@ typedef struct s_leaf{
 	glm::dvec3 optimal;
 
 	s_leaf() : id(0), pos(glm::dvec3(-1.f, -1.f, -1.f)), size(-1), nbIntersection(0), nbVertices(0), optimal(glm::dvec3(-1.f, -1.f, -1.f)){ }
-
 }Leaf;
 
 typedef struct s_chunk{
