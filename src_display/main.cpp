@@ -265,7 +265,7 @@ int main(int argc, char** argv){
 			//For each leaf
 			for(uint16_t idx=0;idx<nbLeaves;++idx){
 				double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
-				if(false){ //d<THRESHOLD_DISTANCE
+				if(d<THRESHOLD_DISTANCE){
 					glUniform3fv(glGetUniformLocation(program, "uColor"), 1, glm::value_ptr(glm::vec3(1.f, 0.f, 0.f)));
 					if(!loadedLeaf[idx]){
 						Chunk voidChunk = freeInMemory(memory, loadedLeaf);
