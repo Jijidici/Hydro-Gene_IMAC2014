@@ -132,32 +132,38 @@ int main(int argc, char** argv){
 	GLuint texture_test = CreateTexture("textures/sky.jpg");
 	
 	/* Leaves VBOs & VAOs creation */
-	GLuint* l_VBOs = new GLuint[nbLeaves];
-	glGenBuffers(nbLeaves, l_VBOs);
+	GLuint l_VBOs = 0;
+	glGenBuffers(1, &l_VBOs);
 	
-	GLuint* l_VAOs = new GLuint[nbLeaves];
-	glGenVertexArrays(nbLeaves, l_VAOs);
+	GLuint l_VAOs = 0;
+	glGenVertexArrays(1, &l_VAOs);
+	//load the vertices		
+	Vertex* trVertices = new Vertex[leafArray[0].nbVertices_lvl1];
+	test_cache = drn_read_chunk(&cache, leafArray[0].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices);
+	std::cout<<"//-> Vertices Computed : "<<std::endl;
+	std::cout<<"//-> NB vertices : "<<leafArray[0].nbVertices_lvl1<<std::endl;
+	std::cout<<"\tx: "<<trVertices[0].pos.x<<"\ty: "<<trVertices[0].pos.y<<"\tz: "<<trVertices[0].pos.z<<std::endl;
+	std::cout<<"\tx: "<<trVertices[1].pos.x<<"\ty: "<<trVertices[1].pos.y<<"\tz: "<<trVertices[1].pos.z<<std::endl;
+	std::cout<<"\tx: "<<trVertices[2].pos.x<<"\ty: "<<trVertices[2].pos.y<<"\tz: "<<trVertices[2].pos.z<<std::endl<<std::endl;
+	std::cout<<"\tx: "<<trVertices[3].pos.x<<"\ty: "<<trVertices[3].pos.y<<"\tz: "<<trVertices[3].pos.z<<std::endl;
+	std::cout<<"\tx: "<<trVertices[4].pos.x<<"\ty: "<<trVertices[4].pos.y<<"\tz: "<<trVertices[4].pos.z<<std::endl;
+	std::cout<<"\tx: "<<trVertices[5].pos.x<<"\ty: "<<trVertices[5].pos.y<<"\tz: "<<trVertices[5].pos.z<<std::endl;
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, l_VBOs);
+		glBufferData(GL_ARRAY_BUFFER, leafArray[0].nbVertices_lvl1*sizeof(Vertex), trVertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
-	for(uint32_t l_idx=0;l_idx<nbLeaves;++l_idx){
-		//load the vertices		
-		Vertex* trVertices = new Vertex[leafArray[l_idx].nbVertices_lvl1];
-		test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices);
-	
-		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]);
-			glBufferData(GL_ARRAY_BUFFER, leafArray[l_idx].nbVertices_lvl1, trVertices, GL_STATIC_DRAW);
+	glBindVertexArray(l_VAOs);
+		glEnableVertexAttribArray(POSITION_LOCATION);
+		glEnableVertexAttribArray(NORMAL_LOCATION);
+		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs);
+			glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
+			glVertexAttribPointer(NORMAL_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3*sizeof(GLdouble)));
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		
-		glBindVertexArray(l_VAOs[l_idx]);
-			glEnableVertexAttribArray(POSITION_LOCATION);
-			glEnableVertexAttribArray(NORMAL_LOCATION);
-			glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]);
-				glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
-				glVertexAttribPointer(NORMAL_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3*sizeof(GLdouble)));
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-		
-		delete[] trVertices;
-	}
+	glBindVertexArray(0);
+	
+	delete[] trVertices;
 	
 	test_cache = drn_close(&cache);
 	
@@ -165,11 +171,9 @@ int main(int argc, char** argv){
 	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl");
 	if(!programNorm){
 		glDeleteBuffers(1, &cubeVBO);
-		glDeleteBuffers(nbLeaves, l_VBOs);
+		glDeleteBuffers(1, &l_VBOs);
 		glDeleteVertexArrays(1, &cubeVAO);
-		glDeleteVertexArrays(nbLeaves, l_VAOs);
-		delete[] l_VAOs;
-		delete[] l_VBOs;
+		glDeleteVertexArrays(1, &l_VAOs);
 		delete[] leafArray;
 		delete[] loadedLeaf;
 		return (EXIT_FAILURE);
@@ -265,7 +269,7 @@ int main(int argc, char** argv){
 			//For each leaf
 			for(uint16_t idx=0;idx<nbLeaves;++idx){
 				double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
-				if(d<THRESHOLD_DISTANCE){
+				if(false){ //d<THRESHOLD_DISTANCE
 					glUniform3fv(glGetUniformLocation(program, "uColor"), 1, glm::value_ptr(glm::vec3(1.f, 0.f, 0.f)));
 					if(!loadedLeaf[idx]){
 						Chunk voidChunk = freeInMemory(memory, loadedLeaf);
@@ -290,9 +294,10 @@ int main(int argc, char** argv){
 				}else{
 					//display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
 					/* display the triangularized leaf */
+					glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 					glUniform3fv(glGetUniformLocation(program, "uColor"), 1, glm::value_ptr(glm::vec3(0.f, 1.f, 0.f)));
-					glBindVertexArray(l_VAOs[idx]);
-						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
+					glBindVertexArray(l_VAOs);
+						glDrawArrays(GL_TRIANGLES, 0, leafArray[0].nbVertices_lvl1);
 					glBindVertexArray(0);
 				}
 			}
@@ -562,10 +567,8 @@ int main(int argc, char** argv){
 		glDeleteBuffers(1, &(tmpChunk.vbo));
 	}
 	
-	glDeleteBuffers(nbLeaves, l_VBOs);
-	glDeleteVertexArrays(nbLeaves, l_VAOs);
-	delete[] l_VAOs;
-	delete[] l_VBOs;
+	glDeleteBuffers(1, &l_VBOs);
+	glDeleteVertexArrays(1, &l_VAOs);
 	delete[] leafArray;
 	delete[] loadedLeaf;
 
