@@ -666,52 +666,61 @@ int main(int argc, char** argv) {
 						}
 					}
 					
-					/* "mass-point" */
-					glm::dvec3 massPoint(0., 0., 0.);
-					for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
-						massPoint += intersectionPoints[i].pos;
-					}
-					massPoint /= intersectionPoints.size();
+					if(intersectionPoints.size() != 0){
 					
-					std::cout << std::endl << "mass point : " << massPoint.x << " " << massPoint.y << " " << massPoint.z << std::endl;
-					
-					/* Compute the "optimalPoint" (Eigen) */
-					Eigen::MatrixXd MatA = Eigen::MatrixXd::Zero(intersectionPoints.size(), 3);
-					Eigen::VectorXd VecB = Eigen::VectorXd::Zero(intersectionPoints.size());
-					
-					for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
-						MatA(i, 0) = intersectionPoints[i].normal.x;
-						MatA(i, 1) = intersectionPoints[i].normal.y;
-						MatA(i, 2) = intersectionPoints[i].normal.z;
+						/* "mass-point" */
+						glm::dvec3 massPoint(0., 0., 0.);
+						for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
+							massPoint += intersectionPoints[i].pos;
+						}
+						massPoint /= intersectionPoints.size();
 						
-						VecB(i) = (double)glm::dot(intersectionPoints[i].pos - massPoint, intersectionPoints[i].normal);
+						std::cout << std::endl << "mass point : " << massPoint.x << " " << massPoint.y << " " << massPoint.z << std::endl;
+						
+						/* Compute the "optimalPoint" (Eigen) */
+						Eigen::MatrixXd MatA = Eigen::MatrixXd::Zero(intersectionPoints.size(), 3);
+						Eigen::VectorXd VecB = Eigen::VectorXd::Zero(intersectionPoints.size());
+						
+						for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
+							MatA(i, 0) = intersectionPoints[i].normal.x;
+							MatA(i, 1) = intersectionPoints[i].normal.y;
+							MatA(i, 2) = intersectionPoints[i].normal.z;
+							
+							VecB(i) = (double)glm::dot(intersectionPoints[i].pos - massPoint, intersectionPoints[i].normal);
+						}
+						
+						//~ std::cout << "MatA : " << std::endl << MatA << std::endl;
+						std::cout << "VecB : " << std::endl << VecB << std::endl;
+						
+						Eigen::JacobiSVD<Eigen::MatrixXd> MatSVD(MatA, Eigen::ComputeThinU | Eigen::ComputeThinV);
+						Eigen::VectorXd eigenOptimalPoint = MatSVD.solve(VecB);
+						
+						//other option to find x vector in Ax=b
+						//~ std::cout << std::endl << "matV : " << MatSVD.matrixV() << std::endl;
+						//~ Eigen::VectorXd eigenoptimalPoint = MatSVD.matrixV().col(intersectionPoints.size() - 1);
+						
+						glm::dvec3 optimalPoint(eigenOptimalPoint(0), eigenOptimalPoint(1), eigenOptimalPoint(2));
+						optimalPoint += massPoint;
+						
+						std::cout << std::endl << "optimal point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
+						
+						//cap the average Point
+						if(optimalPoint.x < currentLeaf.pos.x){ optimalPoint.x = currentLeaf.pos.x; }
+						if(optimalPoint.y < currentLeaf.pos.y){ optimalPoint.y = currentLeaf.pos.y; }
+						if(optimalPoint.z < currentLeaf.pos.z){ optimalPoint.z = currentLeaf.pos.z; }
+						if(optimalPoint.x > currentLeaf.pos.x + l_size){ optimalPoint.x = currentLeaf.pos.x + l_size; }
+						if(optimalPoint.y > currentLeaf.pos.y + l_size){ optimalPoint.y = currentLeaf.pos.y + l_size; }
+						if(optimalPoint.z > currentLeaf.pos.z + l_size){ optimalPoint.z = currentLeaf.pos.z + l_size; }
+						currentLeaf.optimal = optimalPoint;
+						std::cout << std::endl << "average point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
+						
+					}else{
+						
+						std::cout << std::endl << "--- No edge intersection ---" << std::endl;
+						glm::dvec3 optimalPoint((currentLeaf.pos.x + l_size)/2., (currentLeaf.pos.y + l_size)/2., (currentLeaf.pos.z + l_size)/2.);
+						currentLeaf.optimal = optimalPoint;
+						std::cout << std::endl << "average point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
 					}
-					
-					//~ std::cout << "MatA : " << std::endl << MatA << std::endl;
-					std::cout << "VecB : " << std::endl << VecB << std::endl;
-					
-					Eigen::JacobiSVD<Eigen::MatrixXd> MatSVD(MatA, Eigen::ComputeThinU | Eigen::ComputeThinV);
-					Eigen::VectorXd eigenOptimalPoint = MatSVD.solve(VecB);
-					
-					//other option to find x vector in Ax=b
-					//~ std::cout << std::endl << "matV : " << MatSVD.matrixV() << std::endl;
-					//~ Eigen::VectorXd eigenoptimalPoint = MatSVD.matrixV().col(intersectionPoints.size() - 1);
-					
-					glm::dvec3 optimalPoint(eigenOptimalPoint(0), eigenOptimalPoint(1), eigenOptimalPoint(2));
-					optimalPoint += massPoint;
-					
-					std::cout << std::endl << "optimal point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
-					
-					//cap the average Point
-					if(optimalPoint.x < currentLeaf.pos.x){ optimalPoint.x = currentLeaf.pos.x; }
-					if(optimalPoint.y < currentLeaf.pos.y){ optimalPoint.y = currentLeaf.pos.y; }
-					if(optimalPoint.z < currentLeaf.pos.z){ optimalPoint.z = currentLeaf.pos.z; }
-					if(optimalPoint.x > currentLeaf.pos.x + l_size){ optimalPoint.x = currentLeaf.pos.x + l_size; }
-					if(optimalPoint.y > currentLeaf.pos.y + l_size){ optimalPoint.y = currentLeaf.pos.y + l_size; }
-					if(optimalPoint.z > currentLeaf.pos.z + l_size){ optimalPoint.z = currentLeaf.pos.z + l_size; }
-					currentLeaf.optimal = optimalPoint;
-					std::cout << std::endl << "average point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
-					
 					/* Save the VoxelData array */
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
 					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
