@@ -744,7 +744,7 @@ int main(int argc, char** argv) {
 						vx3.pos = leafArray[diagonalRightLeaf].optimal;
 						glm::dvec3 u = createVector(vx1.pos, vx2.pos);
 						glm::dvec3 v = createVector(vx1.pos, vx3.pos);
-						glm::dvec3 computedNormal = glm::cross(u, v);
+						glm::dvec3 computedNormal = glm::cross(v, u);
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
@@ -757,7 +757,7 @@ int main(int argc, char** argv) {
 						vx3.pos = leafArray[frontLeaf].optimal;
 						u = createVector(vx1.pos, vx2.pos);
 						v = createVector(vx1.pos, vx3.pos);
-						computedNormal = glm::cross(u, v);
+						computedNormal = glm::cross(v, u);
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
@@ -772,7 +772,7 @@ int main(int argc, char** argv) {
 						vx3.pos = leafArray[topRightLeaf].optimal;
 						glm::dvec3 u = createVector(vx1.pos, vx2.pos);
 						glm::dvec3 v = createVector(vx1.pos, vx3.pos);
-						glm::dvec3 computedNormal = glm::cross(u, v);
+						glm::dvec3 computedNormal = glm::cross(v, u);
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
@@ -785,7 +785,7 @@ int main(int argc, char** argv) {
 						vx3.pos = leafArray[topLeaf].optimal;
 						u = createVector(vx1.pos, vx2.pos);
 						v = createVector(vx1.pos, vx3.pos);
-						computedNormal = glm::cross(u, v);
+						computedNormal = glm::cross(v, u);
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
@@ -800,7 +800,7 @@ int main(int argc, char** argv) {
 						vx3.pos = leafArray[topFrontLeaf].optimal;
 						glm::dvec3 u = createVector(vx1.pos, vx2.pos);
 						glm::dvec3 v = createVector(vx1.pos, vx3.pos);
-						glm::dvec3 computedNormal = glm::cross(u, v);
+						glm::dvec3 computedNormal = glm::cross(v, u);
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
@@ -813,7 +813,7 @@ int main(int argc, char** argv) {
 						vx3.pos = leafArray[topLeaf].optimal;
 						u = createVector(vx1.pos, vx2.pos);
 						v = createVector(vx1.pos, vx3.pos);
-						computedNormal = glm::cross(u, v);
+						computedNormal = glm::cross(v, u);
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
