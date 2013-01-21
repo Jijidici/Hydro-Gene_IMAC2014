@@ -7,7 +7,7 @@
 
 static const size_t MAX_MEMORY_SIZE = 524288000;
 static const double THRESHOLD_DISTANCE = 1.;
-static const size_t CONFIGCHUNK_OFFSET = 1;
+static const size_t CONFIGCHUNK_OFFSET = 2;
 
 size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint32_t nbLeaves, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize);
 

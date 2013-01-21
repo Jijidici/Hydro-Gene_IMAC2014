@@ -7,6 +7,10 @@
 typedef struct s_vertex{
 	glm::dvec3 pos;
 	glm::dvec3 normal;
+	float bending;
+	float drain;
+	float gradient;
+	float surface;
 }Vertex;
 
 typedef struct s_face{

@@ -30,11 +30,22 @@
 #define SKYBOX 0
 #define TRIANGLES 1
 
+#define NORMAL 2
+#define BENDING 3
+#define DRAIN 4
+#define GRADIENT 5
+#define SURFACE 6
+
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
 static const size_t WINDOW_WIDTH = 1060, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
+
 static const size_t NORMAL_LOCATION = 1;
 static const size_t GRID_3D_SIZE = 2;
+static const size_t BENDING_LOCATION = 3;
+static const size_t DRAIN_LOCATION = 4;
+static const size_t GRADIENT_LOCATION = 5;
+static const size_t SURFACE_LOCATION = 6;
 
 void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersectionLocation, GLint &NormSumLocation, GLint &LightVectLocation){
 	glUseProgram(program);
@@ -47,7 +58,6 @@ void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersecti
 	NormSumLocation = glGetUniformLocation(program, "uNormSum");
 	LightVectLocation = glGetUniformLocation(program, "uLightVect");
 }
-
 
 int main(int argc, char** argv){
 
@@ -64,10 +74,10 @@ int main(int argc, char** argv){
 	uint16_t arguments[7];
 		//0 : nbSub_lvl1
 		//1 : nbSub_lvl2
-		//2 : bending
-		//3 : drain
-		//4 : gradient
-		//5 : normal
+		//2 : normal
+		//3 : bending
+		//4 : drain
+		//5 : gradient
 		//6 : surface
 	
 	test_cache = drn_read_chunk(&cache, 0, arguments);
@@ -83,6 +93,10 @@ int main(int argc, char** argv){
 	size_t chunkBytesSize = lengthTabVoxel*VOXELDATA_BYTES_SIZE;
 	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
 	
+	/* Getting the maximum hydro properties coefficients */
+	float * maxCoeffArray = new float[4];
+	test_cache = drn_read_chunk(&cache, 1, maxCoeffArray);
+
 	/* Getting the leaf chunk (last chunk) */
 	uint32_t nbLeaves = (nbChunks-2)/3;
 	uint32_t lvl2_dataOffset = nbLeaves*2;
@@ -138,21 +152,29 @@ int main(int argc, char** argv){
 	GLuint* l_VAOs = new GLuint[nbLeaves];
 	glGenVertexArrays(nbLeaves, l_VAOs);
 	
-	for(uint32_t idx=0;idx<nbLeaves;++idx){
+	for(uint32_t l_idx=0;l_idx<nbLeaves;++l_idx){
 		//load the vertices		
-		Vertex* trVertices = new Vertex[leafArray[idx].nbVertices_lvl1];
-		test_cache = drn_read_chunk(&cache, leafArray[idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices);
-
-		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[idx]);
-			glBufferData(GL_ARRAY_BUFFER, leafArray[idx].nbVertices_lvl1*sizeof(Vertex), trVertices, GL_STATIC_DRAW);
+		Vertex* trVertices = new Vertex[leafArray[l_idx].nbVertices_lvl1];
+		test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices);
+	
+		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]);
+			glBufferData(GL_ARRAY_BUFFER, leafArray[l_idx].nbVertices_lvl1, trVertices, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		
-		glBindVertexArray(l_VAOs[idx]);
+		glBindVertexArray(l_VAOs[l_idx]);
 			glEnableVertexAttribArray(POSITION_LOCATION);
 			glEnableVertexAttribArray(NORMAL_LOCATION);
-			glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[idx]);
+			glEnableVertexAttribArray(BENDING_LOCATION);
+			glEnableVertexAttribArray(DRAIN_LOCATION);
+			glEnableVertexAttribArray(GRADIENT_LOCATION);
+			glEnableVertexAttribArray(SURFACE_LOCATION);
+			glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]);
 				glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
 				glVertexAttribPointer(NORMAL_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3*sizeof(GLdouble)));
+				glVertexAttribPointer(BENDING_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)));
+				glVertexAttribPointer(DRAIN_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+sizeof(GLfloat)));
+				glVertexAttribPointer(GRADIENT_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+2*sizeof(GLfloat)));
+				glVertexAttribPointer(SURFACE_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+3*sizeof(GLfloat)));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 		
@@ -165,11 +187,11 @@ int main(int argc, char** argv){
 	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl");
 	if(!programNorm){
 		glDeleteBuffers(1, &cubeVBO);
-		glDeleteBuffers(1, l_VBOs);
+		glDeleteBuffers(nbLeaves, l_VBOs);
 		glDeleteVertexArrays(1, &cubeVAO);
-		glDeleteVertexArrays(1, l_VAOs);
-		delete[] l_VBOs;
+		glDeleteVertexArrays(nbLeaves, l_VAOs);
 		delete[] l_VAOs;
+		delete[] l_VBOs;
 		delete[] leafArray;
 		delete[] loadedLeaf;
 		return (EXIT_FAILURE);
@@ -193,6 +215,16 @@ int main(int argc, char** argv){
 	GLint LightVectLocation = glGetUniformLocation(program, "uLightVect");
 	GLint TextureLocation = glGetUniformLocation(program, "uTexture");
 	GLint ModeLocation = glGetUniformLocation(program, "uMode");
+	GLint ChoiceLocation = glGetUniformLocation(program, "uChoice");
+	GLint MaxBendingLocation = glGetUniformLocation(program, "uMaxBending");
+	GLint MaxDrainLocation = glGetUniformLocation(program, "uMaxDrain");
+	GLint MaxSurfaceLocation = glGetUniformLocation(program, "uMaxSurface");
+	GLint MaxGradientLocation = glGetUniformLocation(program, "uMaxGradient");
+
+	glUniform1f(MaxBendingLocation, maxCoeffArray[0]);	
+	glUniform1f(MaxDrainLocation, maxCoeffArray[1]);
+	glUniform1f(MaxGradientLocation, maxCoeffArray[2]);
+	glUniform1f(MaxSurfaceLocation, maxCoeffArray[3]);
 
 	// Creation Light
 	glm::vec3 light(-1.f,-1.f,0.f);
@@ -232,6 +264,11 @@ int main(int argc, char** argv){
 	float old_positionX = 0.;
 	float new_positionX = 0.;
 	float new_positionY = 0.;
+	bool displayNormal = true;	
+	bool displayDrain = false;
+	bool displayBending = false;
+	bool displaySurface = false;
+	bool displayGradient = false;
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -290,7 +327,6 @@ int main(int argc, char** argv){
 				}else{
 					//display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
 					/* display the triangularized leaf */
-					glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 					glUniform3fv(glGetUniformLocation(program, "uColor"), 1, glm::value_ptr(glm::vec3(0.f, 1.f, 0.f)));
 					glBindVertexArray(l_VAOs[idx]);
 						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
@@ -363,6 +399,54 @@ int main(int argc, char** argv){
 						case SDLK_z:
 							if(currentCam == FREE_FLY){
 								is_uKeyPressed = true;
+							}
+							break;
+
+						case SDLK_F1:
+							displayNormal = true;
+	 						displayDrain = false;
+							displayBending = false;
+							displaySurface = false;
+							displayGradient = false;
+							break;
+
+						case SDLK_F2:
+							if(arguments[BENDING]){
+							displayNormal = false;
+	 						displayDrain = false;
+							displayBending = true;
+							displaySurface = false;
+							displayGradient = false;
+							}
+							break;
+
+						case SDLK_F3:
+							if(arguments[DRAIN]){
+							displayNormal = false;
+	 						displayDrain = true;
+							displayBending = false;
+							displaySurface = false;
+							displayGradient = false;
+							}
+							break;
+
+						case SDLK_F4:
+							if(arguments[GRADIENT]){
+							displayNormal = false;
+	 						displayDrain = false;
+							displayBending = false;
+							displaySurface = false;
+							displayGradient = true;
+							}
+							break;
+
+						case SDLK_F5:
+							if(arguments[SURFACE]){
+							displayNormal = false;
+	 						displayDrain = false;
+							displayBending = false;
+							displaySurface = true;
+							displayGradient = false;
 							}
 							break;
 						
@@ -513,6 +597,13 @@ int main(int argc, char** argv){
 			}
 		}
 
+		//DISPLAY OF THE COEFFICIENTS
+		if(displayNormal) glUniform1i(ChoiceLocation, NORMAL);
+		else if(displayDrain) glUniform1i(ChoiceLocation, DRAIN);
+		else if(displayBending) glUniform1i(ChoiceLocation, BENDING);
+		else if(displayGradient) glUniform1i(ChoiceLocation, GRADIENT);
+		else if(displaySurface) glUniform1i(ChoiceLocation, SURFACE);
+
 		//IDLE
 		if(is_lKeyPressed){ ffCam.moveLeft(0.01); }
 		if(is_rKeyPressed){ ffCam.moveLeft(-0.01); }
@@ -563,15 +654,13 @@ int main(int argc, char** argv){
 		glDeleteBuffers(1, &(tmpChunk.vbo));
 	}
 	
-	
-		glDeleteBuffers(1, &cubeVBO);
-		glDeleteBuffers(1, l_VBOs);
-		glDeleteVertexArrays(1, &cubeVAO);
-		glDeleteVertexArrays(1, l_VAOs);
-		delete[] l_VBOs;
-		delete[] l_VAOs;
-		delete[] leafArray;
-		delete[] loadedLeaf;
+	glDeleteBuffers(nbLeaves, l_VBOs);
+	glDeleteVertexArrays(nbLeaves, l_VAOs);
+	delete[] l_VAOs;
+	delete[] l_VBOs;
+	delete[] leafArray;
+	delete[] loadedLeaf;
+	delete[] maxCoeffArray;
 
 	return (EXIT_SUCCESS);
 }

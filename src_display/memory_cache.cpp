@@ -1,5 +1,6 @@
 #include "display/memory_cache.hpp"
 
+#include <iostream>
 #include <vector>
 #include <stdint.h>
 #include <stdexcept>
@@ -10,6 +11,10 @@
 
 #define POSITION_LOCATION 0
 #define NORMAL_LOCATION 1
+static const size_t BENDING_LOCATION = 3;
+static const size_t DRAIN_LOCATION = 4;
+static const size_t GRADIENT_LOCATION = 5;
+static const size_t SURFACE_LOCATION = 6;
 
 size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint32_t nbLeaves, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize){
 	//if the memcache is to tiny for the chunks
@@ -34,9 +39,17 @@ size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf,
 		glBindVertexArray(vaos[currentLeaf]);
 			glEnableVertexAttribArray(POSITION_LOCATION);
 			glEnableVertexAttribArray(NORMAL_LOCATION);
+			glEnableVertexAttribArray(BENDING_LOCATION);
+			glEnableVertexAttribArray(DRAIN_LOCATION);
+			glEnableVertexAttribArray(GRADIENT_LOCATION);
+			glEnableVertexAttribArray(SURFACE_LOCATION);
 			glBindBuffer(GL_ARRAY_BUFFER, vbos[currentLeaf]);
 				glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
 				glVertexAttribPointer(NORMAL_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3*sizeof(GLdouble)));
+				glVertexAttribPointer(BENDING_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)));
+				glVertexAttribPointer(DRAIN_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+sizeof(GLfloat)));
+				glVertexAttribPointer(GRADIENT_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+2*sizeof(GLfloat)));
+				glVertexAttribPointer(SURFACE_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+3*sizeof(GLfloat)));
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 		
@@ -68,6 +81,7 @@ void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double dis
 	Vertex* vertices = NULL;
 	vertices = new Vertex[l.nbVertices_lvl2];
 	test_cache = drn_read_chunk(&cache,  2*l.id+1 + CONFIGCHUNK_OFFSET, vertices);
+
 	glBindBuffer(GL_ARRAY_BUFFER, idxVbo);
 		glBufferData(GL_ARRAY_BUFFER, l.nbVertices_lvl2*sizeof(Vertex), vertices, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
