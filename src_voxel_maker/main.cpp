@@ -698,7 +698,7 @@ int main(int argc, char** argv) {
 					}else{
 						
 						std::cout << std::endl << "--- No edge intersection ---" << std::endl;
-						glm::dvec3 optimalPoint(currentLeaf.pos.x + l_size/2., currentLeaf.pos.y + l_size/2., currentLeaf.pos.x + l_size/2.);
+						glm::dvec3 optimalPoint((currentLeaf.pos.x + l_size)/2., (currentLeaf.pos.y + l_size)/2., (currentLeaf.pos.z + l_size)/2.);
 						currentLeaf.optimal = optimalPoint;
 						std::cout << std::endl << "average point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
 					}
