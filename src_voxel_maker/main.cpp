@@ -437,7 +437,7 @@ int main(int argc, char** argv) {
 	uint32_t sizeLeafArray = nbSub_lvl1*nbSub_lvl1*nbSub_lvl1;
 	Leaf* leafArray = new Leaf[sizeLeafArray];
 	Leaf currentLeaf;
-	currentLeaf.id = 0;
+	currentLeaf.id = 1;
 	currentLeaf.size = l_size;
 	
 	/* Initialize the vertices per leaf vector */
@@ -544,12 +544,7 @@ int main(int argc, char** argv) {
 
 				/* if the leaf is not empty, save its voxels */
 				if(is_intersec){
-					/*** TRIANGULARISATION HERE ***/
-					
-					/* -------------------------------- */
-					/* ----- DOESN'T WORK FOR NOW ----- */
-					/* -------------------------------- */
-					
+					/*** TRIANGULARISATION HERE ***/					
 					/* compute leaf's corners */
 					glm::dvec3 vert0 = currentLeaf.pos;
 					glm::dvec3 vert1 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z);
@@ -741,9 +736,11 @@ int main(int argc, char** argv) {
 
 	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
 		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
-			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
+			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){			
 				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
-
+				
+				std::cout<<"//-> ID current Leaf : "<<leafArray[currentLeafIndex].id<<std::endl;
+				
 				uint32_t rightLeaf = (l_i+1) + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
 				uint32_t diagonalRightLeaf = (l_i+1) + nbSub_lvl1*l_j + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
 				uint32_t frontLeaf = l_i + nbSub_lvl1*l_j + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
@@ -852,7 +849,6 @@ int main(int argc, char** argv) {
 					}
 					test_cache = drn_writer_add_chunk(&cache, l_computed_vertices.data(), l_computed_vertices.size()*sizeof(Vertex));
 					leafArray[currentLeafIndex].nbVertices_lvl1 = l_computed_vertices.size();
-					std::cout<<"//-> NB computed triangles vertices : "<<leafArray[currentLeafIndex].nbVertices_lvl1<<std::endl;
 					l_queue.push_back(leafArray[currentLeafIndex]);
 					l_computed_vertices.clear();
 				}
