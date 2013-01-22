@@ -426,6 +426,7 @@ int main(int argc, char** argv) {
 	test_cache = drn_writer_add_chunk(&cache, arguments, 7*sizeof(uint16_t));
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 	
+	/* Saving the maximum data */
 	test_cache = drn_writer_add_chunk(&cache, maxCoeffArray, 4*sizeof(float));
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 
@@ -719,9 +720,6 @@ int main(int argc, char** argv) {
 					/* Save the vertices lvl2 */
 					test_cache = drn_writer_add_chunk(&cache, l_storedVertices.data(), currentLeaf.nbVertices_lvl2*sizeof(Vertex));
 					
-					/* Save the vetrices lvl1 */
-					/******* HERE SAVE THE VERTICES GET WITH TRIANGULARISATION **********/
-					
 					/* updade the Leaf indexation */
 					leafArray[currentLeafIndex] = currentLeaf;
 					
@@ -739,7 +737,7 @@ int main(int argc, char** argv) {
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
 
 	std::vector<Leaf> l_queue;
-	std::vector<glm::dvec3> l_computed_vertices;
+	std::vector<Vertex> l_computed_vertices;
 
 	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
 		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
@@ -753,34 +751,106 @@ int main(int argc, char** argv) {
 				uint32_t topLeaf = l_i + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
 				uint32_t topFrontLeaf = l_i + nbSub_lvl1*(l_j+1) + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
 				if(leafArray[currentLeafIndex].nbIntersection != 0){
+					Vertex vx1;
+					Vertex vx2;
+					Vertex vx3;
+					vx1.bending = 0.005f;
+					vx2.bending = 0.005f;
+					vx3.bending = 0.005f;
+					vx1.drain = 8000.f;
+					vx2.drain = 8000.f;
+					vx3.drain = 8000.f;
+					vx1.gradient = 0.5f;
+					vx2.gradient = 0.5f;
+					vx3.gradient = 0.5f;
+					vx1.surface = 0.000029;
+					vx2.surface = 0.000029;
+					vx3.surface = 0.000029;
 					//corner edge
 					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[diagonalRightLeaf].nbIntersection != 0)&&(leafArray[frontLeaf].nbIntersection != 0)){
-						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
-						l_computed_vertices.push_back(leafArray[rightLeaf].optimal);
-						l_computed_vertices.push_back(leafArray[diagonalRightLeaf].optimal);
-						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
-						l_computed_vertices.push_back(leafArray[frontLeaf].optimal);
-						l_computed_vertices.push_back(leafArray[diagonalRightLeaf].optimal);
+						vx1.pos = leafArray[currentLeafIndex].optimal;
+						vx2.pos = leafArray[rightLeaf].optimal;
+						vx3.pos = leafArray[diagonalRightLeaf].optimal;
+						glm::dvec3 u = createVector(vx1.pos, vx2.pos);
+						glm::dvec3 v = createVector(vx1.pos, vx3.pos);
+						glm::dvec3 computedNormal = glm::cross(v, u);
+						vx1.normal = computedNormal;
+						vx2.normal = computedNormal;
+						vx3.normal = computedNormal;
+						l_computed_vertices.push_back(vx1);
+						l_computed_vertices.push_back(vx2);
+						l_computed_vertices.push_back(vx3);
+
+						vx1.pos = leafArray[currentLeafIndex].optimal;
+						vx2.pos = leafArray[diagonalRightLeaf].optimal;
+						vx3.pos = leafArray[frontLeaf].optimal;
+						u = createVector(vx1.pos, vx2.pos);
+						v = createVector(vx1.pos, vx3.pos);
+						computedNormal = glm::cross(v, u);
+						vx1.normal = computedNormal;
+						vx2.normal = computedNormal;
+						vx3.normal = computedNormal;
+						l_computed_vertices.push_back(vx1);
+						l_computed_vertices.push_back(vx2);
+						l_computed_vertices.push_back(vx3);
 					}
 					//right edge
 					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[topRightLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)){
-						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
-						l_computed_vertices.push_back(leafArray[rightLeaf].optimal);
-						l_computed_vertices.push_back(leafArray[topRightLeaf].optimal);
-						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
-						l_computed_vertices.push_back(leafArray[topLeaf].optimal);
-						l_computed_vertices.push_back(leafArray[topRightLeaf].optimal);
+						vx1.pos = leafArray[currentLeafIndex].optimal;
+						vx2.pos = leafArray[rightLeaf].optimal;
+						vx3.pos = leafArray[topRightLeaf].optimal;
+						glm::dvec3 u = createVector(vx1.pos, vx2.pos);
+						glm::dvec3 v = createVector(vx1.pos, vx3.pos);
+						glm::dvec3 computedNormal = glm::cross(v, u);
+						vx1.normal = computedNormal;
+						vx2.normal = computedNormal;
+						vx3.normal = computedNormal;
+						l_computed_vertices.push_back(vx1);
+						l_computed_vertices.push_back(vx2);
+						l_computed_vertices.push_back(vx3);
+
+						vx1.pos = leafArray[currentLeafIndex].optimal;
+						vx2.pos = leafArray[topRightLeaf].optimal;
+						vx3.pos = leafArray[topLeaf].optimal;
+						u = createVector(vx1.pos, vx2.pos);
+						v = createVector(vx1.pos, vx3.pos);
+						computedNormal = glm::cross(v, u);
+						vx1.normal = computedNormal;
+						vx2.normal = computedNormal;
+						vx3.normal = computedNormal;
+						l_computed_vertices.push_back(vx1);
+						l_computed_vertices.push_back(vx2);
+						l_computed_vertices.push_back(vx3);
 					}
 					//front edge
 					if((leafArray[frontLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)&&(leafArray[topFrontLeaf].nbIntersection != 0)){
-						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
-						l_computed_vertices.push_back(leafArray[frontLeaf].optimal);
-						l_computed_vertices.push_back(leafArray[topFrontLeaf].optimal);
-						l_computed_vertices.push_back(leafArray[currentLeafIndex].optimal);
-						l_computed_vertices.push_back(leafArray[topLeaf].optimal);
-						l_computed_vertices.push_back(leafArray[topFrontLeaf].optimal);
+						vx1.pos = leafArray[currentLeafIndex].optimal;
+						vx2.pos = leafArray[frontLeaf].optimal;
+						vx3.pos = leafArray[topFrontLeaf].optimal;
+						glm::dvec3 u = createVector(vx1.pos, vx2.pos);
+						glm::dvec3 v = createVector(vx1.pos, vx3.pos);
+						glm::dvec3 computedNormal = glm::cross(v, u);
+						vx1.normal = computedNormal;
+						vx2.normal = computedNormal;
+						vx3.normal = computedNormal;
+						l_computed_vertices.push_back(vx1);
+						l_computed_vertices.push_back(vx2);
+						l_computed_vertices.push_back(vx3);
+
+						vx1.pos = leafArray[currentLeafIndex].optimal;
+						vx2.pos = leafArray[topFrontLeaf].optimal;
+						vx3.pos = leafArray[topLeaf].optimal;
+						u = createVector(vx1.pos, vx2.pos);
+						v = createVector(vx1.pos, vx3.pos);
+						computedNormal = glm::cross(v, u);
+						vx1.normal = computedNormal;
+						vx2.normal = computedNormal;
+						vx3.normal = computedNormal;
+						l_computed_vertices.push_back(vx1);
+						l_computed_vertices.push_back(vx2);
+						l_computed_vertices.push_back(vx3);
 					}
-					test_cache = drn_writer_add_chunk(&cache, l_computed_vertices.data(), l_computed_vertices.size()*sizeof(glm::dvec3));
+					test_cache = drn_writer_add_chunk(&cache, l_computed_vertices.data(), l_computed_vertices.size()*sizeof(Vertex));
 					leafArray[currentLeafIndex].nbVertices_lvl1 = l_computed_vertices.size();
 					std::cout<<"//-> NB computed triangles vertices : "<<leafArray[currentLeafIndex].nbVertices_lvl1<<std::endl;
 					l_queue.push_back(leafArray[currentLeafIndex]);

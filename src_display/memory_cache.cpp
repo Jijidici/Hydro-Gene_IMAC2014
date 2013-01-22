@@ -9,13 +9,6 @@
 #include "data_types.hpp"
 #include "geom_types.hpp"
 
-#define POSITION_LOCATION 0
-#define NORMAL_LOCATION 1
-static const size_t BENDING_LOCATION = 3;
-static const size_t DRAIN_LOCATION = 4;
-static const size_t GRADIENT_LOCATION = 5;
-static const size_t SURFACE_LOCATION = 6;
-
 size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint32_t nbLeaves, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize){
 	//if the memcache is to tiny for the chunks
 	if(chunkBytesSize >= MAX_MEMORY_SIZE){

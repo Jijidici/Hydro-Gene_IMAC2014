@@ -20,7 +20,6 @@ uniform vec3 uLightVect = vec3(0.,0.,0.);
 uniform sampler2D uTexture;
 uniform int uMode;
 uniform int uChoice;
-uniform vec3 uColor = vec3(1., 1., 1.);
 uniform float uMaxBending;
 uniform float uMaxDrain;
 uniform float uMaxGradient;
@@ -31,7 +30,7 @@ out vec4 fFragColor;
 void main() {
 	if(uMode == TRIANGLES){
 
-		vec3 dColor = uColor;
+		vec3 dColor = vec3(0.8f, 0.8f, 0.85f);
 		float ratio;
 
 		if(uChoice == BENDING){
@@ -48,7 +47,7 @@ void main() {
 		}
 		else if(uChoice == SURFACE){
 			ratio = vSurface/uMaxSurface;
-			dColor = vec3(1.f - ratio, ratio, 1.f - ratio);
+			dColor = vec3(0.5f - ratio, ratio, 0.5f - ratio);
 		}
 
 		float dCoeff = max(0, dot(normalize(vNormal), -normalize(uLightVect)));

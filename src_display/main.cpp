@@ -40,12 +40,7 @@ static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
 static const size_t WINDOW_WIDTH = 1060, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
 
-static const size_t NORMAL_LOCATION = 1;
 static const size_t GRID_3D_SIZE = 2;
-static const size_t BENDING_LOCATION = 3;
-static const size_t DRAIN_LOCATION = 4;
-static const size_t GRADIENT_LOCATION = 5;
-static const size_t SURFACE_LOCATION = 6;
 
 void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersectionLocation, GLint &NormSumLocation, GLint &LightVectLocation){
 	glUseProgram(program);
@@ -158,7 +153,7 @@ int main(int argc, char** argv){
 		test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices);
 	
 		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]);
-			glBufferData(GL_ARRAY_BUFFER, leafArray[l_idx].nbVertices_lvl1, trVertices, GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, leafArray[l_idx].nbVertices_lvl1*sizeof(Vertex), trVertices, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		
 		glBindVertexArray(l_VAOs[l_idx]);
@@ -303,7 +298,6 @@ int main(int argc, char** argv){
 			for(uint16_t idx=0;idx<nbLeaves;++idx){
 				double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
 				if(d<THRESHOLD_DISTANCE){
-					glUniform3fv(glGetUniformLocation(program, "uColor"), 1, glm::value_ptr(glm::vec3(1.f, 0.f, 0.f)));
 					if(!loadedLeaf[idx]){
 						Chunk voidChunk = freeInMemory(memory, loadedLeaf);
 						loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
@@ -325,9 +319,8 @@ int main(int argc, char** argv){
 						}
 					}
 				}else{
-					//display_lvl1(cubeVAO, ms, MVPLocation, leafArray[idx].pos, halfLeafSize);
 					/* display the triangularized leaf */
-					glUniform3fv(glGetUniformLocation(program, "uColor"), 1, glm::value_ptr(glm::vec3(0.f, 1.f, 0.f)));
+					glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 					glBindVertexArray(l_VAOs[idx]);
 						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
 					glBindVertexArray(0);
@@ -449,38 +442,6 @@ int main(int argc, char** argv){
 							displayGradient = false;
 							}
 							break;
-						
-						case SDLK_g:
-								std::cout << "near normal : " << std::endl;
-								std::cout << ffCam.m_frustumNearPlaneNormal.x << std::endl;
-								std::cout << ffCam.m_frustumNearPlaneNormal.y << std::endl;
-								std::cout << ffCam.m_frustumNearPlaneNormal.z << std::endl << std::endl;
-								
-								std::cout << "far normal : " << std::endl;
-								std::cout << ffCam.m_frustumFarPlaneNormal.x << std::endl;
-								std::cout << ffCam.m_frustumFarPlaneNormal.y << std::endl;
-								std::cout << ffCam.m_frustumFarPlaneNormal.z << std::endl << std::endl;
-								
-								std::cout << "left normal : " << std::endl;
-								std::cout << ffCam.m_frustumLeftPlaneNormal.x << std::endl;
-								std::cout << ffCam.m_frustumLeftPlaneNormal.y << std::endl;
-								std::cout << ffCam.m_frustumLeftPlaneNormal.z << std::endl << std::endl;
-								
-								std::cout << "right normal : " << std::endl;
-								std::cout << ffCam.m_frustumRightPlaneNormal.x << std::endl;
-								std::cout << ffCam.m_frustumRightPlaneNormal.y << std::endl;
-								std::cout << ffCam.m_frustumRightPlaneNormal.z << std::endl << std::endl;
-								
-								std::cout << "top normal : " << std::endl;
-								std::cout << ffCam.m_frustumTopPlaneNormal.x << std::endl;
-								std::cout << ffCam.m_frustumTopPlaneNormal.y << std::endl;
-								std::cout << ffCam.m_frustumTopPlaneNormal.z << std::endl << std::endl;
-								
-								std::cout << "bottom normal : " << std::endl;
-								std::cout << ffCam.m_frustumBottomPlaneNormal.x << std::endl;
-								std::cout << ffCam.m_frustumBottomPlaneNormal.y << std::endl;
-								std::cout << ffCam.m_frustumBottomPlaneNormal.z << std::endl << std::endl;
-								break;
 
 						case SDLK_s:
 							if(currentCam == FREE_FLY){
@@ -517,13 +478,6 @@ int main(int argc, char** argv){
 							if(currentCam == FREE_FLY){
 								is_dKeyPressed = false;
 							}
-							break;
-
-						case SDLK_SPACE:
-							std::cout << "top plane normal : " << std::endl << "x : " << ffCam.m_frustumTopPlaneNormal.x << ", y : " << ffCam.m_frustumTopPlaneNormal.y << ", z : " << ffCam.m_frustumTopPlaneNormal.z << std::endl;
-							std::cout << "right plane normal : " << std::endl << "x : " << ffCam.m_frustumRightPlaneNormal.x << ", y : " << ffCam.m_frustumRightPlaneNormal.y << ", z : " << ffCam.m_frustumRightPlaneNormal.z << std::endl;
-							std::cout << "bottom plane normal : " << std::endl << "x : " << ffCam.m_frustumBottomPlaneNormal.x << ", y : " << ffCam.m_frustumBottomPlaneNormal.y << ", z : " << ffCam.m_frustumBottomPlaneNormal.z << std::endl;
-							std::cout << "left plane normal : " << std::endl << "x : " << ffCam.m_frustumLeftPlaneNormal.x << ", y : " << ffCam.m_frustumLeftPlaneNormal.y << ", z : " << ffCam.m_frustumLeftPlaneNormal.z << std::endl;
 							break;
 
 						default:
