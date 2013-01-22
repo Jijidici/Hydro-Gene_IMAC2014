@@ -6,6 +6,8 @@
 #include <drn/drn_types.h>
 #include <glm/glm.hpp>
 
+#include "geom_types.hpp"
+
 static const size_t VOXELDATA_BYTES_SIZE = 56;
 
 typedef struct s_voxelData{ //voxels dans tabVoxel
@@ -24,9 +26,9 @@ typedef struct s_leaf{
 	uint32_t nbIntersection;
 	uint32_t nbVertices_lvl1;
 	uint32_t nbVertices_lvl2;
-	glm::dvec3 optimal;
+	Vertex optimal;
 
-	s_leaf() : id(0), pos(glm::dvec3(-1.f, -1.f, -1.f)), size(-1), nbIntersection(0), nbVertices_lvl1(0), nbVertices_lvl2(0), optimal(glm::dvec3(-1.f, -1.f, -1.f)){ }
+	s_leaf() : id(0), pos(glm::dvec3(-1.f, -1.f, -1.f)), size(-1), nbIntersection(0), nbVertices_lvl1(0), nbVertices_lvl2(0){ }
 }Leaf;
 
 typedef struct s_chunk{
