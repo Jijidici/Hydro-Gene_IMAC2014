@@ -179,7 +179,7 @@ int main(int argc, char** argv){
 	test_cache = drn_close(&cache);
 	
 	// Creation des Shaders
-	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl");
+	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
 	if(!programNorm){
 		glDeleteBuffers(1, &cubeVBO);
 		glDeleteBuffers(nbLeaves, l_VBOs);

@@ -9,12 +9,12 @@
 #define GRADIENT 5
 #define SURFACE 6
 
-in vec3 vNormal;
-in vec2 vTexCoords;
-in float vBending;
-in float vDrain;
-in float vGradient;
-in float vSurface;
+in vec3 gNormal;
+in vec2 gTexCoords;
+in float gBending;
+in float gDrain;
+in float gGradient;
+in float gSurface;
 
 uniform vec3 uLightVect = vec3(0.,0.,0.);
 uniform sampler2D uTexture;
@@ -34,23 +34,23 @@ void main() {
 		float ratio;
 
 		if(uChoice == BENDING){
-			ratio = vBending/uMaxBending;
+			ratio = gBending/uMaxBending;
 			dColor = vec3(1.f - ratio, ratio, 1.f - ratio);
 		}
 		else if(uChoice == DRAIN){
-			ratio = vDrain/uMaxDrain;
+			ratio = gDrain/uMaxDrain;
 			dColor = vec3(1.f - ratio, 1.f - ratio, ratio);
 		}
 		else if(uChoice == GRADIENT){
-			ratio = vGradient/uMaxGradient;
+			ratio = gGradient/uMaxGradient;
 			dColor = vec3(ratio, 1.f - ratio, 1.f - ratio);
 		}
 		else if(uChoice == SURFACE){
-			ratio = vSurface/uMaxSurface;
+			ratio = gSurface/uMaxSurface;
 			dColor = vec3(0.5f - ratio, ratio, 0.5f - ratio);
 		}
 
-		float dCoeff = max(0, dot(normalize(vNormal), -normalize(uLightVect)));
+		float dCoeff = max(0, dot(normalize(gNormal), -normalize(uLightVect)));
 
 		vec3 aColor = vec3(0.02f, 0.02f, 0.f);
 		vec3 color = vec3(1.f, 1.f, 1.f) * (aColor + dColor*dCoeff);
@@ -58,6 +58,6 @@ void main() {
 		fFragColor = vec4(color, 1.f);
 
 	}else if(uMode == SKYBOX){
-		fFragColor = texture(uTexture, vTexCoords);
+		fFragColor = texture(uTexture, gTexCoords);
 	}
 }

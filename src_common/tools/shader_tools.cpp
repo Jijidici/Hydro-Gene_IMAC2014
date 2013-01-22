@@ -23,7 +23,7 @@ static const char* readFile(const char* filePath) {
     return src;
 }
 
-GLuint loadProgram(const char* vertexShaderFile, const char* fragmentShaderFile) {
+GLuint loadProgram(const char* vertexShaderFile, const char* fragmentShaderFile, const char* geometryShaderFile) {
     const char* vertexShaderSource = readFile(vertexShaderFile);
     if(!vertexShaderSource) {
         std::cerr << "Unable to load " << vertexShaderFile << std::endl;
@@ -33,6 +33,12 @@ GLuint loadProgram(const char* vertexShaderFile, const char* fragmentShaderFile)
     const char* fragmentShaderSource = readFile(fragmentShaderFile);
     if(!fragmentShaderSource) {
         std::cerr << "Unable to load " << fragmentShaderFile << std::endl;
+        return 0;
+    }
+
+    const char* geometryShaderSource = readFile(geometryShaderFile);
+    if(!geometryShaderSource) {
+        std::cerr << "Unable to load " << geometryShaderFile << std::endl;
         return 0;
     }
     
@@ -94,7 +100,36 @@ GLuint loadProgram(const char* vertexShaderFile, const char* fragmentShaderFile)
         delete [] log;
         return 0;
     }
+
+    // Creation d'un Geometry Shader
+    GLuint geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
     
+    // Spécification du code source
+    glShaderSource(geometryShader, 1, &geometryShaderSource, 0);
+    
+    // Compilation du shader
+    glCompileShader(geometryShader);
+    
+    /// Vérification que la compilation a bien fonctionnée (très important !)
+    
+    // Récupération du status de compilation
+    glGetShaderiv(geometryShader, GL_COMPILE_STATUS, &compileStatus);
+    if(compileStatus == GL_FALSE) {
+        // Si echec, récupération de la taille du log de compilation
+        GLint logLength;
+        glGetShaderiv(geometryShader, GL_INFO_LOG_LENGTH, &logLength);
+        
+        // Allocation d'une chaine de caractère suffisement grande pour contenir le log
+        char* log = new char[logLength];
+        
+        glGetShaderInfoLog(geometryShader, logLength, 0, log);
+        std::cerr << "Geometry Shader error:" << log << std::endl;
+        std::cerr << geometryShaderSource << std::endl;
+        
+        delete [] log;
+        return 0;
+    }
+
     GLuint program;
     
     // Creation d'un programme
@@ -103,10 +138,12 @@ GLuint loadProgram(const char* vertexShaderFile, const char* fragmentShaderFile)
     // Attachement des shaders au programme
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
+    glAttachShader(program, geometryShader);
     
     // Désallocation des shaders: ils ne seront réellement supprimés que lorsque le programme sera supprimé
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+    glDeleteShader(geometryShader);
     
     // Edition de lien
     glLinkProgram(program);
@@ -131,6 +168,7 @@ GLuint loadProgram(const char* vertexShaderFile, const char* fragmentShaderFile)
     
     delete [] vertexShaderSource;
     delete [] fragmentShaderSource;
+    delete [] geometryShaderSource;
     
     return program;
 }
