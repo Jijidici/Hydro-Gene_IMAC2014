@@ -322,6 +322,44 @@ int main(int argc, char** argv){
 			nF[15] = 0.; nF[16] = 0.; nF[17] = 1.;	
 
 			writePage2(nbVertices, nbFaces, nV, nF, outputFileName);
+			
+			dV = new int[nbVertices];
+			dV[0] = 0;	//1
+			dV[1] = 1;	//2
+			dV[2] = 1;	//3
+			dV[3] = 0;	//4
+			dV[4] = 2;	//5
+			dV[5] = 3;	//6
+			dV[6] = 3;	//7
+			dV[7] = 2;	//8
+			
+			dF = new int[nbFaces];
+			dF[0] = 0;	//1
+			dF[1] = 0;	//2
+			dF[1] = 1;	//3
+			dF[1] = 1;	//4
+			dF[1] = 2;	//5
+			dF[1] = 2;	//6
+			
+			oV = new double[3*nbVertices];
+			oV[0] = 0.; oV[1] = 0.5; oV[2] = 0.; //1 
+			oV[3] = 0.; oV[4] = 0.5; oV[5] = 0.; //2 
+			oV[6] = 0.; oV[7] = 0.5; oV[8] = 0.; //3 
+			oV[9] = 0.; oV[10] = 0.5; oV[11] = 0.; //4 
+			oV[12] = 0.; oV[13] = 0.5; oV[14] = 0.; //5 
+			oV[15] = 0.; oV[16] = 0.5; oV[17] = 0.; //6 
+			oV[18] = 0.; oV[19] = 0.5; oV[20] = 0.; //7 
+			oV[21] = 0.; oV[22] = 0.5; oV[23] = 0.; //8 
+			
+			oF = new double[3*nbFaces];
+			oF[0] = 0.; oF[1] = 0.5; oF[2] = 0.; //1 
+			oF[3] = 0.; oF[4] = 0.5; oF[5] = 0.; //2 
+			oF[6] = 0.; oF[7] = 0.5; oF[8] = 0.; //3 
+			oF[9] = 0.; oF[10] = 0.5; oF[11] = 0.; //4 
+			oF[12] = 0.; oF[13] = 0.5; oF[14] = 0.; //5 
+			oF[15] = 0.; oF[16] = 0.5; oF[17] = 0.; //6 
+			
+			writePage4(nbVertices, nbFaces, dV, dF, oV, oF, outputFileName);
 		break;
 
 		default:
