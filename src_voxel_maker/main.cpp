@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
 	uint16_t normal = 0;
 	uint16_t mode = 0;
 	
-	//Managing of the console arguments
+	//Managing the console arguments
 	if(argc > 1){
 		char** tabArguments = new char*[argc];
 
@@ -442,7 +442,6 @@ int main(int argc, char** argv) {
 	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
 		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
 			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
-				
 				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
 				
 				/* Initialize the vertices per leaf vector */
@@ -475,11 +474,11 @@ int main(int argc, char** argv) {
 					/* Face properties */
 					/* min and max */
 					uint16_t minVoxelX = ((getminX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
-					uint16_t maxVoxelX = ((getminX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
+					uint16_t maxVoxelX = ((getmaxX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
 					uint16_t minVoxelY = ((getminY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
-					uint16_t maxVoxelY = ((getminY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
+					uint16_t maxVoxelY = ((getmaxY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
 					uint16_t minVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
-					uint16_t maxVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
+					uint16_t maxVoxelZ = ((getmaxZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
 
 					//Test if the triangle is inside the current leaf
 					if(maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
@@ -487,11 +486,11 @@ int main(int argc, char** argv) {
 					   maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){
 					   
 						//case where triangle overlap 2 leaves
-						if(maxVoxelX > nbSub_lvl2){ maxVoxelX = nbSub_lvl2 - 1; } 
+						if(maxVoxelX >= nbSub_lvl2){ maxVoxelX = nbSub_lvl2 - 1; } 
 						if(minVoxelX < 0){ maxVoxelX = 0; }
-						if(maxVoxelY > nbSub_lvl2){ maxVoxelY = nbSub_lvl2 - 1; } 
+						if(maxVoxelY >= nbSub_lvl2){ maxVoxelY = nbSub_lvl2 - 1; } 
 						if(minVoxelY < 0){ maxVoxelY = 0; }
-						if(maxVoxelZ > nbSub_lvl2){ maxVoxelZ = nbSub_lvl2 - 1; } 
+						if(maxVoxelZ >= nbSub_lvl2){ maxVoxelZ = nbSub_lvl2 - 1; } 
 						if(minVoxelZ < 0){ maxVoxelZ = 0; }
 						
 						/* Edges */
@@ -515,6 +514,7 @@ int main(int argc, char** argv) {
 								//~ #pragma omp parallel for
 								for(uint16_t i=minVoxelX;i<=maxVoxelX;++i){
 									// Voxel Properties 
+									
 									Voxel vox = createVoxel(i*voxelSize + currentLeaf.pos.x + voxelSize*0.5, j*voxelSize + currentLeaf.pos.y + voxelSize*0.5, k*voxelSize + currentLeaf.pos.z + voxelSize*0.5, voxelSize);
 									if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
 										is_intersec = true;
@@ -623,7 +623,7 @@ int main(int argc, char** argv) {
 								/* intersection point */								
 								glm::dvec3 intPoint;
 								if((*e_it).computeIntersectionPoint(u, v, tempFace.s1->pos, intPoint)){
-									//~ std::cout << "Intersection Point : " << intPoint.x << " " << intPoint.y << " " << intPoint.z << std::endl;
+									std::cout << "Intersection Point : " << intPoint.x << " " << intPoint.y << " " << intPoint.z << std::endl;
 									
 									Vertex intVertex;
 									intVertex.pos = intPoint;
@@ -715,10 +715,7 @@ int main(int argc, char** argv) {
 						if(optimalPoint.pos.x > currentLeaf.pos.x + l_size){ optimalPoint.pos.x = currentLeaf.pos.x + l_size; }
 						if(optimalPoint.pos.y > currentLeaf.pos.y + l_size){ optimalPoint.pos.y = currentLeaf.pos.y + l_size; }
 						if(optimalPoint.pos.z > currentLeaf.pos.z + l_size){ optimalPoint.pos.z = currentLeaf.pos.z + l_size; }
-						currentLeaf.optimal = optimalPoint;
-
-						std::cout << std::endl << "average point : " << optimalPoint.pos.x << " " << optimalPoint.pos.y << " " << optimalPoint.pos.z << std::endl;
-						
+						currentLeaf.optimal = optimalPoint;						
 					}else{
 						std::cout << std::endl << "--- No edge intersection ---" << std::endl;
 						glm::dvec3 dvec_optimalPoint((currentLeaf.pos.x + l_size)/2., (currentLeaf.pos.y + l_size)/2., (currentLeaf.pos.z + l_size)/2.);
@@ -732,7 +729,7 @@ int main(int argc, char** argv) {
 						optimalPoint.surface = averageSurface;
 						
 						currentLeaf.optimal = optimalPoint;
-						std::cout << std::endl << "average point : " << optimalPoint.pos.x << " " << optimalPoint.pos.y << " " << optimalPoint.pos.z << std::endl;
+						std::cout << std::endl << "optimal point : " << optimalPoint.pos.x << " " << optimalPoint.pos.y << " " << optimalPoint.pos.z << std::endl;
 					}
 					
 					/* Save the VoxelData array */
