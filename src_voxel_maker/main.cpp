@@ -492,10 +492,6 @@ int main(int argc, char** argv) {
 						if(maxVoxelZ >= nbSub_lvl2){ maxVoxelZ = nbSub_lvl2 - 1; } 
 						if(minVoxelZ < 0){ minVoxelZ = 0; }
 						
-						std::cout<<"//-> MinX : "<<minVoxelX<<" | MaxX : "<<maxVoxelX<<std::endl;
-						std::cout<<"//-> MinY : "<<minVoxelX<<" | MaxY : "<<maxVoxelY<<std::endl;
-						std::cout<<"//-> MinZ : "<<minVoxelX<<" | MaxZ : "<<maxVoxelZ<<std::endl<<std::endl;
-						
 						/* Edges */
 						Edge edgS1S2 = createEdge(tabF[n].s1->pos, tabF[n].s2->pos);
 						Edge edgS1S3 = createEdge(tabF[n].s1->pos, tabF[n].s3->pos);

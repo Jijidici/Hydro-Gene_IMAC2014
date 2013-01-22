@@ -14,7 +14,7 @@ enum SceneType{
 };
 
 /* writing the vertices and faces file */
-bool writeVerticesAndFacesFile(uint32_t nbV, uint32_t nbF, double* v, uint32_t* f, std::string filename){
+bool writePage1(uint32_t nbV, uint32_t nbF, double* v, uint32_t* f, std::string filename){
 	if(nbV == 0 || nbF == 0 || v == NULL || f == NULL){
 		throw std::invalid_argument("null value");
 	}
@@ -45,7 +45,7 @@ bool writeVerticesAndFacesFile(uint32_t nbV, uint32_t nbF, double* v, uint32_t* 
 }
 
 /* writing the normals file */
-bool writeNormalFile(uint32_t nbV, uint32_t nbF, double* normalV, double* normalF, std::string filename){
+bool writePage2(uint32_t nbV, uint32_t nbF, double* normalV, double* normalF, std::string filename){
 	if(nbV == 0 || nbF == 0 || normalV == NULL || normalF == NULL){
 		throw std::invalid_argument("null value");
 	}
@@ -68,6 +68,41 @@ bool writeNormalFile(uint32_t nbV, uint32_t nbF, double* normalV, double* normal
 
 	std::cout<<"-> Normal file generated : "<<output<<std::endl;
 
+	return true;
+}
+
+/* writing the other data file */
+bool writePage4(uint32_t nbV, uint32_t nbF, int* drainV, int* drainF, double* otherV, double* otherF, std::string filename){
+	if(nbV ==0 || nbF ==0 || drainV == NULL || drainF == NULL || otherV == NULL || otherF == NULL){
+		throw std::invalid_argument("null value");
+	}
+	
+	std::string output = filename + "_4.data";
+	size_t test_file = 0;
+	
+	FILE* file = NULL;
+	file = fopen(output.c_str(), "wb");
+	if(NULL == file){
+		throw std::runtime_error("unable to open file");
+	}
+	
+	for(uint32_t idx=0;idx<nbV;++idx){
+		test_file = fwrite(&(drainV[idx]), sizeof(int), 1, file);
+		if(test_file <= 0){ throw std::runtime_error("unable to write in the file"); }
+		test_file = fwrite(&(otherV[3*idx]), sizeof(double), 3, file);
+		if(test_file <= 0){ throw std::runtime_error("unable to write in the file"); }
+	}
+	
+	for(uint32_t idx=0;idx<nbF;++idx){
+		test_file = fwrite(&(drainF[idx]), sizeof(int), 1, file);
+		if(test_file <= 0){ throw std::runtime_error("unable to write in the file"); }
+		test_file = fwrite(&(otherF[3*idx]), sizeof(double), 3, file);
+		if(test_file <= 0){ throw std::runtime_error("unable to write in the file"); }
+	}
+	
+	fclose(file);
+	std::cout<<"-> Topologic data file generated : "<<output<<std::endl;
+	
 	return true;
 }
 
@@ -127,6 +162,10 @@ int main(int argc, char** argv){
 	uint32_t* f = NULL;
 	double* nV = NULL;
 	double* nF = NULL;
+	int* dV = NULL;
+	int* dF = NULL;
+	double* oV = NULL;
+	double* oF = NULL;
 
 	switch(input){
 		case HORIZ_PLAN:
@@ -144,7 +183,7 @@ int main(int argc, char** argv){
 			f[0] = 1; f[1] = 2; f[2] = 3;
 			f[3] = 3; f[4] = 4; f[5] = 1;
 
-			writeVerticesAndFacesFile(nbVertices, nbFaces, v, f, outputFileName);
+			writePage1(nbVertices, nbFaces, v, f, outputFileName);
 
 			nV = new double[3*nbVertices];
 			nV[0] = 0.; nV[1] = 0.; nV[2] = 1.;		//1
@@ -156,7 +195,29 @@ int main(int argc, char** argv){
 			nF[0] = 0.; nF[1] = 0.; nF[2] = 1.;
 			nF[3] = 0.; nF[4] = 0.; nF[5] = 1.;	
 
-			writeNormalFile(nbVertices, nbFaces, nV, nF, outputFileName);
+			writePage2(nbVertices, nbFaces, nV, nF, outputFileName);
+			
+			dV = new int[nbVertices];
+			dV[0] = 1;	//1
+			dV[1] = 1;	//2
+			dV[2] = 1;	//3
+			dV[3] = 1;	//4
+			
+			dF = new int[nbFaces];
+			dF[0] = 1;	//1
+			dF[1] = 1;	//2
+			
+			oV = new double[3*nbVertices];
+			oV[0] = 0.; oV[1] = 0.5; oV[2] = 0.; //1 
+			oV[3] = 0.; oV[4] = 0.5; oV[5] = 0.; //2 
+			oV[6] = 0.; oV[7] = 0.5; oV[8] = 0.; //3 
+			oV[9] = 0.; oV[10] = 0.5; oV[11] = 0.; //4 
+			
+			oF = new double[3*nbFaces];
+			oF[0] = 0.; oF[1] = 0.5; oF[2] = 0.; //1 
+			oF[3] = 0.; oF[4] = 0.5; oF[5] = 0.; //2 
+			
+			writePage4(nbVertices, nbFaces, dV, dF, oV, oF, outputFileName);
 		break;
 
 		case SINGLE_TRI:
@@ -172,7 +233,7 @@ int main(int argc, char** argv){
 			f = new uint32_t[3*nbFaces];
 			f[0] = 1; f[1] = 2; f[2] = 3;
 
-			writeVerticesAndFacesFile(nbVertices, nbFaces, v, f, outputFileName);
+			writePage1(nbVertices, nbFaces, v, f, outputFileName);
 
 			nV = new double[3*nbVertices];
 			nV[0] = -0.9; nV[1] = -0.9; nV[2] = 3.24;		//1
@@ -182,7 +243,7 @@ int main(int argc, char** argv){
 			nF = new double[3*nbFaces];
 			nF[0] = -0.9; nF[1] = -0.9; nF[2] = 3.24;
 
-			writeNormalFile(nbVertices, nbFaces, nV, nF, outputFileName);
+			writePage2(nbVertices, nbFaces, nV, nF, outputFileName);
 		break;
 
 		case VERTI_PLAN:
@@ -200,7 +261,7 @@ int main(int argc, char** argv){
 			f[0] = 1; f[1] = 2; f[2] = 3;
 			f[3] = 3; f[4] = 4; f[5] = 1;
 
-			writeVerticesAndFacesFile(nbVertices, nbFaces, v, f, outputFileName);
+			writePage1(nbVertices, nbFaces, v, f, outputFileName);
 
 			nV = new double[3*nbVertices];
 			nV[0] = 1.; nV[1] = 0.; nV[2] = 0.;		//1
@@ -212,7 +273,7 @@ int main(int argc, char** argv){
 			nF[0] = -1.; nF[1] = 0.; nF[2] = 0.;
 			nF[3] = -1.; nF[4] = 0.; nF[5] = 0.;	
 
-			writeNormalFile(nbVertices, nbFaces, nV, nF, outputFileName);
+			writePage2(nbVertices, nbFaces, nV, nF, outputFileName);
 		break;
 
 		case STAIR:
@@ -240,7 +301,7 @@ int main(int argc, char** argv){
 			f[12] = 5; f[13] = 6; f[14] = 7;
 			f[15] = 7; f[16] = 8; f[17] = 5;
 
-			writeVerticesAndFacesFile(nbVertices, nbFaces, v, f, outputFileName);
+			writePage1(nbVertices, nbFaces, v, f, outputFileName);
 
 			nV = new double[3*nbVertices];
 			nV[0] = 0.; nV[1] = 0.; nV[2] = 1.;			//1
@@ -260,7 +321,7 @@ int main(int argc, char** argv){
 			nF[12] = 0.; nF[13] = 0.; nF[14] = 1.;
 			nF[15] = 0.; nF[16] = 0.; nF[17] = 1.;	
 
-			writeNormalFile(nbVertices, nbFaces, nV, nF, outputFileName);
+			writePage2(nbVertices, nbFaces, nV, nF, outputFileName);
 		break;
 
 		default:
@@ -272,6 +333,10 @@ int main(int argc, char** argv){
 	if(f != NULL){ delete[] f; }
 	if(nV != NULL){ delete[] nV; }
 	if(nF != NULL){ delete[] nF; }
+	if(dV != NULL){ delete[] dV; }
+	if(dF != NULL){ delete[] dF; }
+	if(oV != NULL){ delete[] oV; }
+	if(oF != NULL){ delete[] oF; }
 
 	std::cout<<"[--FINISHED--]"<<std::endl;
 
