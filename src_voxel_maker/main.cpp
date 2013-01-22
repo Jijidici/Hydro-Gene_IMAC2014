@@ -15,7 +15,7 @@
 
 #include "drn/drn_writer.h"
 
-static const double APPROXIM_RANGE = 2*sqrt(3)/3;
+static const double APPROXIM_RANGE = sqrt(3)/2;
 static const size_t GRID_3D_SIZE = 2;
 
 glm::dvec3 triangleCubefaceIntersection(glm::dvec3 optimal_current, glm::dvec3 optimal_compared, uint16_t face, glm::dvec3 position_current, double leafSize){
@@ -243,7 +243,6 @@ int main(int argc, char** argv) {
 	
 	//VERTICES
 	Vertex * tabV = new Vertex[nbVertice];
-	double offsetY = 0.2; //Here is an offset on y to avoid problem with triangle on the 0,0,0 plane
 
 	//Max values
 	float *maxCoeffArray = new float[4];
@@ -254,7 +253,7 @@ int main(int argc, char** argv) {
 	for(uint32_t n=0;n<nbVertice;++n){ // to create the vertices tab
 		tabV[n].pos.x = positionsData[3*n];
 		tabV[n].pos.z = positionsData[3*n+1];
-		tabV[n].pos.y = positionsData[3*n+2] + offsetY;
+		tabV[n].pos.y = positionsData[3*n+2];
 		tabV[n].normal.x = normalData[3*cptNormals];
 		tabV[n].normal.z = normalData[3*cptNormals+1];
 		tabV[n].normal.y = normalData[3*cptNormals+2];
@@ -473,13 +472,13 @@ int main(int argc, char** argv) {
 				for(uint32_t n=0;n<nbFace;++n){
 					/* Face properties */
 					/* min and max */
-					uint16_t minVoxelX = ((getminX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
-					uint16_t maxVoxelX = ((getmaxX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
-					uint16_t minVoxelY = ((getminY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
-					uint16_t maxVoxelY = ((getmaxY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
-					uint16_t minVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
-					uint16_t maxVoxelZ = ((getmaxZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
-
+					int minVoxelX = ((getminX(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
+					int maxVoxelX = ((getmaxX(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
+					int minVoxelY = ((getminY(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
+					int maxVoxelY = ((getmaxY(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
+					int minVoxelZ = ((getminZ(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
+					int maxVoxelZ = ((getmaxZ(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
+					
 					//Test if the triangle is inside the current leaf
 					if(maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
 					   maxVoxelY >= 0 && minVoxelY < nbSub_lvl2 &&
@@ -487,11 +486,15 @@ int main(int argc, char** argv) {
 					   
 						//case where triangle overlap 2 leaves
 						if(maxVoxelX >= nbSub_lvl2){ maxVoxelX = nbSub_lvl2 - 1; } 
-						if(minVoxelX < 0){ maxVoxelX = 0; }
+						if(minVoxelX < 0){ minVoxelX = 0; }
 						if(maxVoxelY >= nbSub_lvl2){ maxVoxelY = nbSub_lvl2 - 1; } 
-						if(minVoxelY < 0){ maxVoxelY = 0; }
+						if(minVoxelY < 0){ minVoxelY = 0; }
 						if(maxVoxelZ >= nbSub_lvl2){ maxVoxelZ = nbSub_lvl2 - 1; } 
-						if(minVoxelZ < 0){ maxVoxelZ = 0; }
+						if(minVoxelZ < 0){ minVoxelZ = 0; }
+						
+						std::cout<<"//-> MinX : "<<minVoxelX<<" | MaxX : "<<maxVoxelX<<std::endl;
+						std::cout<<"//-> MinY : "<<minVoxelX<<" | MaxY : "<<maxVoxelY<<std::endl;
+						std::cout<<"//-> MinZ : "<<minVoxelX<<" | MaxZ : "<<maxVoxelZ<<std::endl<<std::endl;
 						
 						/* Edges */
 						Edge edgS1S2 = createEdge(tabF[n].s1->pos, tabF[n].s2->pos);
@@ -503,7 +506,7 @@ int main(int argc, char** argv) {
 						/* Define the upper and lower plane which surround the triangle face */
 						Plane upperPlane = createPlane(tabF[n].s3->pos + thresholdNormal, tabF[n].s2->pos + thresholdNormal, tabF[n].s1->pos + thresholdNormal);
 						Plane lowerPlane = createPlane(tabF[n].s1->pos - thresholdNormal, tabF[n].s2->pos - thresholdNormal, tabF[n].s3->pos - thresholdNormal);
-						/* Define the three perpendicular planes to the trangle Face passing by each edge */
+						/* Define the three perpendicular planes to the triangle Face passing by each edge */
 						Plane e1 = createPlane(tabF[n].s1->pos, tabF[n].s2->pos, tabF[n].s2->pos + tabF[n].normal);
 						Plane e2 = createPlane(tabF[n].s2->pos, tabF[n].s3->pos, tabF[n].s3->pos + tabF[n].normal);
 						Plane e3 = createPlane(tabF[n].s3->pos, tabF[n].s1->pos, tabF[n].s1->pos + tabF[n].normal);
@@ -511,7 +514,6 @@ int main(int argc, char** argv) {
 						//For each cube of the face bounding box
 						for(uint16_t k=minVoxelZ; k<=maxVoxelZ; ++k){
 							for(uint16_t j=minVoxelY;j<=maxVoxelY; ++j){
-								//~ #pragma omp parallel for
 								for(uint16_t i=minVoxelX;i<=maxVoxelX;++i){
 									// Voxel Properties 
 									
