@@ -412,9 +412,7 @@ int main(int argc, char** argv) {
 	
 	/* Intersection flag to know if a leaf have at least one intersection - if it is not the case, we do not save the leaf */
 	bool is_intersec = false;
-	/* Triangle flag to know if we have to save the triangle inside the leaf */
-	bool is_triangle_in = false;
-	
+		
 	/* Initialize the Leaves vector */
 	uint32_t sizeLeafArray = nbSub_lvl1*nbSub_lvl1*nbSub_lvl1;
 	Leaf* leafArray = new Leaf[sizeLeafArray];
@@ -469,8 +467,6 @@ int main(int argc, char** argv) {
 					   maxVoxelY >= 0 && minVoxelY < nbSub_lvl2 &&
 					   maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){
 					   
-					   is_triangle_in = true;
-					   
 						//case where triangle overlap 2 leaves
 						if(maxVoxelX > nbSub_lvl2){ maxVoxelX = nbSub_lvl2 - 1; } 
 						if(minVoxelX < 0){ maxVoxelX = 0; }
@@ -519,13 +515,10 @@ int main(int argc, char** argv) {
 							}
 						}//end foreach voxel
 						/* add the triangle to the chunck */
-						if(is_triangle_in){
-							l_storedVertices.push_back(*(tabF[n].s1));
-							l_storedVertices.push_back(*(tabF[n].s2));
-							l_storedVertices.push_back(*(tabF[n].s3));
-							currentLeaf.nbVertices_lvl2+=3;
-							is_triangle_in = false;
-						}			
+						l_storedVertices.push_back(*(tabF[n].s1));
+						l_storedVertices.push_back(*(tabF[n].s2));
+						l_storedVertices.push_back(*(tabF[n].s3));
+						currentLeaf.nbVertices_lvl2+=3;
 					}
 				}//end foreach face
 
@@ -609,8 +602,6 @@ int main(int argc, char** argv) {
 								glm::dvec3 intPoint;
 								if((*e_it).computeIntersectionPoint(u, v, tempFace.s1->pos, intPoint)){
 									std::cout << "Intersection Point : " << intPoint.x << " " << intPoint.y << " " << intPoint.z << std::endl;
-									
-									//~ std::cout << "Normale : " << normale.x << " " << normale.y << " " << normale.z << std::endl;
 									
 									Vertex intVertex;
 									intVertex.pos = intPoint;

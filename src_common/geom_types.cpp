@@ -50,10 +50,10 @@ Edge createEdge(glm::dvec3 inS1, glm::dvec3 inS2){
 
 
 bool Edge::computeIntersectionPoint(glm::dvec3& u, glm::dvec3& v, glm::dvec3& s1, glm::dvec3& result){
-	/*** WARNING : no %0 test ! ***/
 	if(u.x == 0 || u.y == 0 || u.z == 0 || v.x == 0 || v.y == 0 || v.z == 0){
 		return false;
 	}
+	
 	if(dir.x != 0){
 		glm::dvec2 row1(u.y, u.z);
 		glm::dvec2 row2(v.y, v.z);
