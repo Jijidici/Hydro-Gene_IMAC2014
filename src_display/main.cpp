@@ -113,6 +113,9 @@ int main(int argc, char** argv){
 	// Initialisation de la SDL
 	SDL_Init(SDL_INIT_VIDEO);
 
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
 	// Creation de la fenêtre et d'un contexte OpenGL
 	SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, BYTES_PER_PIXEL, SDL_OPENGL);
 
