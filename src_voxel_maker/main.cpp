@@ -429,32 +429,25 @@ int main(int argc, char** argv) {
 	/* Saving the maximum data */
 	test_cache = drn_writer_add_chunk(&cache, maxCoeffArray, 4*sizeof(float));
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
-
-	/* Intersection flag to know if a leaf have at least one intersection - if it is not the case, we do not save the leaf */
-	bool is_intersec = false;
 		
 	/* Initialize the Leaves vector */
 	uint32_t sizeLeafArray = nbSub_lvl1*nbSub_lvl1*nbSub_lvl1;
 	Leaf* leafArray = new Leaf[sizeLeafArray];
-	Leaf currentLeaf;
-	currentLeaf.id = 0;
-	currentLeaf.size = l_size;
-	
-	/* Initialize the vertices per leaf vector */
-	std::vector<Vertex> l_storedVertices;
 	
 	//INTERSECTION PROCESSING
 	/* Range approximation for voxelisation */
 	double Rc = voxelSize * APPROXIM_RANGE;
 
 	//For each leaf
-	//#pragma omp parallel for
 	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
 		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
 			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
 				
 				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
-
+				
+				/* Initialize the vertices per leaf vector */
+				std::vector<Vertex> l_storedVertices;
+				
 				/* Init leaf voxel array */	
 				for(uint32_t n=0;n<l_voxArrLength;++n){
 					l_voxelArray[n].nbFaces=0;
@@ -466,10 +459,15 @@ int main(int argc, char** argv) {
 				}
 				
 				/* Fix the current leaf */
+				Leaf currentLeaf;
+				currentLeaf.size = l_size;
 				currentLeaf.pos = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
 				currentLeaf.nbIntersection = 0;
 				currentLeaf.nbVertices_lvl1 = 0;
 				currentLeaf.nbVertices_lvl2 = 0;
+				
+				/* Intersection flag to know if a leaf have at least one intersection - if it is not the case, we do not save the leaf */
+				bool is_intersec = false;
 				
 				//For each Face
 				for(uint32_t n=0;n<nbFace;++n){
@@ -589,15 +587,15 @@ int main(int argc, char** argv) {
 					
 					std::vector<Vertex> intersectionPoints;
 					
-					std::cout << "---- LEAF ----" << std::endl;
+					//~ std::cout << "---- LEAF ----" << std::endl;
 					for(std::vector<Edge>::iterator e_it = leafEdges.begin(); e_it < leafEdges.end(); ++e_it){
 						std::vector<Vertex> edgeIntPoints;
 						bool edgeIntersected = false;
 						
 						/* browse saved triangles */
-						std::cout << "Edge : " << std::endl; 
-						std::cout << "Origin : " << (*e_it).origin.x << " " << (*e_it).origin.y << " " << (*e_it).origin.z << std::endl;
-						std::cout << "Dir : " << (*e_it).dir.x << " " << (*e_it).dir.y << " " << (*e_it).dir.z << std::endl;
+						//~ std::cout << "Edge : " << std::endl; 
+						//~ std::cout << "Origin : " << (*e_it).origin.x << " " << (*e_it).origin.y << " " << (*e_it).origin.z << std::endl;
+						//~ std::cout << "Dir : " << (*e_it).dir.x << " " << (*e_it).dir.y << " " << (*e_it).dir.z << std::endl;
 						for(size_t i = 0; i < l_storedVertices.size(); i += 3){
 							Face tempFace; tempFace.s1 = &l_storedVertices[i]; tempFace.s2 = &l_storedVertices[i+1]; tempFace.s3 = &l_storedVertices[i+2];
 							/*** test intersection edge - tempFace ***/
@@ -616,7 +614,7 @@ int main(int argc, char** argv) {
 								/* intersection point */								
 								glm::dvec3 intPoint;
 								if((*e_it).computeIntersectionPoint(u, v, tempFace.s1->pos, intPoint)){
-									std::cout << "Intersection Point : " << intPoint.x << " " << intPoint.y << " " << intPoint.z << std::endl;
+									//~ std::cout << "Intersection Point : " << intPoint.x << " " << intPoint.y << " " << intPoint.z << std::endl;
 									
 									Vertex intVertex;
 									intVertex.pos = intPoint;
@@ -642,8 +640,8 @@ int main(int argc, char** argv) {
 							}
 							averagePos /= edgeIntPoints.size();
 							averageNorm /= edgeIntPoints.size();
-							std::cout << "average Pos : " << averagePos.x << " " << averagePos.y << " " << averagePos.z << std::endl;
-							std::cout << "average Norm : " << averageNorm.x << " " << averageNorm.y << " " << averageNorm.z << std::endl;
+							//~ std::cout << "average Pos : " << averagePos.x << " " << averagePos.y << " " << averagePos.z << std::endl;
+							//~ std::cout << "average Norm : " << averageNorm.x << " " << averageNorm.y << " " << averageNorm.z << std::endl;
 							
 							averageVertex.pos = averagePos;
 							averageVertex.normal = averageNorm;
@@ -662,7 +660,7 @@ int main(int argc, char** argv) {
 						}
 						massPoint /= intersectionPoints.size();
 						
-						std::cout << std::endl << "mass point : " << massPoint.x << " " << massPoint.y << " " << massPoint.z << std::endl;
+						//~ std::cout << std::endl << "mass point : " << massPoint.x << " " << massPoint.y << " " << massPoint.z << std::endl;
 						
 						/* Compute the "optimalPoint" (Eigen) */
 						Eigen::MatrixXd MatA = Eigen::MatrixXd::Zero(intersectionPoints.size(), 3);
@@ -677,7 +675,7 @@ int main(int argc, char** argv) {
 						}
 						
 						//~ std::cout << "MatA : " << std::endl << MatA << std::endl;
-						std::cout << "VecB : " << std::endl << VecB << std::endl;
+						//~ std::cout << "VecB : " << std::endl << VecB << std::endl;
 						
 						Eigen::JacobiSVD<Eigen::MatrixXd> MatSVD(MatA, Eigen::ComputeThinU | Eigen::ComputeThinV);
 						Eigen::VectorXd eigenOptimalPoint = MatSVD.solve(VecB);
@@ -689,7 +687,7 @@ int main(int argc, char** argv) {
 						glm::dvec3 optimalPoint(eigenOptimalPoint(0), eigenOptimalPoint(1), eigenOptimalPoint(2));
 						optimalPoint += massPoint;
 						
-						std::cout << std::endl << "optimal point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
+						//~ std::cout << std::endl << "optimal point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
 						
 						//cap the average Point
 						if(optimalPoint.x < currentLeaf.pos.x){ optimalPoint.x = currentLeaf.pos.x; }
@@ -699,15 +697,16 @@ int main(int argc, char** argv) {
 						if(optimalPoint.y > currentLeaf.pos.y + l_size){ optimalPoint.y = currentLeaf.pos.y + l_size; }
 						if(optimalPoint.z > currentLeaf.pos.z + l_size){ optimalPoint.z = currentLeaf.pos.z + l_size; }
 						currentLeaf.optimal = optimalPoint;
-						std::cout << std::endl << "average point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
+						//~ std::cout << std::endl << "average point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
 						
 					}else{
 						
-						std::cout << std::endl << "--- No edge intersection ---" << std::endl;
+						//~ std::cout << std::endl << "--- No edge intersection ---" << std::endl;
 						glm::dvec3 optimalPoint((currentLeaf.pos.x + l_size)/2., (currentLeaf.pos.y + l_size)/2., (currentLeaf.pos.z + l_size)/2.);
 						currentLeaf.optimal = optimalPoint;
-						std::cout << std::endl << "average point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
+						//~ std::cout << std::endl << "average point : " << optimalPoint.x << " " << optimalPoint.y << " " << optimalPoint.z << std::endl;
 					}
+					
 					/* Save the VoxelData array */
 					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
 					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
@@ -715,16 +714,12 @@ int main(int argc, char** argv) {
 					/* Save the vertices lvl2 */
 					test_cache = drn_writer_add_chunk(&cache, l_storedVertices.data(), currentLeaf.nbVertices_lvl2*sizeof(Vertex));
 					
+					/* Set Leaf id */
+					currentLeaf.id = (drn_writer_get_last_chunk_id(&cache)-2)/2;
+					std::cout<<"//-> Leaf Id : "<<currentLeaf.id<<std::endl;
+					
 					/* updade the Leaf indexation */
 					leafArray[currentLeafIndex] = currentLeaf;
-					
-					/* init for next leaf */
-					currentLeaf.id++;
-					currentLeaf.nbIntersection = 0;
-					currentLeaf.nbVertices_lvl1 = 0;
-					currentLeaf.nbVertices_lvl2 = 0;
-					l_storedVertices.clear();
-					is_intersec = false;
 				}
 			}
 		}
@@ -733,7 +728,7 @@ int main(int argc, char** argv) {
 	
 	/* Build the triangles */
 	std::vector<Leaf> l_queue;
-	std::vector< std::vector<Vertex> > l_computedVertices(currentLeaf.id);
+	std::vector< std::vector<Vertex> > l_computedVertices((drn_writer_get_last_chunk_id(&cache)-1)/2);
 	std::cout<<"// computed vertices vector size : "<<l_computedVertices.size()<<std::endl;
 
 	for(uint16_t l_i=0;l_i<nbSub_lvl1-1;++l_i){
