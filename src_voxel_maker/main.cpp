@@ -437,7 +437,7 @@ int main(int argc, char** argv) {
 	uint32_t sizeLeafArray = nbSub_lvl1*nbSub_lvl1*nbSub_lvl1;
 	Leaf* leafArray = new Leaf[sizeLeafArray];
 	Leaf currentLeaf;
-	currentLeaf.id = 1;
+	currentLeaf.id = 0;
 	currentLeaf.size = l_size;
 	
 	/* Initialize the vertices per leaf vector */
@@ -730,16 +730,16 @@ int main(int argc, char** argv) {
 		}
 	}//end foreach leaf
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
-
+	
+	/* Build the triangles */
 	std::vector<Leaf> l_queue;
-	std::vector<Vertex> l_computed_vertices;
+	std::vector< std::vector<Vertex> > l_computedVertices(currentLeaf.id);
+	std::cout<<"// computed vertices vector size : "<<l_computedVertices.size()<<std::endl;
 
-	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
-		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
-			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){			
+	for(uint16_t l_i=0;l_i<nbSub_lvl1-1;++l_i){
+		for(uint16_t l_j=0;l_j<nbSub_lvl1-1;++l_j){
+			for(uint16_t l_k=0;l_k<nbSub_lvl1-1;++l_k){			
 				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
-				
-				std::cout<<"//-> ID current Leaf : "<<leafArray[currentLeafIndex].id<<std::endl;
 				
 				uint32_t rightLeaf = (l_i+1) + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
 				uint32_t diagonalRightLeaf = (l_i+1) + nbSub_lvl1*l_j + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
@@ -774,9 +774,15 @@ int main(int argc, char** argv) {
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
-						l_computed_vertices.push_back(vx1);
-						l_computed_vertices.push_back(vx2);
-						l_computed_vertices.push_back(vx3);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx3);
 
 						vx1.pos = leafArray[currentLeafIndex].optimal;
 						vx2.pos = leafArray[diagonalRightLeaf].optimal;
@@ -787,9 +793,15 @@ int main(int argc, char** argv) {
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
-						l_computed_vertices.push_back(vx1);
-						l_computed_vertices.push_back(vx2);
-						l_computed_vertices.push_back(vx3);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx3);
 					}
 					//right edge
 					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[topRightLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)){
@@ -802,9 +814,15 @@ int main(int argc, char** argv) {
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
-						l_computed_vertices.push_back(vx1);
-						l_computed_vertices.push_back(vx2);
-						l_computed_vertices.push_back(vx3);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx3);
 
 						vx1.pos = leafArray[currentLeafIndex].optimal;
 						vx2.pos = leafArray[topRightLeaf].optimal;
@@ -815,9 +833,15 @@ int main(int argc, char** argv) {
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
-						l_computed_vertices.push_back(vx1);
-						l_computed_vertices.push_back(vx2);
-						l_computed_vertices.push_back(vx3);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx3);
 					}
 					//front edge
 					if((leafArray[frontLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)&&(leafArray[topFrontLeaf].nbIntersection != 0)){
@@ -830,9 +854,15 @@ int main(int argc, char** argv) {
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
-						l_computed_vertices.push_back(vx1);
-						l_computed_vertices.push_back(vx2);
-						l_computed_vertices.push_back(vx3);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx3);
 
 						vx1.pos = leafArray[currentLeafIndex].optimal;
 						vx2.pos = leafArray[topFrontLeaf].optimal;
@@ -843,19 +873,36 @@ int main(int argc, char** argv) {
 						vx1.normal = computedNormal;
 						vx2.normal = computedNormal;
 						vx3.normal = computedNormal;
-						l_computed_vertices.push_back(vx1);
-						l_computed_vertices.push_back(vx2);
-						l_computed_vertices.push_back(vx3);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx3);
 					}
-					test_cache = drn_writer_add_chunk(&cache, l_computed_vertices.data(), l_computed_vertices.size()*sizeof(Vertex));
-					leafArray[currentLeafIndex].nbVertices_lvl1 = l_computed_vertices.size();
-					l_queue.push_back(leafArray[currentLeafIndex]);
-					l_computed_vertices.clear();
 				}
 			}
 		}
 	}
-
+	
+	/* Save the computed triangle */
+	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
+		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
+			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){			
+				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
+				if(leafArray[currentLeafIndex].nbIntersection != 0){
+					std::cout<<"//-> NB Vertices saved in leaf : "<<l_computedVertices[leafArray[currentLeafIndex].id].size()<<std::endl;
+					test_cache = drn_writer_add_chunk(&cache, l_computedVertices[leafArray[currentLeafIndex].id].data(), l_computedVertices[leafArray[currentLeafIndex].id].size()*sizeof(Vertex));
+					leafArray[currentLeafIndex].nbVertices_lvl1 = l_computedVertices[leafArray[currentLeafIndex].id].size();
+					l_queue.push_back(leafArray[currentLeafIndex]);
+				}
+			}
+		}
+	}
+	
 	std::cout << "Number of leaves saved : "<< l_queue.size() << std::endl;
 
 	/* writing the Leaf chunck */
