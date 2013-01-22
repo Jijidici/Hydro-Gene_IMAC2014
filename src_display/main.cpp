@@ -225,7 +225,8 @@ int main(int argc, char** argv){
 	glUniform1f(MaxSurfaceLocation, maxCoeffArray[3]);
 
 	// Creation Light
-	glm::vec3 light(-1.f,-1.f,0.f);
+	float coefLight = 0.;
+	glm::vec3 light(glm::cos(coefLight),sin(coefLight),0.f);
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -579,6 +580,13 @@ int main(int argc, char** argv){
 			}
 			ffCam.rotateLeft((old_positionX - new_positionX)*0.6);
 		}
+		
+		//Manage the sun
+		coefLight -= 0.00218166156f;		
+		light.x = glm::cos(coefLight);
+		light.y = glm::sin(coefLight);
+		
+		if(coefLight < -4.71238898){ coefLight = 1.57079633; }
 		
 		// Gestion compteur
 		end = SDL_GetTicks();
