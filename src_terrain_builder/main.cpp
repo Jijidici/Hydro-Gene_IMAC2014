@@ -244,6 +244,23 @@ int main(int argc, char** argv){
 			nF[0] = -0.9; nF[1] = -0.9; nF[2] = 3.24;
 
 			writePage2(nbVertices, nbFaces, nV, nF, outputFileName);
+			
+			dV = new int[nbVertices];
+			dV[0] = 1;	//1
+			dV[1] = 1;	//2
+			dV[2] = 1;	//3
+			
+			dF = new int[nbFaces];
+			dF[0] = 1;	//1
+			
+			oV = new double[3*nbVertices];
+			oV[0] = 0.; oV[1] = 0.5; oV[2] = 0.; //1 
+			oV[3] = 0.; oV[4] = 0.5; oV[5] = 0.; //2 
+			
+			oF = new double[3*nbFaces];
+			oF[0] = 0.; oF[1] = 0.5; oF[2] = 0.; //1 
+			
+			writePage4(nbVertices, nbFaces, dV, dF, oV, oF, outputFileName);
 		break;
 
 		case VERTI_PLAN:
@@ -274,6 +291,28 @@ int main(int argc, char** argv){
 			nF[3] = -1.; nF[4] = 0.; nF[5] = 0.;	
 
 			writePage2(nbVertices, nbFaces, nV, nF, outputFileName);
+			
+			dV = new int[nbVertices];
+			dV[0] = 1;	//1
+			dV[1] = 1;	//2
+			dV[2] = 1;	//3
+			dV[3] = 1;	//4
+			
+			dF = new int[nbFaces];
+			dF[0] = 1;	//1
+			dF[1] = 1;	//2
+			
+			oV = new double[3*nbVertices];
+			oV[0] = 0.; oV[1] = 0.5; oV[2] = 0.; //1 
+			oV[3] = 0.; oV[4] = 0.5; oV[5] = 0.; //2 
+			oV[6] = 0.; oV[7] = 0.5; oV[8] = 0.; //3 
+			oV[9] = 0.; oV[10] = 0.5; oV[11] = 0.; //4 
+			
+			oF = new double[3*nbFaces];
+			oF[0] = 0.; oF[1] = 0.5; oF[2] = 0.; //1 
+			oF[3] = 0.; oF[4] = 0.5; oF[5] = 0.; //2 
+			
+			writePage4(nbVertices, nbFaces, dV, dF, oV, oF, outputFileName);
 		break;
 
 		case STAIR:
