@@ -37,6 +37,7 @@
 #define SURFACE 6
 
 #define VEGET 7
+#define GROUND 8
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
 static const size_t WINDOW_WIDTH = 1060, WINDOW_HEIGHT = 600;
@@ -185,27 +186,29 @@ int main(int argc, char** argv){
 	test_cache = drn_close(&cache);
 	
 	//Infinite ground creation
-	double groundVertices[18]{
-		-2., 0, 2., 
-		2., 0, 2., 
-		2., 0, -2., 
-		2., 0, -2., 
-		-2., 0, -2., 
-		-2., 0, 2. 
+	double groundVertices[36]{
+		-1., 0, 1., 0., 1., 0.,
+		1., 0, 1., 0., 1., 0.,
+		1., 0, -1., 0., 1., 0.,
+		1., 0, -1., 0., 1., 0.,
+		-1., 0, -1., 0., 1., 0.,
+		-1., 0, 1., 0., 1., 0.
 	};
 	
 	GLuint groundVBO = 0;
 	glGenBuffers(1, &groundVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
-		glBufferData(GL_ARRAY_BUFFER, 18*sizeof(double), groundVertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, 36*sizeof(double), groundVertices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
 	GLuint groundVAO = 0;
 	glGenVertexArrays(1, &groundVAO);
 	glBindVertexArray(groundVAO);
 		glEnableVertexAttribArray(POSITION_LOCATION);
+		glEnableVertexAttribArray(NORMAL_LOCATION);
 		glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
-			glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, 3*sizeof(double), reinterpret_cast<const GLvoid*>(0));
+			glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, 6*sizeof(double), reinterpret_cast<const GLvoid*>(0));
+			glVertexAttribPointer(NORMAL_LOCATION, 3, GL_DOUBLE, GL_FALSE, 6*sizeof(double), reinterpret_cast<const GLvoid*>(3*sizeof(double)));
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	
@@ -379,8 +382,12 @@ int main(int argc, char** argv){
 			if(currentCam == FREE_FLY){
 				ms.mult(ffCam.getViewMatrix());
 				ms.translate(ffCam.getCameraPosition());
-			}
 				ms.scale(glm::vec3(2.f, 2.f, 2.f));
+			}else if(currentCam == TRACK_BALL){
+				ms.mult(tbCam.getViewMatrix());
+				ms.scale(glm::vec3(100.f, 100.f, 100.f));
+			}
+				
 				glUniform1i(ModeLocation, SKYBOX);
 				glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 				glUniform1i(TextureLocation,0);
@@ -389,6 +396,22 @@ int main(int argc, char** argv){
 						glDrawArrays(GL_TRIANGLES, 0, 36);
 					glBindVertexArray(0);
 				BindTexture(0);
+		ms.pop();
+		
+		//Ground
+		ms.push();
+			if(currentCam == FREE_FLY){
+				ms.mult(ffCam.getViewMatrix());
+			}else if(currentCam == TRACK_BALL){
+				ms.mult(tbCam.getViewMatrix());
+			}
+			ms.scale(glm::vec3(100.f, 100.f, 100.f));
+			glUniform1i(ModeLocation, GROUND);
+			glUniform1i(ChoiceLocation, NORMAL);
+			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+			glBindVertexArray(groundVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			glBindVertexArray(0);
 		ms.pop();
 
 		// Mise à jour de l'affichage

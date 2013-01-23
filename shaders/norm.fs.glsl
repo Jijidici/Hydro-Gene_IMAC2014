@@ -2,14 +2,15 @@
 
 #define SKYBOX 0
 #define TRIANGLES 1
-#define NORMAL 2
 
+#define NORMAL 2
 #define BENDING 3
 #define DRAIN 4
 #define GRADIENT 5
 #define SURFACE 6
 
 #define VEGET 7
+#define GROUND 8
 
 in vec3 gNormal;
 in vec2 gTexCoords;
@@ -30,7 +31,7 @@ uniform float uMaxSurface;
 out vec4 fFragColor;
 
 void main() {
-	if(uMode == TRIANGLES){
+	if(uMode == TRIANGLES || uMode == GROUND){
 
 		vec3 dColor = vec3(0.8f, 0.8f, 0.85f);
 		float ratio;
