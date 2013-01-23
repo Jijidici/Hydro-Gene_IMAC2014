@@ -268,6 +268,7 @@ int main(int argc, char** argv){
 	bool displayBending = false;
 	bool displaySurface = false;
 	bool displayGradient = false;
+	float thresholdDistance = 0.5f;
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -301,7 +302,7 @@ int main(int argc, char** argv){
 			//For each leaf
 			for(uint16_t idx=0;idx<nbLeaves;++idx){
 				double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
-				if(d<THRESHOLD_DISTANCE){
+				if(d<thresholdDistance){
 					if(!loadedLeaf[idx]){
 						Chunk voidChunk = freeInMemory(memory, loadedLeaf);
 						loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
@@ -398,7 +399,13 @@ int main(int argc, char** argv){
 								is_uKeyPressed = true;
 							}
 							break;
-
+							
+						case SDLK_s:
+							if(currentCam == FREE_FLY){
+								is_dKeyPressed = true;
+							}
+							break;
+							
 						case SDLK_F1:
 							displayNormal = true;
 	 						displayDrain = false;
@@ -446,13 +453,15 @@ int main(int argc, char** argv){
 							displayGradient = false;
 							}
 							break;
-
-						case SDLK_s:
-							if(currentCam == FREE_FLY){
-								is_dKeyPressed = true;
-							}
+						
+						case SDLK_UP:
+							thresholdDistance += 0.1f;
 							break;
-
+							
+						case SDLK_DOWN:
+							thresholdDistance -= 0.1f;
+							break;
+						
 						default:
 							break;
 					}
