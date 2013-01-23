@@ -2,8 +2,8 @@
 
 #define SKYBOX 0
 #define TRIANGLES 1
-#define NORMAL 2
 
+#define NORMAL 2
 #define BENDING 3
 #define DRAIN 4
 #define GRADIENT 5

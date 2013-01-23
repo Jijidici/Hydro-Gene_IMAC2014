@@ -184,21 +184,56 @@ int main(int argc, char** argv){
 	
 	test_cache = drn_close(&cache);
 	
+	//Infinite ground creation
+	Vertex groundVertices[6]{
+		createVertex(glm::dvec3(-1., 0, 1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]),
+		createVertex(glm::dvec3(1., 0, 1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]),
+		createVertex(glm::dvec3(1., 0, -1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]),
+		createVertex(glm::dvec3(1., 0, -1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]),
+		createVertex(glm::dvec3(-1., 0, -1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]),
+		createVertex(glm::dvec3(-1., 0, 1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3])
+	};
+	
+	GLuint groundVBO = 0;
+	glGenBuffers(1, &groundVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
+		glBufferData(GL_ARRAY_BUFFER, 6*sizeof(Vertex), groundVertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	GLuint groundVAO = 0;
+	glGenVertexArrays(1, &groundVAO);
+	glBindVertexArray(groundVAO);
+		glEnableVertexAttribArray(POSITION_LOCATION);
+		glEnableVertexAttribArray(NORMAL_LOCATION);
+		glEnableVertexAttribArray(BENDING_LOCATION);
+		glEnableVertexAttribArray(DRAIN_LOCATION);
+		glEnableVertexAttribArray(GRADIENT_LOCATION);
+		glEnableVertexAttribArray(SURFACE_LOCATION);
+		glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
+			glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
+			glVertexAttribPointer(NORMAL_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3*sizeof(GLdouble)));
+			glVertexAttribPointer(BENDING_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)));
+			glVertexAttribPointer(DRAIN_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+sizeof(GLfloat)));
+			glVertexAttribPointer(GRADIENT_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+2*sizeof(GLfloat)));
+			glVertexAttribPointer(SURFACE_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+3*sizeof(GLfloat)));
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	
 	// Creation des Shaders
-	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
-	if(!programNorm){
+	GLuint program = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
+	if(!program){
 		glDeleteBuffers(1, &cubeVBO);
 		glDeleteBuffers(nbLeaves, l_VBOs);
+		glDeleteBuffers(1, &groundVBO);
 		glDeleteVertexArrays(1, &cubeVAO);
 		glDeleteVertexArrays(nbLeaves, l_VAOs);
+		glDeleteVertexArrays(1, &groundVAO);
 		delete[] l_VAOs;
 		delete[] l_VBOs;
 		delete[] leafArray;
 		delete[] loadedLeaf;
 		return (EXIT_FAILURE);
 	}
-	
-	GLuint program = programNorm;
 	glUseProgram(program);
 
 	// Creation des Matrices
@@ -289,7 +324,26 @@ int main(int argc, char** argv){
 
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		
+		glUniform1i(ModeLocation, TRIANGLES);
+		glUniform3fv(LightVectLocation, 1, glm::value_ptr(light));
+		
+		//Ground
+		ms.push();
+			if(currentCam == FREE_FLY){
+				ms.mult(ffCam.getViewMatrix());
+			}else if(currentCam == TRACK_BALL){
+				ms.mult(tbCam.getViewMatrix());
+			}
+			ms.scale(glm::vec3(100.f, 100.f, 100.f));
+			glUniform1i(ChoiceLocation, NORMAL);
+			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+			glBindVertexArray(groundVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			glBindVertexArray(0);
+		ms.pop();
+		
+		//Terrain
 		ms.push();
 			// Choose the camera
 			glm::mat4 V;
@@ -299,8 +353,6 @@ int main(int argc, char** argv){
 				V = ffCam.getViewMatrix();
 			}
 			ms.mult(V);
-			glUniform3fv(LightVectLocation, 1, glm::value_ptr(light));
-			glUniform1i(ModeLocation, TRIANGLES);
 
 			//For each leaf
 			for(uint16_t idx=0;idx<nbLeaves;++idx){
@@ -335,6 +387,7 @@ int main(int argc, char** argv){
 						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
 					glBindVertexArray(0);
 				}
+				/* Display vegetation */
 				glUniform1i(ChoiceLocation, VEGET);
 				glUniform1i(TextureLocation,0);
 				BindTexture(texture_arbre);
@@ -354,20 +407,23 @@ int main(int argc, char** argv){
 		ms.pop();
 
 		//Skybox
+		glUniform1i(ModeLocation, SKYBOX);
 		ms.push();
 			if(currentCam == FREE_FLY){
 				ms.mult(ffCam.getViewMatrix());
 				ms.translate(ffCam.getCameraPosition());
-			}
 				ms.scale(glm::vec3(2.f, 2.f, 2.f));
-				glUniform1i(ModeLocation, SKYBOX);
-				glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-				glUniform1i(TextureLocation,0);
-				BindTexture(texture_test);
-					glBindVertexArray(cubeVAO);
-						glDrawArrays(GL_TRIANGLES, 0, 36);
-					glBindVertexArray(0);
-				BindTexture(0);
+			}else if(currentCam == TRACK_BALL){
+				ms.mult(tbCam.getViewMatrix());
+				ms.scale(glm::vec3(100.f, 100.f, 100.f));
+			}
+			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+			glUniform1i(TextureLocation,0);
+			BindTexture(texture_test);
+				glBindVertexArray(cubeVAO);
+					glDrawArrays(GL_TRIANGLES, 0, 36);
+				glBindVertexArray(0);
+			BindTexture(0);
 		ms.pop();
 
 		// Mise à jour de l'affichage
@@ -630,7 +686,9 @@ int main(int argc, char** argv){
 
 	// Destruction des ressources OpenGL
 	glDeleteBuffers(1, &cubeVBO);
+	glDeleteBuffers(1, &groundVBO);
 	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteVertexArrays(1, &groundVAO);
 	glDeleteTextures(1, &texture_test);
 	
 	//free cache memory

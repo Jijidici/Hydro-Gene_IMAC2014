@@ -5,6 +5,17 @@
 
 #include <glm/glm.hpp>
 
+Vertex createVertex(glm::dvec3 inPos, glm::dvec3 inNormal, float inB, float inD, float inG, float inS){
+	Vertex newVertex;
+	newVertex.pos = inPos;
+	newVertex.normal = inNormal;
+	newVertex.bending = inB;
+	newVertex.drain = inD;
+	newVertex.gradient = inG;
+	newVertex.surface = inS;
+	return newVertex;
+}
+
 Voxel createVoxel(double inX, double inY, double inZ, double inSize){
 	Voxel newVoxel;
 	newVoxel.c.x = inX;
