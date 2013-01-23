@@ -10,7 +10,6 @@
 #define SURFACE 6
 
 #define VEGET 7
-#define GROUND 8
 
 in vec3 gNormal;
 in vec2 gTexCoords;
@@ -31,7 +30,7 @@ uniform float uMaxSurface;
 out vec4 fFragColor;
 
 void main() {
-	if(uMode == TRIANGLES || uMode == GROUND){
+	if(uMode == TRIANGLES){
 
 		vec3 dColor = vec3(0.8f, 0.8f, 0.85f);
 		float ratio;

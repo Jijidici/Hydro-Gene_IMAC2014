@@ -3,7 +3,6 @@
 #define SKYBOX 0
 #define TRIANGLES 1
 #define VEGET 7
-#define GROUND 8
 
 layout(triangles) in;
 layout(triangle_strip, max_vertices=5) out;
@@ -74,12 +73,5 @@ void main(){
 		 	}
 		 	EndPrimitive();
 		}
-	}else if(uMode == GROUND){
-		for(int i=0; i<gl_in.length(); i++){
-			gNormal = vNormal[i];
-			gl_Position = gl_in[i].gl_Position;
-			EmitVertex();
-		}
-	 	EndPrimitive();
 	}
 }

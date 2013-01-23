@@ -2,7 +2,6 @@
 
 #define SKYBOX 0
 #define TRIANGLES 1
-#define GROUND 8
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
@@ -37,10 +36,5 @@ void main(){
 		vGradient = gradient;
 		vSurface = surface;
 		gl_Position = uMVPMatrix * vec4(position, 1.f);
-	}
-	else if(uMode == GROUND){
-		vNormal = normal;
-		vec4 realPosition = uMVPMatrix* vec4(position, 1.f);
-		gl_Position = realPosition;
 	}
 }

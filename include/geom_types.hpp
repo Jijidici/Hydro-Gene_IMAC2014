@@ -53,6 +53,7 @@ typedef struct s_edge{
 /*          FUNCTIONS                     */
 /******************************************/
 
+Vertex createVertex(glm::dvec3 inPos, glm::dvec3 inNormal, float inB, float inD, float inG, float inS);
 Voxel createVoxel(double inX, double inY, double inZ, double inSize);
 Cube createCube(double inLeft, double inRight, double inTop, double inBottom, double inFar, double inNear);
 glm::dvec3 createVector(glm::dvec3 begin, glm::dvec3 end);
