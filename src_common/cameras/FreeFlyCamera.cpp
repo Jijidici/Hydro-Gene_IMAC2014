@@ -7,6 +7,7 @@
 #include "data_types.hpp"
 
 #define PI 3.14159265
+#define SQRT_3 1.73205081
 
 namespace hydrogene{
 
@@ -46,7 +47,7 @@ namespace hydrogene{
 	}
 	
 	void FreeFlyCamera::computeFrustumPlanes(){
-		glm::vec3 frustumPosition = m_Position - glm::vec3(m_leafSize*m_FrontVector.x, m_leafSize*m_FrontVector.y, m_leafSize*m_FrontVector.z);
+		glm::vec3 frustumPosition = m_Position - glm::vec3(SQRT_3*m_leafSize*m_FrontVector.x, SQRT_3*m_leafSize*m_FrontVector.y, SQRT_3*m_leafSize*m_FrontVector.z);
 		m_frustumNearPlanePoint = frustumPosition + (m_FrontVector*m_nearDistance);
 		m_frustumNearPlaneNormal = glm::normalize(frustumPosition - m_frustumNearPlanePoint);
 		
