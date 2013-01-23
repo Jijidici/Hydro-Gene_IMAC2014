@@ -2,12 +2,14 @@
 
 #define SKYBOX 0
 #define TRIANGLES 1
-
 #define NORMAL 2
+
 #define BENDING 3
 #define DRAIN 4
 #define GRADIENT 5
 #define SURFACE 6
+
+#define VEGET 7
 
 in vec3 gNormal;
 in vec2 gTexCoords;
@@ -49,7 +51,7 @@ void main() {
 			ratio = gSurface/uMaxSurface;
 			dColor = vec3(0.5f - ratio, ratio, 0.5f - ratio);
 		}
-
+	
 		float dCoeff = max(0, dot(normalize(gNormal), -normalize(uLightVect)));
 
 		vec3 aColor = vec3(0.1f, 0.1f, 0.1f);
@@ -57,7 +59,16 @@ void main() {
 		
 		fFragColor = vec4(color, 1.f);
 
-	}else if(uMode == SKYBOX){
+		if(uChoice == VEGET){
+			vec4 texel = texture(uTexture, gTexCoords);
+				if(texel.a <0.5){
+					discard;
+			}
+			fFragColor = texel;
+		}	
+
+	}
+	else if(uMode == SKYBOX){
 		fFragColor = texture(uTexture, gTexCoords);
 	}
 }

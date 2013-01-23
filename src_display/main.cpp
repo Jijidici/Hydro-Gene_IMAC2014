@@ -36,6 +36,8 @@
 #define GRADIENT 5
 #define SURFACE 6
 
+#define VEGET 7
+
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
 static const size_t WINDOW_WIDTH = 1060, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
@@ -142,6 +144,7 @@ int main(int argc, char** argv){
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
 
 	GLuint texture_test = CreateTexture("textures/sky.jpg");
+	GLuint texture_arbre = CreateTexture("textures/plant.png");
 	
 	/* Leaves VBOs & VAOs creation */
 	GLuint* l_VBOs = new GLuint[nbLeaves];
@@ -195,7 +198,7 @@ int main(int argc, char** argv){
 		return (EXIT_FAILURE);
 	}
 	
-	GLuint program = programNorm;	
+	GLuint program = programNorm;
 	glUseProgram(program);
 
 	// Creation des Matrices
@@ -314,10 +317,12 @@ int main(int argc, char** argv){
 							if(currentCam == FREE_FLY){
 								//FRUSTUM CULLING
 								if(ffCam.leavesFrustum(leafArray[idx])){
+									glUniform1i(ChoiceLocation, NORMAL);
 									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
 									break;
 								}
 							}else{
+								glUniform1i(ChoiceLocation, NORMAL);
 								display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
 								break;
 							}
@@ -325,11 +330,20 @@ int main(int argc, char** argv){
 					}
 				}else{
 					/* display the triangularized leaf */
+					glUniform1i(ChoiceLocation, NORMAL);
 					glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 					glBindVertexArray(l_VAOs[idx]);
 						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
 					glBindVertexArray(0);
 				}
+				glUniform1i(ChoiceLocation, VEGET);
+				glUniform1i(TextureLocation,0);
+				BindTexture(texture_arbre);
+					glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+					glBindVertexArray(l_VAOs[idx]);
+						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
+					glBindVertexArray(0);
+				BindTexture(0);
 			}
 		ms.pop();
 
@@ -565,8 +579,7 @@ int main(int argc, char** argv){
 		}
 
 		//DISPLAY OF THE COEFFICIENTS
-		if(displayNormal) glUniform1i(ChoiceLocation, NORMAL);
-		else if(displayDrain) glUniform1i(ChoiceLocation, DRAIN);
+		if(displayDrain) glUniform1i(ChoiceLocation, DRAIN);
 		else if(displayBending) glUniform1i(ChoiceLocation, BENDING);
 		else if(displayGradient) glUniform1i(ChoiceLocation, GRADIENT);
 		else if(displaySurface) glUniform1i(ChoiceLocation, SURFACE);
