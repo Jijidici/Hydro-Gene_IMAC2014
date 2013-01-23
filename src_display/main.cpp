@@ -317,12 +317,12 @@ int main(int argc, char** argv){
 							if(currentCam == FREE_FLY){
 								//FRUSTUM CULLING
 								if(ffCam.leavesFrustum(leafArray[idx])){
-									glUniform1i(ChoiceLocation, NORMAL);
+
 									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
 									break;
 								}
 							}else{
-								glUniform1i(ChoiceLocation, NORMAL);
+
 								display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
 								break;
 							}
@@ -330,7 +330,6 @@ int main(int argc, char** argv){
 					}
 				}else{
 					/* display the triangularized leaf */
-					glUniform1i(ChoiceLocation, NORMAL);
 					glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 					glBindVertexArray(l_VAOs[idx]);
 						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
@@ -344,6 +343,13 @@ int main(int argc, char** argv){
 						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
 					glBindVertexArray(0);
 				BindTexture(0);
+
+				//DISPLAY OF THE COEFFICIENTS
+				if(displayNormal) glUniform1i(ChoiceLocation, NORMAL);
+				else if(displayDrain) glUniform1i(ChoiceLocation, DRAIN);
+				else if(displayBending) glUniform1i(ChoiceLocation, BENDING);
+				else if(displayGradient) glUniform1i(ChoiceLocation, GRADIENT);
+				else if(displaySurface) glUniform1i(ChoiceLocation, SURFACE);
 			}
 		ms.pop();
 
@@ -577,12 +583,6 @@ int main(int argc, char** argv){
 					break;
 			}
 		}
-
-		//DISPLAY OF THE COEFFICIENTS
-		if(displayDrain) glUniform1i(ChoiceLocation, DRAIN);
-		else if(displayBending) glUniform1i(ChoiceLocation, BENDING);
-		else if(displayGradient) glUniform1i(ChoiceLocation, GRADIENT);
-		else if(displaySurface) glUniform1i(ChoiceLocation, SURFACE);
 
 		//IDLE
 		if(is_lKeyPressed){ ffCam.moveLeft(0.01); }
