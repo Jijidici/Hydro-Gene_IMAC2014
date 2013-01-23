@@ -184,13 +184,40 @@ int main(int argc, char** argv){
 	
 	test_cache = drn_close(&cache);
 	
+	//Infinite ground creation
+	double groundVertices[18]{
+		-2., 0, 2., 
+		2., 0, 2., 
+		2., 0, -2., 
+		2., 0, -2., 
+		-2., 0, -2., 
+		-2., 0, 2. 
+	};
+	
+	GLuint groundVBO = 0;
+	glGenBuffers(1, &groundVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
+		glBufferData(GL_ARRAY_BUFFER, 18*sizeof(double), groundVertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	GLuint groundVAO = 0;
+	glGenVertexArrays(1, &groundVAO);
+	glBindVertexArray(groundVAO);
+		glEnableVertexAttribArray(POSITION_LOCATION);
+		glBindBuffer(GL_ARRAY_BUFFER, groundVBO);
+			glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, 3*sizeof(double), reinterpret_cast<const GLvoid*>(0));
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	
 	// Creation des Shaders
 	GLuint programNorm = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
 	if(!programNorm){
 		glDeleteBuffers(1, &cubeVBO);
 		glDeleteBuffers(nbLeaves, l_VBOs);
+		glDeleteBuffers(1, &groundVBO);
 		glDeleteVertexArrays(1, &cubeVAO);
 		glDeleteVertexArrays(nbLeaves, l_VAOs);
+		glDeleteVertexArrays(1, &groundVAO);
 		delete[] l_VAOs;
 		delete[] l_VBOs;
 		delete[] leafArray;
@@ -630,7 +657,9 @@ int main(int argc, char** argv){
 
 	// Destruction des ressources OpenGL
 	glDeleteBuffers(1, &cubeVBO);
+	glDeleteBuffers(1, &groundVBO);
 	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteVertexArrays(1, &groundVAO);
 	glDeleteTextures(1, &texture_test);
 	
 	//free cache memory
