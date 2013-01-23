@@ -38,7 +38,7 @@ typedef struct s_chunk{
 	double d;
 	GLuint vao;
 	GLuint vbo;
-	
+
 	bool operator()(const s_chunk chk1, const s_chunk chk2){
 		return chk1.d < chk2.d;
 	}
