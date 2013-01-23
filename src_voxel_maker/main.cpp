@@ -705,7 +705,7 @@ int main(int argc, char** argv) {
 				
 				/* if the leaf is not empty, save its voxels */
 				for(unsigned int n = 0; n < 8; ++n){
-					if(leafArray[leafIndex[n]].nbIntersection != 0){ // is_intersect
+					if(leafArray[leafIndex[n]].nbVertices_lvl2 != 0){ // is_intersect
 						std::cout << "INDEX : " << leafIndex[n] << std::endl;
 						std::cout << "nbInt : " << leafArray[n].nbIntersection << std::endl;
 						std::cout << "nbVert : " << leafArray[n].nbVertices_lvl2 << std::endl;
@@ -947,13 +947,13 @@ int main(int argc, char** argv) {
 				uint32_t topRightLeaf = (l_i+1) + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
 				uint32_t topLeaf = l_i + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
 				uint32_t topFrontLeaf = l_i + nbSub_lvl1*(l_j+1) + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
-				if(leafArray[currentLeafIndex].nbIntersection != 0){
+				if(leafArray[currentLeafIndex].nbVertices_lvl2 != 0){
 					Vertex vx1;
 					Vertex vx2;
 					Vertex vx3;
 					
 					//corner edge
-					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[diagonalRightLeaf].nbIntersection != 0)&&(leafArray[frontLeaf].nbIntersection != 0)){
+					if((leafArray[rightLeaf].nbVertices_lvl2 != 0)&&(leafArray[diagonalRightLeaf].nbVertices_lvl2 != 0)&&(leafArray[frontLeaf].nbVertices_lvl2 != 0)){
 						vx1 = leafArray[currentLeafIndex].optimal;
 						vx2 = leafArray[rightLeaf].optimal;
 						vx3 = leafArray[diagonalRightLeaf].optimal;
@@ -984,7 +984,7 @@ int main(int argc, char** argv) {
 						l_computedVertices[leafArray[frontLeaf].id].push_back(vx3);
 					}
 					//right edge
-					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[topRightLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)){
+					if((leafArray[rightLeaf].nbVertices_lvl2 != 0)&&(leafArray[topRightLeaf].nbVertices_lvl2 != 0)&&(leafArray[topLeaf].nbVertices_lvl2 != 0)){
 						vx1 = leafArray[currentLeafIndex].optimal;
 						vx2 = leafArray[rightLeaf].optimal;
 						vx3 = leafArray[topRightLeaf].optimal;
@@ -1015,7 +1015,7 @@ int main(int argc, char** argv) {
 						l_computedVertices[leafArray[topLeaf].id].push_back(vx3);
 					}
 					//front edge
-					if((leafArray[frontLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)&&(leafArray[topFrontLeaf].nbIntersection != 0)){
+					if((leafArray[frontLeaf].nbVertices_lvl2 != 0)&&(leafArray[topLeaf].nbVertices_lvl2 != 0)&&(leafArray[topFrontLeaf].nbVertices_lvl2 != 0)){
 						vx1 = leafArray[currentLeafIndex].optimal;
 						vx2 = leafArray[frontLeaf].optimal;
 						vx3 = leafArray[topFrontLeaf].optimal;
@@ -1056,7 +1056,7 @@ int main(int argc, char** argv) {
 			for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
 				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_k + l_j*nbSub_lvl1*nbSub_lvl1;
 				std::cout << "index : " << currentLeafIndex << std::endl;
-				if(leafArray[currentLeafIndex].nbIntersection != 0){
+				if(leafArray[currentLeafIndex].nbVertices_lvl2 != 0){
 					//~ int useless2 = 0;
 					//~ std::cin >> useless2;
 					std::cout<<"//-> NB Vertices saved in leaf : "<<l_computedVertices[leafArray[currentLeafIndex].id].size()<<std::endl;
