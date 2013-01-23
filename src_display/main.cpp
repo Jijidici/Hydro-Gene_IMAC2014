@@ -56,6 +56,19 @@ void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersecti
 	LightVectLocation = glGetUniformLocation(program, "uLightVect");
 }
 
+void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLint ChoiceLocation, GLint TextureLocation, GLuint texture){
+
+	glUniform1i(ChoiceLocation, VEGET);
+	glUniform1i(TextureLocation,0);
+	BindTexture(texture);
+		glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+	
+		glBindVertexArray(meshVAO);
+			glDrawArrays(GL_TRIANGLES, 0, nbVertices);
+		glBindVertexArray(0);
+	BindTexture(0);
+}
+
 int main(int argc, char** argv){
 
 	/* Open DATA file */
@@ -143,8 +156,11 @@ int main(int argc, char** argv){
 	GLuint cubeVBO = CreateCubeVBO();
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
 
-	GLuint texture_test = CreateTexture("textures/sky.jpg");
-	GLuint texture_arbre = CreateTexture("textures/plant.png");
+	GLuint texture_sky = CreateTexture("textures/sky.jpg");
+	GLuint texture_plant = CreateTexture("textures/plant.png");
+	GLuint texture_tree = CreateTexture("textures/tree.png");
+	GLuint texture_pinetree = CreateTexture("textures/pine_tree.png");
+	GLuint texture_waterplant = CreateTexture("textures/water_plant.png");
 	
 	/* Leaves VBOs & VAOs creation */
 	GLuint* l_VBOs = new GLuint[nbLeaves];
@@ -369,13 +385,13 @@ int main(int argc, char** argv){
 							if(currentCam == FREE_FLY){
 								//FRUSTUM CULLING
 								if(ffCam.leavesFrustum(leafArray[idx])){
-
 									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
+								display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
 									break;
 								}
 							}else{
-
 								display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
+								display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
 								break;
 							}
 						}
@@ -387,15 +403,6 @@ int main(int argc, char** argv){
 						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
 					glBindVertexArray(0);
 				}
-				/* Display vegetation */
-				glUniform1i(ChoiceLocation, VEGET);
-				glUniform1i(TextureLocation,0);
-				BindTexture(texture_arbre);
-					glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-					glBindVertexArray(l_VAOs[idx]);
-						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
-					glBindVertexArray(0);
-				BindTexture(0);
 
 				//DISPLAY OF THE COEFFICIENTS
 				if(displayNormal) glUniform1i(ChoiceLocation, NORMAL);
@@ -419,7 +426,7 @@ int main(int argc, char** argv){
 			}
 			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 			glUniform1i(TextureLocation,0);
-			BindTexture(texture_test);
+			BindTexture(texture_sky);
 				glBindVertexArray(cubeVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 36);
 				glBindVertexArray(0);
@@ -689,7 +696,7 @@ int main(int argc, char** argv){
 	glDeleteBuffers(1, &groundVBO);
 	glDeleteVertexArrays(1, &cubeVAO);
 	glDeleteVertexArrays(1, &groundVAO);
-	glDeleteTextures(1, &texture_test);
+	glDeleteTextures(1, &texture_sky);
 	
 	//free cache memory
 	uint16_t nbLoadedLeaves = memory.size();

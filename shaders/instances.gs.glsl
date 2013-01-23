@@ -41,14 +41,14 @@ void main(){
 			  gTexCoords = vec2(0.0, 1.0);
 		 	  EmitVertex();
 				gl_Position.x = gl_in[i].gl_Position.x;
-				gl_Position.y = gl_in[i].gl_Position.y + 0.1f;
+				gl_Position.y = gl_in[i].gl_Position.y + 0.01f;
 			  gTexCoords = vec2(0.0, 0.0);
 		 	  EmitVertex();
-				gl_Position.x = gl_in[i].gl_Position.x + 0.05f;
-				gl_Position.y = gl_in[i].gl_Position.y + 0.1f;
+				gl_Position.x = gl_in[i].gl_Position.x + 0.005f;
+				gl_Position.y = gl_in[i].gl_Position.y + 0.01f;
 			  gTexCoords = vec2(1.0, 0.0);
 		 	  EmitVertex();
-				gl_Position.x = gl_in[i].gl_Position.x + 0.05f;
+				gl_Position.x = gl_in[i].gl_Position.x + 0.005f;
 				gl_Position.y = gl_in[i].gl_Position.y;
 			  gTexCoords = vec2(1.0, 1.0);
 		 	  EmitVertex();
