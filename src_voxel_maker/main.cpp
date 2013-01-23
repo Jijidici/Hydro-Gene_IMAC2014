@@ -397,11 +397,13 @@ int main(int argc, char** argv) {
 	double voxelSize = l_size/(double)nbSub_lvl2;
 	
 	size_t const l_voxArrLength = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
-	VoxelData* l_voxelArray = NULL;
-	l_voxelArray = new VoxelData[l_voxArrLength];
-	if(NULL == l_voxelArray){
-		std::cout<<"[!] -> Allocation failure for l_voxelArray"<<std::endl;
-		return EXIT_FAILURE;
+	VoxelData* l_voxelArray[8];
+	for(unsigned int i = 0; i < 8; ++i){
+		l_voxelArray[i] = new VoxelData[l_voxArrLength];
+		if(NULL == l_voxelArray[i]){
+			std::cout<<"[!] -> Allocation failure for l_voxelArray"<<std::endl;
+			return EXIT_FAILURE;
+		}
 	}
 	
 	/* Setting the config data */
@@ -439,40 +441,58 @@ int main(int argc, char** argv) {
 	double Rc = voxelSize * APPROXIM_RANGE;
 
 	//For each leaf
-	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
-		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
-			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
-				
+	for(uint16_t l_j=0;l_j<nbSub_lvl1;l_j+=2){
+		for(uint16_t l_k=0;l_k<nbSub_lvl1;l_k+=2){
+			for(uint16_t l_i=0;l_i<nbSub_lvl1;l_i+=2){
 				uint32_t leafIndex[8];
 				
-				leafIndex[0] = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
-				leafIndex[1] = l_i + 1 + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
-				leafIndex[2] = l_i + nbSub_lvl1*l_j + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
-				leafIndex[3] = l_i + 1 + nbSub_lvl1*l_j + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
-				leafIndex[4] = l_i + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
-				leafIndex[5] = l_i + 1 + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
-				leafIndex[6] = l_i + nbSub_lvl1*(l_j+1) + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
-				leafIndex[7] = l_i + 1 + nbSub_lvl1*(l_j+1) + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
+				// indexes of the 8 leaves of the group
+				leafIndex[0] = l_i + 		nbSub_lvl1*l_k 		+ 	l_j*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[1] = l_i + 1 + 	nbSub_lvl1*l_k 		+ 	l_j*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[2] = l_i + 		nbSub_lvl1*(l_k+1) 	+ 	l_j*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[3] = l_i + 1 + 	nbSub_lvl1*(l_k+1) 	+	l_j*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[4] = l_i + 		nbSub_lvl1*l_k 		+	(l_j+1)*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[5] = l_i + 1 + 	nbSub_lvl1*l_k		+ 	(l_j+1)*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[6] = l_i + 		nbSub_lvl1*(l_k+1)	+ 	(l_j+1)*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[7] = l_i + 1 + 	nbSub_lvl1*(l_k+1) 	+ 	(l_j+1)*nbSub_lvl1*nbSub_lvl1;
+				
+				for(unsigned int n = 0; n < 8; ++n){
+					std::cout << leafIndex[n] << std::endl;
+				}
+				int useless;
+				std::cin >> useless;
 				
 				/* Initialize the vertices per leaf vector */
 				std::vector<Vertex> l_storedVertices[8];
 				
-				/* Init leaf voxel array */	
-				for(uint32_t n=0;n<l_voxArrLength;++n){
-					l_voxelArray[n].nbFaces=0;
-					l_voxelArray[n].sumNormal = glm::dvec3(0,0,0);
-					l_voxelArray[n].sumDrain = 0;
-					l_voxelArray[n].sumGradient = 0;
-					l_voxelArray[n].sumSurface = 0;
-					l_voxelArray[n].sumBending = 0;
+				/* Init leaves voxel arrays */	 // plusieurs aussi !!
+				for(unsigned int i = 0; i < 8; ++i){
+					for(uint32_t n=0;n<l_voxArrLength;++n){
+						l_voxelArray[i][n].nbFaces=0;
+						l_voxelArray[i][n].sumNormal = glm::dvec3(0,0,0);
+						l_voxelArray[i][n].sumDrain = 0;
+						l_voxelArray[i][n].sumGradient = 0;
+						l_voxelArray[i][n].sumSurface = 0;
+						l_voxelArray[i][n].sumBending = 0;
+					}
 				}
 				
 				/* Fix the current leaf */
-				leafArray[leafIndex[0]].size = l_size;
-				leafArray[leafIndex[0]].pos = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
-				leafArray[leafIndex[0]].nbIntersection = 0;
-				leafArray[leafIndex[0]].nbVertices_lvl1 = 0;
-				leafArray[leafIndex[0]].nbVertices_lvl2 = 0;
+				for(unsigned int n = 0; n < 8; ++n){
+					leafArray[leafIndex[n]].size = l_size;
+					leafArray[leafIndex[n]].nbIntersection = 0;
+					leafArray[leafIndex[n]].nbVertices_lvl1 = 0;
+					leafArray[leafIndex[n]].nbVertices_lvl2 = 0;
+				}
+				
+				leafArray[leafIndex[0]].pos = glm::dvec3((l_i*l_size)-1., 		(l_j*l_size)-1., 		(l_k*l_size)-1.);
+				leafArray[leafIndex[1]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	(l_j*l_size)-1., 		(l_k*l_size)-1.);
+				leafArray[leafIndex[2]].pos = glm::dvec3((l_i*l_size)-1., 		(l_j*l_size)-1., 		((l_k+1)*l_size)-1.);
+				leafArray[leafIndex[3]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	(l_j*l_size)-1., 		((l_k+1)*l_size)-1.);
+				leafArray[leafIndex[4]].pos = glm::dvec3((l_i*l_size)-1., 		((l_j+1)*l_size)-1., 	(l_k*l_size)-1.);
+				leafArray[leafIndex[5]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	((l_j+1)*l_size)-1., 	(l_k*l_size)-1.);
+				leafArray[leafIndex[6]].pos = glm::dvec3((l_i*l_size)-1., 		((l_j+1)*l_size)-1., 	((l_k+1)*l_size)-1.);
+				leafArray[leafIndex[7]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	((l_j+1)*l_size)-1., 	((l_k+1)*l_size)-1.);
 				
 				/* Intersection flag to know if a leaf have at least one intersection - if it is not the case, we do not save the leaf */
 				bool is_intersec = false;
@@ -529,12 +549,12 @@ int main(int argc, char** argv) {
 										
 										/* update the voxel array */
 										uint32_t currentIndex = i + nbSub_lvl2*j + k*nbSub_lvl2*nbSub_lvl2;
-										l_voxelArray[currentIndex].nbFaces++;
-										if(normal) 	l_voxelArray[currentIndex].sumNormal = glm::dvec3(l_voxelArray[currentIndex].sumNormal.x + tabF[n].normal.x, l_voxelArray[currentIndex].sumNormal.y + tabF[n].normal.y, l_voxelArray[currentIndex].sumNormal.z + tabF[n].normal.z);
-										if(drain) 	l_voxelArray[currentIndex].sumDrain = l_voxelArray[currentIndex].sumDrain + tabF[n].drain;
-										if(gradient)l_voxelArray[currentIndex].sumGradient = l_voxelArray[currentIndex].sumGradient + tabF[n].gradient;
-										if(surface) l_voxelArray[currentIndex].sumSurface = l_voxelArray[currentIndex].sumSurface + tabF[n].surface;
-										if(bending) l_voxelArray[currentIndex].sumBending = l_voxelArray[currentIndex].sumBending + tabF[n].bending;
+										l_voxelArray[0][currentIndex].nbFaces++;
+										if(normal) 	l_voxelArray[0][currentIndex].sumNormal = glm::dvec3(l_voxelArray[0][currentIndex].sumNormal.x + tabF[n].normal.x, l_voxelArray[0][currentIndex].sumNormal.y + tabF[n].normal.y, l_voxelArray[0][currentIndex].sumNormal.z + tabF[n].normal.z);
+										if(drain) 	l_voxelArray[0][currentIndex].sumDrain = l_voxelArray[0][currentIndex].sumDrain + tabF[n].drain;
+										if(gradient)l_voxelArray[0][currentIndex].sumGradient = l_voxelArray[0][currentIndex].sumGradient + tabF[n].gradient;
+										if(surface) l_voxelArray[0][currentIndex].sumSurface = l_voxelArray[0][currentIndex].sumSurface + tabF[n].surface;
+										if(bending) l_voxelArray[0][currentIndex].sumBending = l_voxelArray[0][currentIndex].sumBending + tabF[n].bending;
 										
 										/* update the leaf info */
 										leafArray[leafIndex[0]].nbIntersection++;
@@ -904,7 +924,9 @@ int main(int argc, char** argv) {
 
 	delete[] tabV;
 	delete[] tabF;
-	delete[] l_voxelArray;
+	for(unsigned int i = 0; i < 8; ++i){
+		delete[] l_voxelArray[i];
+	}
 	delete[] leafArray;
 	delete[] maxCoeffArray;
 
