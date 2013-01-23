@@ -54,8 +54,8 @@ void main() {
 	
 		float dCoeff = max(0, dot(normalize(gNormal), -normalize(uLightVect)));
 
-		vec3 aColor = vec3(0.02f, 0.02f, 0.f);
-		vec3 color = vec3(1.f, 1.f, 1.f) * (aColor + dColor*dCoeff);
+		vec3 aColor = vec3(0.1f, 0.1f, 0.1f);
+		vec3 color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeff);
 		
 		fFragColor = vec4(color, 1.f);
 
