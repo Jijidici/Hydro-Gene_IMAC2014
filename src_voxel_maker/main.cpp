@@ -511,24 +511,24 @@ int main(int argc, char** argv) {
 					/* Face properties */
 					/* min and max */ /* problem here !! */
 					int minVoxelX = ((getminX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
-					int maxVoxelX = ((getminX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
+					int maxVoxelX = ((getmaxX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
 					int minVoxelY = ((getminY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
-					int maxVoxelY = ((getminY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
+					int maxVoxelY = ((getmaxY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
 					int minVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
-					int maxVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
+					int maxVoxelZ = ((getmaxZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
 					
-					std::cout << "min/max : " << std::endl;
-					std::cout << "X : " << minVoxelX << " | " << maxVoxelX << std::endl;
-					std::cout << "Y : " << minVoxelY << " | " << maxVoxelY << std::endl;
-					std::cout << "Z : " << minVoxelZ << " | " << maxVoxelZ << std::endl;
+					//~ std::cout << "min/max : " << std::endl;
+					//~ std::cout << "X : " << minVoxelX << " | " << maxVoxelX << std::endl;
+					//~ std::cout << "Y : " << minVoxelY << " | " << maxVoxelY << std::endl;
+					//~ std::cout << "Z : " << minVoxelZ << " | " << maxVoxelZ << std::endl;
+					//~ 
+					//~ std::cout << "face : " << std::endl;
+					//~ std::cout << "s1 : " << tabF[n].s1->pos.x << " " << tabF[n].s1->pos.y << " " << tabF[n].s1->pos.z << std::endl;
+					//~ std::cout << "s2 : " << tabF[n].s2->pos.x << " " << tabF[n].s2->pos.y << " " << tabF[n].s2->pos.z << std::endl;
+					//~ std::cout << "s3 : " << tabF[n].s3->pos.x << " " << tabF[n].s3->pos.y << " " << tabF[n].s3->pos.z << std::endl;
 					
-					std::cout << "face : " << std::endl;
-					std::cout << "s1 : " << tabF[n].s1->pos.x << " " << tabF[n].s1->pos.y << " " << tabF[n].s1->pos.z << std::endl;
-					std::cout << "s2 : " << tabF[n].s2->pos.x << " " << tabF[n].s2->pos.y << " " << tabF[n].s2->pos.z << std::endl;
-					std::cout << "s3 : " << tabF[n].s3->pos.x << " " << tabF[n].s3->pos.y << " " << tabF[n].s3->pos.z << std::endl;
-					
-					int useless2;
-					std::cin >> useless2;
+					//~ int useless2;
+					//~ std::cin >> useless2;
 					
 					//Test if the triangle is inside the current group of leaves
 					if(maxVoxelX >= 0 && minVoxelX < nbSub_lvl2*2 &&
@@ -536,12 +536,27 @@ int main(int argc, char** argv) {
 					   maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2*2){
 					   
 						//case where triangle overlaps 2 groups
-						if(maxVoxelX > nbSub_lvl2*2){ maxVoxelX = nbSub_lvl2*2 - 1; } 
-						if(minVoxelX < 0){ maxVoxelX = 0; }
-						if(maxVoxelY > nbSub_lvl2*2){ maxVoxelY = nbSub_lvl2*2 - 1; } 
-						if(minVoxelY < 0){ maxVoxelY = 0; }
-						if(maxVoxelZ > nbSub_lvl2*2){ maxVoxelZ = nbSub_lvl2*2 - 1; } 
-						if(minVoxelZ < 0){ maxVoxelZ = 0; }
+						if(maxVoxelX >= nbSub_lvl2*2){ maxVoxelX = nbSub_lvl2*2 - 1; } 
+						if(minVoxelX < 0){ minVoxelX = 0; }
+						if(maxVoxelY >= nbSub_lvl2*2){ maxVoxelY = nbSub_lvl2*2 - 1; } 
+						if(minVoxelY < 0){ minVoxelY = 0; }
+						if(maxVoxelZ >= nbSub_lvl2*2){ maxVoxelZ = nbSub_lvl2*2 - 1; } 
+						if(minVoxelZ < 0){ minVoxelZ = 0; }
+						
+						//~ std::cout << "test" << std::endl;
+						
+						//~ std::cout << "min/max : " << std::endl;
+						//~ std::cout << "X : " << minVoxelX << " | " << maxVoxelX << std::endl;
+						//~ std::cout << "Y : " << minVoxelY << " | " << maxVoxelY << std::endl;
+						//~ std::cout << "Z : " << minVoxelZ << " | " << maxVoxelZ << std::endl;
+						//~ 
+						//~ std::cout << "face : " << std::endl;
+						//~ std::cout << "s1 : " << tabF[n].s1->pos.x << " " << tabF[n].s1->pos.y << " " << tabF[n].s1->pos.z << std::endl;
+						//~ std::cout << "s2 : " << tabF[n].s2->pos.x << " " << tabF[n].s2->pos.y << " " << tabF[n].s2->pos.z << std::endl;
+						//~ std::cout << "s3 : " << tabF[n].s3->pos.x << " " << tabF[n].s3->pos.y << " " << tabF[n].s3->pos.z << std::endl;
+						//~ 
+						//~ int useless2;
+						//~ std::cin >> useless2;
 						
 						uint32_t insideLeafIndex = 0;
 						uint32_t insideArrayIndex = 0;
@@ -553,7 +568,7 @@ int main(int argc, char** argv) {
 							// need to clamp ?
 							insideLeafIndex = leafIndex[0];
 							insideArrayIndex = 0;
-							std::cout << "test 0" << std::endl;
+							//~ std::cout << "test 0" << std::endl;
 						}
 						
 						if(	maxVoxelX >= nbSub_lvl2 && minVoxelX < nbSub_lvl2*2 &&
@@ -561,7 +576,7 @@ int main(int argc, char** argv) {
 							maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){
 							insideLeafIndex = leafIndex[1];
 							insideArrayIndex = 1;
-							std::cout << "test 1" << std::endl;
+							//~ std::cout << "test 1" << std::endl;
 						}
 						
 						if(	maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
@@ -569,7 +584,7 @@ int main(int argc, char** argv) {
 							maxVoxelZ >= nbSub_lvl2 && minVoxelZ < nbSub_lvl2*2){
 							insideLeafIndex = leafIndex[2];
 							insideArrayIndex = 2;
-							std::cout << "test 2" << std::endl;
+							//~ std::cout << "test 2" << std::endl;
 						}
 						
 						if(	maxVoxelX >= nbSub_lvl2 && minVoxelX < nbSub_lvl2*2 &&
@@ -577,7 +592,7 @@ int main(int argc, char** argv) {
 							maxVoxelZ >= nbSub_lvl2 && minVoxelZ < nbSub_lvl2*2){
 							insideLeafIndex = leafIndex[3];
 							insideArrayIndex = 3;
-							std::cout << "test 3" << std::endl;
+							//~ std::cout << "test 3" << std::endl;
 						}
 						
 						if(	maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
@@ -585,7 +600,7 @@ int main(int argc, char** argv) {
 							maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){
 							insideLeafIndex = leafIndex[4];
 							insideArrayIndex = 4;
-							std::cout << "test 4" << std::endl;
+							//~ std::cout << "test 4" << std::endl;
 						}
 						
 						if(	maxVoxelX >= nbSub_lvl2 && minVoxelX < nbSub_lvl2*2 &&
@@ -593,7 +608,7 @@ int main(int argc, char** argv) {
 							maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){
 							insideLeafIndex = leafIndex[5];
 							insideArrayIndex = 5;
-							std::cout << "test 5" << std::endl;
+							//~ std::cout << "test 5" << std::endl;
 						}
 						
 						if(	maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
@@ -601,7 +616,7 @@ int main(int argc, char** argv) {
 							maxVoxelZ >= nbSub_lvl2 && minVoxelZ < nbSub_lvl2*2){
 							insideLeafIndex = leafIndex[6];
 							insideArrayIndex = 6;
-							std::cout << "test 6" << std::endl;
+							//~ std::cout << "test 6" << std::endl;
 						}
 						
 						if(	maxVoxelX >= nbSub_lvl2 && minVoxelX < nbSub_lvl2*2 &&
@@ -609,7 +624,7 @@ int main(int argc, char** argv) {
 							maxVoxelZ >= nbSub_lvl2 && minVoxelZ < nbSub_lvl2*2){
 							insideLeafIndex = leafIndex[7];
 							insideArrayIndex = 7;
-							std::cout << "test 7" << std::endl;
+							//~ std::cout << "test 7" << std::endl;
 						}
 							
 						/* Edges */
@@ -628,11 +643,23 @@ int main(int argc, char** argv) {
 						Plane e3 = createPlane(tabF[n].s3->pos, tabF[n].s1->pos, tabF[n].s1->pos + tabF[n].normal);
 
 						//For each cube of the face bounding box
-						for(uint16_t j=minVoxelY;j<=maxVoxelY; ++j){	
-							for(uint16_t k=minVoxelZ; k<=maxVoxelZ; ++k){
-								for(uint16_t i=minVoxelX;i<=maxVoxelX;++i){
+						for(int J=minVoxelY;J<=maxVoxelY; ++J){	
+							for(int K=minVoxelZ; K<=maxVoxelZ; ++K){
+								for(int I=minVoxelX;I<=maxVoxelX; ++I){
+									int i = I;
+									int k = K;
+									int j = J;
+									
+									if(i >= nbSub_lvl2){ i -= nbSub_lvl2;}
+									if(j >= nbSub_lvl2){ j -= nbSub_lvl2;}
+									if(k >= nbSub_lvl2){ k -= nbSub_lvl2;}
+									
+									//~ std::cout << "IJK : " << i << " " << j << " " << k << std::endl;
+									
 									// Voxel Properties 
 									Voxel vox = createVoxel(i*voxelSize + leafArray[insideLeafIndex].pos.x + voxelSize*0.5, j*voxelSize + leafArray[insideLeafIndex].pos.y + voxelSize*0.5, k*voxelSize + leafArray[insideLeafIndex].pos.z + voxelSize*0.5, voxelSize);
+									
+									//~ vox.c -= leafArray[insideLeafIndex].pos - leafArray[0].pos;
 									
 									//~ std::cout << "voxel : " << vox.c.x << " " << vox.c.y << " " << vox.c.z << std::endl;
 									//~ int useless;
@@ -642,9 +669,9 @@ int main(int argc, char** argv) {
 										is_intersec = true;
 										
 										/* PROBLEM HERE !! */
+										//~ std::cout << "test" << std::endl;
 										
-										
-										std::cout << "voxel intersection" << std::endl;
+										//~ std::cout << "voxel intersection" << std::endl;
 										//~ int useless = 0;
 										//~ std::cin >> useless;
 										
@@ -657,15 +684,15 @@ int main(int argc, char** argv) {
 										if(surface) l_voxelArray[insideArrayIndex][currentIndex].sumSurface = l_voxelArray[insideArrayIndex][currentIndex].sumSurface + tabF[n].surface;
 										if(bending) l_voxelArray[insideArrayIndex][currentIndex].sumBending = l_voxelArray[insideArrayIndex][currentIndex].sumBending + tabF[n].bending;
 										
-										//~ /* update the leaf info */
-										//~ ++leafArray[insideLeafIndex].nbIntersection;
+										/* update the leaf info */
+										++leafArray[insideLeafIndex].nbIntersection;
 									}
 								}
 							}
 						}//end foreach voxel
 						
 						/* update the leaf info */
-						++leafArray[insideLeafIndex].nbIntersection;
+						//~ ++leafArray[insideLeafIndex].nbIntersection;
 						
 						/* add the triangle to the chunck */
 						l_storedVertices[insideArrayIndex].push_back(*(tabF[n].s1));
@@ -674,19 +701,18 @@ int main(int argc, char** argv) {
 						leafArray[insideLeafIndex].nbVertices_lvl2+=3;
 					}
 				}//end foreach face
-				
-				std::cout << "end for each face" << std::endl;
+
 				
 				/* if the leaf is not empty, save its voxels */
 				for(unsigned int n = 0; n < 8; ++n){
-					if(leafArray[leafIndex[n]].nbVertices_lvl2 != 0){ // is_intersect
+					if(leafArray[leafIndex[n]].nbIntersection != 0){ // is_intersect
 						std::cout << "INDEX : " << leafIndex[n] << std::endl;
 						std::cout << "nbInt : " << leafArray[n].nbIntersection << std::endl;
 						std::cout << "nbVert : " << leafArray[n].nbVertices_lvl2 << std::endl;
-						//~ int useless3 = 0;
-						//~ std::cin >> useless3;
+						
 						/* Save the VoxelData array */
 						test_cache = drn_writer_add_chunk(&cache, l_voxelArray[n], l_voxArrLength*sizeof(VoxelData));
+						
 						if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 						
 						/* Save the vertices lvl2 */
