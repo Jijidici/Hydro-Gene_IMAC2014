@@ -157,10 +157,13 @@ int main(int argc, char** argv){
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
 
 	GLuint texture_sky = CreateTexture("textures/sky.jpg");
+	/* vegetation textures */
 	GLuint texture_plant = CreateTexture("textures/plant.png");
 	GLuint texture_tree = CreateTexture("textures/tree.png");
 	GLuint texture_pinetree = CreateTexture("textures/pine_tree.png");
 	GLuint texture_waterplant = CreateTexture("textures/water_plant.png");
+	/* terrain textures */
+	GLuint texture_grass = CreateTexture("textures/grass.jpg");
 	
 	/* Leaves VBOs & VAOs creation */
 	GLuint* l_VBOs = new GLuint[nbLeaves];
@@ -263,10 +266,15 @@ int main(int argc, char** argv){
 	ms.set(P);
 
 	// Recuperation des variables uniformes
+	/* Light */
 	GLint LightVectLocation = glGetUniformLocation(program, "uLightVect");
+	/* Textures */
 	GLint TextureLocation = glGetUniformLocation(program, "uTexture");
+	GLint GrassTexLocation = glGetUniformLocation(program, "uGrassTex");
+	/* Shaders modes */
 	GLint ModeLocation = glGetUniformLocation(program, "uMode");
 	GLint ChoiceLocation = glGetUniformLocation(program, "uChoice");
+	/* Max properties */
 	GLint MaxBendingLocation = glGetUniformLocation(program, "uMaxBending");
 	GLint MaxDrainLocation = glGetUniformLocation(program, "uMaxDrain");
 	GLint MaxSurfaceLocation = glGetUniformLocation(program, "uMaxSurface");
@@ -276,7 +284,10 @@ int main(int argc, char** argv){
 	glUniform1f(MaxDrainLocation, maxCoeffArray[1]);
 	glUniform1f(MaxGradientLocation, maxCoeffArray[2]);
 	glUniform1f(MaxSurfaceLocation, maxCoeffArray[3]);
-
+	
+	// Send terrain textures
+	glUniform1i(GrassTexLocation,0);
+	
 	// Creation Light
 	float coefLight = 0.;
 	glm::vec3 light(glm::cos(coefLight),sin(coefLight),0.f);
@@ -385,14 +396,18 @@ int main(int argc, char** argv){
 							if(currentCam == FREE_FLY){
 								//FRUSTUM CULLING
 								if(ffCam.leavesFrustum(leafArray[idx])){
-									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
+									BindTexture(texture_grass, GL_TEXTURE0);
+										display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
+									BindTexture(0, GL_TEXTURE0);
 									if(displayVegetation){
 										display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
 									}
 									break;
 								}
 							}else{
-								display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
+								BindTexture(texture_grass, GL_TEXTURE0);
+									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
+								BindTexture(0, GL_TEXTURE0);
 								if(displayVegetation){
 									display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
 								}
@@ -403,9 +418,11 @@ int main(int argc, char** argv){
 				}else{
 					/* display the triangularized leaf */
 					glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-					glBindVertexArray(l_VAOs[idx]);
-						glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
-					glBindVertexArray(0);
+					BindTexture(texture_grass, GL_TEXTURE0);
+						glBindVertexArray(l_VAOs[idx]);
+							glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
+						glBindVertexArray(0);
+					BindTexture(0, GL_TEXTURE0);
 				}
 
 				//DISPLAY OF THE COEFFICIENTS

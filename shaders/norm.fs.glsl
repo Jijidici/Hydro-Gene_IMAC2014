@@ -20,6 +20,7 @@ in float gSurface;
 
 uniform vec3 uLightVect = vec3(0.,0.,0.);
 uniform sampler2D uTexture;
+uniform sampler2D uGrassTex;
 uniform int uMode;
 uniform int uChoice;
 uniform float uMaxBending;
@@ -32,7 +33,7 @@ out vec4 fFragColor;
 void main() {
 	if(uMode == TRIANGLES){
 
-		vec3 dColor = vec3(0.8f, 0.8f, 0.85f);
+		vec3 dColor = texture(uGrassTex, gTexCoords).rgb;
 		float ratio;
 
 		if(uChoice == BENDING){

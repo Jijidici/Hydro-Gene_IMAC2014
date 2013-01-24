@@ -30,6 +30,7 @@ void main(){
 		gl_Position = realPosition;
 	}
 	else if(uMode == TRIANGLES){
+		vTexCoords = (position.xz+1)*0.5;
 		vNormal = normal;
 		vBending = bending;
 		vDrain = drain;

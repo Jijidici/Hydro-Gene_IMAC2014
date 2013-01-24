@@ -62,6 +62,7 @@ void main(){
 		}
 		else{
 			for(int i=0; i<gl_in.length(); i++){
+				gTexCoords = vTexCoords[i];
 				gNormal = vNormal[i];
 				gBending = vBending[i];
 				gDrain = vDrain[i];
