@@ -164,19 +164,11 @@ int main(int argc, char** argv){
 	
 	for(uint32_t l_idx=0;l_idx<nbLeaves;++l_idx){
 		//load the vertices
-		//~ std::cout << "l_idx : " << l_idx << std::endl;
-		//~ std::cout << "INDEX : " << leafArray[l_idx].id << std::endl;
-		//~ std::cout << "nbV_lvl1 : " << leafArray[l_idx].nbVertices_lvl1 << std::endl;
-		//~ std::cout << "test0" << std::endl;
 		Vertex* trVertices = new Vertex[leafArray[l_idx].nbVertices_lvl1];
-		//~ std::cout << "test1" << std::endl;
 		test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices); /*******/
-		//~ std::cout << "test2" << std::endl;
 		
 		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]); /*** PROBLEM HERE ***/
-			//~ std::cout << "test3" << std::endl;
 			glBufferData(GL_ARRAY_BUFFER, leafArray[l_idx].nbVertices_lvl1*sizeof(Vertex), trVertices, GL_STATIC_DRAW);
-			//~ std::cout << "test4" << std::endl;
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		
 		glBindVertexArray(l_VAOs[l_idx]);
