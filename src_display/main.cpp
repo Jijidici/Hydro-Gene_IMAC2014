@@ -60,13 +60,13 @@ void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uin
 
 	glUniform1i(ChoiceLocation, VEGET);
 	glUniform1i(TextureLocation,0);
-	BindTexture(texture);
+	BindTexture(texture, GL_TEXTURE0);
 		glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 	
 		glBindVertexArray(meshVAO);
 			glDrawArrays(GL_TRIANGLES, 0, nbVertices);
 		glBindVertexArray(0);
-	BindTexture(0);
+	BindTexture(0, GL_TEXTURE0);
 }
 
 int main(int argc, char** argv){
@@ -201,14 +201,13 @@ int main(int argc, char** argv){
 	test_cache = drn_close(&cache);
 	
 	//Infinite ground creation
-	Vertex groundVertices[6]{
-		createVertex(glm::dvec3(-1., 0, 1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]),
-		createVertex(glm::dvec3(1., 0, 1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]),
-		createVertex(glm::dvec3(1., 0, -1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]),
-		createVertex(glm::dvec3(1., 0, -1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]),
-		createVertex(glm::dvec3(-1., 0, -1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]),
-		createVertex(glm::dvec3(-1., 0, 1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3])
-	};
+	Vertex groundVertices[6];
+	groundVertices[0] = createVertex(glm::dvec3(-1., 0, 1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]);
+	groundVertices[1] = createVertex(glm::dvec3(1., 0, 1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]);
+	groundVertices[2] = createVertex(glm::dvec3(1., 0, -1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]);
+	groundVertices[3] = createVertex(glm::dvec3(1., 0, -1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]);
+	groundVertices[4] = createVertex(glm::dvec3(-1., 0, -1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]);
+	groundVertices[5] = createVertex(glm::dvec3(-1., 0, 1.), glm::dvec3(0., 1., 0.), 0.f, maxCoeffArray[1], 0.f, maxCoeffArray[3]);
 	
 	GLuint groundVBO = 0;
 	glGenBuffers(1, &groundVBO);
@@ -386,7 +385,7 @@ int main(int argc, char** argv){
 								//FRUSTUM CULLING
 								if(ffCam.leavesFrustum(leafArray[idx])){
 									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
-								display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+									display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
 									break;
 								}
 							}else{
@@ -426,11 +425,11 @@ int main(int argc, char** argv){
 			}
 			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 			glUniform1i(TextureLocation,0);
-			BindTexture(texture_sky);
+			BindTexture(texture_sky, GL_TEXTURE0);
 				glBindVertexArray(cubeVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 36);
 				glBindVertexArray(0);
-			BindTexture(0);
+			BindTexture(0, GL_TEXTURE0);
 		ms.pop();
 
 		// Mise à jour de l'affichage

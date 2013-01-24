@@ -158,14 +158,14 @@ GLuint CreateTexture(const char* path){
 	glBindTexture(GL_TEXTURE_2D, texture);
 
     if(image->format->BytesPerPixel == 1){
-			format = GL_RED;
-		}
-		if(image->format->BytesPerPixel == 3){
-			format = GL_RGB;
-		}
-		if(image->format->BytesPerPixel == 4){
-			format = GL_RGBA;
-		}
+		format = GL_RED;
+	}
+	if(image->format->BytesPerPixel == 3){
+		format = GL_RGB;
+	}
+	if(image->format->BytesPerPixel == 4){
+		format = GL_RGBA;
+	}
 
 	glTexImage2D(
 		GL_TEXTURE_2D,
@@ -188,9 +188,9 @@ GLuint CreateTexture(const char* path){
 	return texture;
 }
 
-void BindTexture(GLuint texture){
+void BindTexture(GLuint texture, GLenum unity){
 
-	glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(unity);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
 }
