@@ -382,9 +382,20 @@ int main(int argc, char** argv) {
 	}
 	
 	/* Setting the config data */
-	uint16_t arguments[7];
+	/* Compute the possible number of resolution level on leaves */
+	uint16_t nbLevel = 1;
+	uint16_t tmp_nbSub_lvl1 = nbSub_lvl1;
+	while(tmp_nbSub_lvl1 > 4){
+		tmp_nbSub_lvl1 /= 2;
+		nbLevel++;
+	}
+	
+	std::cout<<"//-> NB possible level : "<<nbLevel<<std::endl;
+	
+	uint16_t arguments[8];
 	arguments[0] = nbSub_lvl1;
 	arguments[1] = nbSub_lvl2;
+	arguments[7] = nbLevel;
 	for(int i = 2; i<7; ++i){
 		arguments[i] = 0;
 	}
@@ -400,7 +411,7 @@ int main(int argc, char** argv) {
 	if(test_cache < 0){ throw std::runtime_error("unable to open data file"); }
 	
 	/* Saving the config data */
-	test_cache = drn_writer_add_chunk(&cache, arguments, 7*sizeof(uint16_t));
+	test_cache = drn_writer_add_chunk(&cache, arguments, 8*sizeof(uint16_t));
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 	
 	/* Saving the maximum data */

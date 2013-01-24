@@ -81,7 +81,7 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Nb chunks :"<<nbChunks<<std::endl;
 
 	/* Getting the config data */
-	uint16_t arguments[7];
+	uint16_t arguments[8];
 		//0 : nbSub_lvl1
 		//1 : nbSub_lvl2
 		//2 : normal
@@ -89,14 +89,17 @@ int main(int argc, char** argv){
 		//4 : drain
 		//5 : gradient
 		//6 : surface
+		//7 : nbLevel
 	
 	test_cache = drn_read_chunk(&cache, 0, arguments);
 
 	uint16_t nbSub_lvl1 = arguments[0];
 	uint16_t nbSub_lvl2 = arguments[1];
+	uint16_t nbLevel = arguments[7];
 	
 	std::cout<<"//-> Nb Subdivision lvl 1 : "<<nbSub_lvl1<<std::endl;
 	std::cout<<"//-> Nb Subdivision lvl 2 : "<<nbSub_lvl2<<std::endl;
+	std::cout<<"//-> Nb possible levels : "<<nbLevel<<std::endl;
 	
 	uint32_t lengthTabVoxel = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
 	
@@ -114,21 +117,6 @@ int main(int argc, char** argv){
 
 	Leaf* leafArray = new Leaf[nbLeaves];
 	test_cache = drn_read_chunk(&cache, nbChunks-1, leafArray);
-	
-	/*************TEST**************/
-	int nbF = 0;
-	
-	for(int i = 0; i < nbLeaves; ++i){
-		std::cout << "id : " << leafArray[i].id << std::endl;
-		//~ std::cout << "nbVertices_lvl2 : " << leafArray[i].nbVertices_lvl2 << std::endl;
-		std::cout << "optimal : " << leafArray[i].optimal.pos.x << " " << leafArray[i].optimal.pos.y << " " << leafArray[i].optimal.pos.z << std::endl;
-		nbF += leafArray[i].nbVertices_lvl2 / 3.;
-	}
-	
-	std::cout << "nbFaces : " << nbF << std::endl;
-	
-	
-	/***********FIN TEST*************/
 	
 	/* Array which know if a leaf grid is loaded or not */
 	bool* loadedLeaf = new bool[nbLeaves];

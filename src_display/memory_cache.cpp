@@ -101,7 +101,7 @@ void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double dis
 	test_cache = drn_close(&cache);
 	if(test_cache <0){ throw std::runtime_error("unable to close data file"); }
 	
-	std::cout<<"//-> Leaf chunks "<<l.id*2+2<<" & "<<l.id*2+3<<" loaded."<<std::endl;
+	//~ std::cout<<"//-> Leaf chunks "<<l.id*2+2<<" & "<<l.id*2+3<<" loaded."<<std::endl;
 }
 
 Chunk freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
