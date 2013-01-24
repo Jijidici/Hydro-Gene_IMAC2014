@@ -115,6 +115,21 @@ int main(int argc, char** argv){
 	Leaf* leafArray = new Leaf[nbLeaves];
 	test_cache = drn_read_chunk(&cache, nbChunks-1, leafArray);
 	
+	/*************TEST**************/
+	int nbF = 0;
+	
+	for(int i = 0; i < nbLeaves; ++i){
+		std::cout << "id : " << leafArray[i].id << std::endl;
+		//~ std::cout << "nbVertices_lvl2 : " << leafArray[i].nbVertices_lvl2 << std::endl;
+		std::cout << "optimal : " << leafArray[i].optimal.pos.x << " " << leafArray[i].optimal.pos.y << " " << leafArray[i].optimal.pos.z << std::endl;
+		nbF += leafArray[i].nbVertices_lvl2 / 3.;
+	}
+	
+	std::cout << "nbFaces : " << nbF << std::endl;
+	
+	
+	/***********FIN TEST*************/
+	
 	/* Array which know if a leaf grid is loaded or not */
 	bool* loadedLeaf = new bool[nbLeaves];
 	for(uint16_t idx=0;idx<nbLeaves;++idx){
@@ -176,11 +191,11 @@ int main(int argc, char** argv){
 	glGenVertexArrays(nbLeaves, l_VAOs);
 	
 	for(uint32_t l_idx=0;l_idx<nbLeaves;++l_idx){
-		//load the vertices		
+		//load the vertices
 		Vertex* trVertices = new Vertex[leafArray[l_idx].nbVertices_lvl1];
-		test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices);
-	
-		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]);
+		test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices); /*******/
+		
+		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]); /*** PROBLEM HERE ***/
 			glBufferData(GL_ARRAY_BUFFER, leafArray[l_idx].nbVertices_lvl1*sizeof(Vertex), trVertices, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		

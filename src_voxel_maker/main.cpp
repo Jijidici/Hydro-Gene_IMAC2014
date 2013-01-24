@@ -357,12 +357,6 @@ int main(int argc, char** argv) {
 		test_lvl2 = test_lvl2/2;
 		++power_lvl2;
 	}
-	
-	std::cout << "-> Number of vertices : " << nbVertice << std::endl;
-	std::cout << "-> Number of faces : " << nbFace << std::endl;
-	std::cout <<"-> Terrain min & max : X[min:"<<terrainMinX<<" | max:"<<terrainMaxX<<"]"<< std::endl;
-	std::cout <<"-> Terrain min & max : Y[min:"<<terrainMinY<<" | max:"<<terrainMaxY<<"]"<< std::endl;
-	std::cout <<"-> Terrain min & max : Z[min:"<<terrainMinZ<<" | max:"<<terrainMaxZ<<"]"<< std::endl;
 
 	if(nbSub_lvl1 == 0){
 		nbSub_lvl1 = 16;
@@ -405,11 +399,13 @@ int main(int argc, char** argv) {
 	double voxelSize = l_size/(double)nbSub_lvl2;
 	
 	size_t const l_voxArrLength = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
-	VoxelData* l_voxelArray = NULL;
-	l_voxelArray = new VoxelData[l_voxArrLength];
-	if(NULL == l_voxelArray){
-		std::cout<<"[!] -> Allocation failure for l_voxelArray"<<std::endl;
-		return EXIT_FAILURE;
+	VoxelData* l_voxelArray[8];
+	for(unsigned int n = 0; n < 8; ++n){
+		l_voxelArray[n] = new VoxelData[l_voxArrLength];
+		if(NULL == l_voxelArray[n]){
+			std::cout<<"[!] -> Allocation failure for l_voxelArray"<<std::endl;
+			return EXIT_FAILURE;
+		}
 	}
 	
 	/* Setting the config data */
@@ -446,61 +442,139 @@ int main(int argc, char** argv) {
 	/* Range approximation for voxelisation */
 	double Rc = voxelSize * APPROXIM_RANGE;
 
-	//For each leaf
-	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
-		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
-			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
-				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
+	//For each group of leaves
+	//~ #pragma omp parallel for
+	for(uint16_t l_j=0;l_j<nbSub_lvl1;l_j+=2){
+		for(uint16_t l_k=0;l_k<nbSub_lvl1;l_k+=2){
+			for(uint16_t l_i=0;l_i<nbSub_lvl1;l_i+=2){
+				uint32_t leafIndex[8];
+				
+				// indexes of the 8 leaves of the group
+				leafIndex[0] = l_i 		+ 	nbSub_lvl1*l_k 		+ 	l_j*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[1] = l_i+1 	+ 	nbSub_lvl1*l_k 		+ 	l_j*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[2] = l_i 		+ 	nbSub_lvl1*(l_k+1) 	+ 	l_j*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[3] = l_i+1 	+ 	nbSub_lvl1*(l_k+1) 	+	l_j*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[4] = l_i 		+ 	nbSub_lvl1*l_k 		+	(l_j+1)*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[5] = l_i+1 	+ 	nbSub_lvl1*l_k		+ 	(l_j+1)*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[6] = l_i 		+ 	nbSub_lvl1*(l_k+1)	+ 	(l_j+1)*nbSub_lvl1*nbSub_lvl1;
+				leafIndex[7] = l_i+1 	+ 	nbSub_lvl1*(l_k+1) 	+ 	(l_j+1)*nbSub_lvl1*nbSub_lvl1;
 				
 				/* Initialize the vertices per leaf vector */
-				std::vector<Vertex> l_storedVertices;
+				std::vector<Vertex> l_storedVertices[8];
 				
-				/* Init leaf voxel array */	
-				for(uint32_t n=0;n<l_voxArrLength;++n){
-					l_voxelArray[n].nbFaces=0;
-					l_voxelArray[n].sumNormal = glm::dvec3(0,0,0);
-					l_voxelArray[n].sumDrain = 0;
-					l_voxelArray[n].sumGradient = 0;
-					l_voxelArray[n].sumSurface = 0;
-					l_voxelArray[n].sumBending = 0;
+				/* Init leaves voxel arrays */
+				for(unsigned int i = 0; i < 8; ++i){
+					for(uint32_t n=0;n<l_voxArrLength;++n){
+						l_voxelArray[i][n].nbFaces=0;
+						l_voxelArray[i][n].sumNormal = glm::dvec3(0,0,0);
+						l_voxelArray[i][n].sumDrain = 0;
+						l_voxelArray[i][n].sumGradient = 0;
+						l_voxelArray[i][n].sumSurface = 0;
+						l_voxelArray[i][n].sumBending = 0;
+					}
 				}
 				
 				/* Fix the current leaf */
-				Leaf currentLeaf;
-				currentLeaf.size = l_size;
-				currentLeaf.pos = glm::dvec3((l_i*l_size)-1., (l_j*l_size)-1., (l_k*l_size)-1.);
-				currentLeaf.nbIntersection = 0;
-				currentLeaf.nbVertices_lvl1 = 0;
-				currentLeaf.nbVertices_lvl2 = 0;
+				for(unsigned int n = 0; n < 8; ++n){
+					leafArray[leafIndex[n]].size = l_size;
+					leafArray[leafIndex[n]].nbIntersection = 0;
+					leafArray[leafIndex[n]].nbVertices_lvl1 = 0;
+					leafArray[leafIndex[n]].nbVertices_lvl2 = 0;
+				}
 				
-				/* Intersection flag to know if a leaf have at least one intersection - if it is not the case, we do not save the leaf */
-				bool is_intersec = false;
+				leafArray[leafIndex[0]].pos = glm::dvec3((l_i*l_size)-1., 		(l_j*l_size)-1., 		(l_k*l_size)-1.);
+				leafArray[leafIndex[1]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	(l_j*l_size)-1., 		(l_k*l_size)-1.);
+				leafArray[leafIndex[2]].pos = glm::dvec3((l_i*l_size)-1., 		(l_j*l_size)-1., 		((l_k+1)*l_size)-1.);
+				leafArray[leafIndex[3]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	(l_j*l_size)-1., 		((l_k+1)*l_size)-1.);
+				leafArray[leafIndex[4]].pos = glm::dvec3((l_i*l_size)-1., 		((l_j+1)*l_size)-1., 	(l_k*l_size)-1.);
+				leafArray[leafIndex[5]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	((l_j+1)*l_size)-1., 	(l_k*l_size)-1.);
+				leafArray[leafIndex[6]].pos = glm::dvec3((l_i*l_size)-1., 		((l_j+1)*l_size)-1., 	((l_k+1)*l_size)-1.);
+				leafArray[leafIndex[7]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	((l_j+1)*l_size)-1., 	((l_k+1)*l_size)-1.);
 				
 				//For each Face
-				//~ #pragma omp parallel for
 				for(uint32_t n=0;n<nbFace;++n){
 					/* Face properties */
 					/* min and max */
-					int minVoxelX = ((getminX(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
-					int maxVoxelX = ((getmaxX(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
-					int minVoxelY = ((getminY(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
-					int maxVoxelY = ((getmaxY(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
-					int minVoxelZ = ((getminZ(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
-					int maxVoxelZ = ((getmaxZ(tabF[n])+1.)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
+					int minVoxelX = ((getminX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
+					int maxVoxelX = ((getmaxX(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_i*nbSub_lvl2;
+					int minVoxelY = ((getminY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
+					int maxVoxelY = ((getmaxY(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_j*nbSub_lvl2;
+					int minVoxelZ = ((getminZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
+					int maxVoxelZ = ((getmaxZ(tabF[n])+1)*0.5)*nbSub_lvl1*nbSub_lvl2 - l_k*nbSub_lvl2;
 					
-					//Test if the triangle is inside the current leaf
-					if(maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
-					   maxVoxelY >= 0 && minVoxelY < nbSub_lvl2 &&
-					   maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){
+					//Test if the triangle is inside the current group of leaves
+					if(maxVoxelX >= 0 && minVoxelX < nbSub_lvl2*2 &&
+					   maxVoxelY >= 0 && minVoxelY < nbSub_lvl2*2 &&
+					   maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2*2){
 					   
-						//case where triangle overlap 2 leaves
-						if(maxVoxelX >= nbSub_lvl2){ maxVoxelX = nbSub_lvl2 - 1; } 
+						//case where triangle overlaps 2 groups
+						if(maxVoxelX >= nbSub_lvl2*2){ maxVoxelX = nbSub_lvl2*2 - 1; } 
 						if(minVoxelX < 0){ minVoxelX = 0; }
-						if(maxVoxelY >= nbSub_lvl2){ maxVoxelY = nbSub_lvl2 - 1; } 
+						if(maxVoxelY >= nbSub_lvl2*2){ maxVoxelY = nbSub_lvl2*2 - 1; } 
 						if(minVoxelY < 0){ minVoxelY = 0; }
-						if(maxVoxelZ >= nbSub_lvl2){ maxVoxelZ = nbSub_lvl2 - 1; } 
+						if(maxVoxelZ >= nbSub_lvl2*2){ maxVoxelZ = nbSub_lvl2*2 - 1; } 
 						if(minVoxelZ < 0){ minVoxelZ = 0; }
 						
+						uint32_t insideLeafIndex = 0;
+						uint32_t insideArrayIndex = 0;
+						
+						/* put triangles in the right leaf */
+						if(	maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
+							maxVoxelY >= 0 && minVoxelY < nbSub_lvl2 &&
+							maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){		// first leaf
+							insideLeafIndex = leafIndex[0];
+							insideArrayIndex = 0;
+						}
+						
+						if(	maxVoxelX >= nbSub_lvl2 && minVoxelX < nbSub_lvl2*2 &&
+							maxVoxelY >= 0 && minVoxelY < nbSub_lvl2 &&
+							maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){
+							insideLeafIndex = leafIndex[1];
+							insideArrayIndex = 1;
+						}
+						
+						if(	maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
+							maxVoxelY >= 0 && minVoxelY < nbSub_lvl2 &&
+							maxVoxelZ >= nbSub_lvl2 && minVoxelZ < nbSub_lvl2*2){
+							insideLeafIndex = leafIndex[2];
+							insideArrayIndex = 2;
+						}
+						
+						if(	maxVoxelX >= nbSub_lvl2 && minVoxelX < nbSub_lvl2*2 &&
+							maxVoxelY >= 0 && minVoxelY < nbSub_lvl2 &&
+							maxVoxelZ >= nbSub_lvl2 && minVoxelZ < nbSub_lvl2*2){
+							insideLeafIndex = leafIndex[3];
+							insideArrayIndex = 3;
+						}
+						
+						if(	maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
+							maxVoxelY >= nbSub_lvl2 && minVoxelY < nbSub_lvl2*2 &&
+							maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){
+							insideLeafIndex = leafIndex[4];
+							insideArrayIndex = 4;
+						}
+						
+						if(	maxVoxelX >= nbSub_lvl2 && minVoxelX < nbSub_lvl2*2 &&
+							maxVoxelY >= nbSub_lvl2 && minVoxelY < nbSub_lvl2*2 &&
+							maxVoxelZ >= 0 && minVoxelZ < nbSub_lvl2){
+							insideLeafIndex = leafIndex[5];
+							insideArrayIndex = 5;
+						}
+						
+						if(	maxVoxelX >= 0 && minVoxelX < nbSub_lvl2 &&
+							maxVoxelY >= nbSub_lvl2 && minVoxelY < nbSub_lvl2*2 &&
+							maxVoxelZ >= nbSub_lvl2 && minVoxelZ < nbSub_lvl2*2){
+							insideLeafIndex = leafIndex[6];
+							insideArrayIndex = 6;
+						}
+						
+						if(	maxVoxelX >= nbSub_lvl2 && minVoxelX < nbSub_lvl2*2 &&
+							maxVoxelY >= nbSub_lvl2 && minVoxelY < nbSub_lvl2*2 &&
+							maxVoxelZ >= nbSub_lvl2 && minVoxelZ < nbSub_lvl2*2){
+							insideLeafIndex = leafIndex[7];
+							insideArrayIndex = 7;
+						}
+							
 						/* Edges */
 						Edge edgS1S2 = createEdge(tabF[n].s1->pos, tabF[n].s2->pos);
 						Edge edgS1S3 = createEdge(tabF[n].s1->pos, tabF[n].s3->pos);
@@ -517,105 +591,125 @@ int main(int argc, char** argv) {
 						Plane e3 = createPlane(tabF[n].s3->pos, tabF[n].s1->pos, tabF[n].s1->pos + tabF[n].normal);
 
 						//For each cube of the face bounding box
-						for(uint16_t k=minVoxelZ; k<=maxVoxelZ; ++k){
-							for(uint16_t j=minVoxelY;j<=maxVoxelY; ++j){
-								for(uint16_t i=minVoxelX;i<=maxVoxelX;++i){
-									// Voxel Properties 
+						for(int J=minVoxelY;J<=maxVoxelY; ++J){	
+							for(int K=minVoxelZ; K<=maxVoxelZ; ++K){
+								for(int I=minVoxelX;I<=maxVoxelX; ++I){
+									int i = I;
+									int k = K;
+									int j = J;
 									
-									Voxel vox = createVoxel(i*voxelSize + currentLeaf.pos.x + voxelSize*0.5, j*voxelSize + currentLeaf.pos.y + voxelSize*0.5, k*voxelSize + currentLeaf.pos.z + voxelSize*0.5, voxelSize);
+									if(i >= nbSub_lvl2){ i -= nbSub_lvl2;}
+									if(j >= nbSub_lvl2){ j -= nbSub_lvl2;}
+									if(k >= nbSub_lvl2){ k -= nbSub_lvl2;}
+									
+									// Voxel Properties 
+									Voxel vox = createVoxel(i*voxelSize + leafArray[insideLeafIndex].pos.x + voxelSize*0.5, j*voxelSize + leafArray[insideLeafIndex].pos.y + voxelSize*0.5, k*voxelSize + leafArray[insideLeafIndex].pos.z + voxelSize*0.5, voxelSize);
+
 									if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
-										is_intersec = true;
-										
 										/* update the voxel array */
-										uint32_t currentIndex = i + nbSub_lvl2*j + k*nbSub_lvl2*nbSub_lvl2;
-										l_voxelArray[currentIndex].nbFaces++;
-										if(normal) 	l_voxelArray[currentIndex].sumNormal = glm::dvec3(l_voxelArray[currentIndex].sumNormal.x + tabF[n].normal.x, l_voxelArray[currentIndex].sumNormal.y + tabF[n].normal.y, l_voxelArray[currentIndex].sumNormal.z + tabF[n].normal.z);
-										if(drain) 	l_voxelArray[currentIndex].sumDrain = l_voxelArray[currentIndex].sumDrain + tabF[n].drain;
-										if(gradient)l_voxelArray[currentIndex].sumGradient = l_voxelArray[currentIndex].sumGradient + tabF[n].gradient;
-										if(surface) l_voxelArray[currentIndex].sumSurface = l_voxelArray[currentIndex].sumSurface + tabF[n].surface;
-										if(bending) l_voxelArray[currentIndex].sumBending = l_voxelArray[currentIndex].sumBending + tabF[n].bending;
+										uint32_t currentIndex = i + nbSub_lvl2*k + j*nbSub_lvl2*nbSub_lvl2;
+										l_voxelArray[insideArrayIndex][currentIndex].nbFaces++;
+										if(normal) 	l_voxelArray[insideArrayIndex][currentIndex].sumNormal = glm::dvec3(l_voxelArray[insideArrayIndex][currentIndex].sumNormal.x + tabF[n].normal.x, l_voxelArray[insideArrayIndex][currentIndex].sumNormal.y + tabF[n].normal.y, l_voxelArray[insideArrayIndex][currentIndex].sumNormal.z + tabF[n].normal.z);
+										if(drain) 	l_voxelArray[insideArrayIndex][currentIndex].sumDrain = l_voxelArray[insideArrayIndex][currentIndex].sumDrain + tabF[n].drain;
+										if(gradient)l_voxelArray[insideArrayIndex][currentIndex].sumGradient = l_voxelArray[insideArrayIndex][currentIndex].sumGradient + tabF[n].gradient;
+										if(surface) l_voxelArray[insideArrayIndex][currentIndex].sumSurface = l_voxelArray[insideArrayIndex][currentIndex].sumSurface + tabF[n].surface;
+										if(bending) l_voxelArray[insideArrayIndex][currentIndex].sumBending = l_voxelArray[insideArrayIndex][currentIndex].sumBending + tabF[n].bending;
 										
 										/* update the leaf info */
-										currentLeaf.nbIntersection++;
+										++leafArray[insideLeafIndex].nbIntersection;
 									}
 								}
 							}
 						}//end foreach voxel
+						
 						/* add the triangle to the chunck */
-						l_storedVertices.push_back(*(tabF[n].s1));
-						l_storedVertices.push_back(*(tabF[n].s2));
-						l_storedVertices.push_back(*(tabF[n].s3));
-						currentLeaf.nbVertices_lvl2+=3;
+						l_storedVertices[insideArrayIndex].push_back(*(tabF[n].s1));
+						l_storedVertices[insideArrayIndex].push_back(*(tabF[n].s2));
+						l_storedVertices[insideArrayIndex].push_back(*(tabF[n].s3));
+						leafArray[insideLeafIndex].nbVertices_lvl2+=3;
 					}
 				}//end foreach face
-
+				
 				/* if the leaf is not empty, save its voxels */
-				if(is_intersec){
-					/*** TRIANGULARISATION HERE ***/					
-					/* compute leaf's corners */
-					glm::dvec3 vert0 = currentLeaf.pos;
-					glm::dvec3 vert1 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z);
-					glm::dvec3 vert2 = glm::dvec3(vert0.x + l_size, vert0.y + l_size, vert0.z);
-					glm::dvec3 vert3 = glm::dvec3(vert0.x, vert0.y + l_size, vert0.z);
-					glm::dvec3 vert4 = glm::dvec3(vert0.x, vert0.y, vert0.z + l_size);
-					glm::dvec3 vert5 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z + l_size);
-					glm::dvec3 vert6 = glm::dvec3(vert0.x + l_size, vert0.y + l_size, vert0.z + l_size);
-					glm::dvec3 vert7 = glm::dvec3(vert0.x, vert0.y + l_size, vert0.z + l_size);
-					
-					/* compute leaf's edges */
-					Edge e0 = createEdge(vert0, vert1);
-					Edge e1 = createEdge(vert1, vert2);
-					Edge e2 = createEdge(vert2, vert3);
-					Edge e3 = createEdge(vert3, vert0);
-					Edge e4 = createEdge(vert4, vert5);
-					Edge e5 = createEdge(vert5, vert6);
-					Edge e6 = createEdge(vert6, vert7);
-					Edge e7 = createEdge(vert7, vert4);
-					Edge e8 = createEdge(vert0, vert4);
-					Edge e9 = createEdge(vert1, vert5);
-					Edge e10 = createEdge(vert2, vert6);
-					Edge e11 = createEdge(vert3, vert7);
-					
-					std::vector<Edge> leafEdges;
-					leafEdges.push_back(e0);
-					leafEdges.push_back(e1);
-					leafEdges.push_back(e2);
-					leafEdges.push_back(e3);
-					leafEdges.push_back(e4);
-					leafEdges.push_back(e5);
-					leafEdges.push_back(e6);
-					leafEdges.push_back(e7);
-					leafEdges.push_back(e8);
-					leafEdges.push_back(e9);
-					leafEdges.push_back(e10);
-					leafEdges.push_back(e11);
-					
-					
-					/* Intersection triangle - edge */
-					/* browse edges */
-					
-					std::vector<Vertex> intersectionPoints;
-					
-					/* average datas of the leaf */
-					glm::dvec3 averageNormal(0., 0., 0.);
-					float averageBending = 0.;
-					float averageDrain = 0.;
-					float averageGradient = 0.;
-					float averageSurface = 0.;
-					
-					std::cout << "---- LEAF ----" << std::endl;
-					for(std::vector<Edge>::iterator e_it = leafEdges.begin(); e_it < leafEdges.end(); ++e_it){
-						std::vector<Vertex> edgeIntPoints;
-						bool edgeIntersected = false;
+				for(unsigned int n = 0; n < 8; ++n){
+					if(leafArray[leafIndex[n]].nbIntersection != 0){ // is_intersect
+						/* Save the VoxelData array */
+						test_cache = drn_writer_add_chunk(&cache, l_voxelArray[n], l_voxArrLength*sizeof(VoxelData));
 						
-						/* browse saved triangles */
-						std::cout << "Edge : " << std::endl; 
-						std::cout << "Origin : " << (*e_it).origin.x << " " << (*e_it).origin.y << " " << (*e_it).origin.z << std::endl;
-						std::cout << "Dir : " << (*e_it).dir.x << " " << (*e_it).dir.y << " " << (*e_it).dir.z << std::endl;
-						for(size_t i = 0; i < l_storedVertices.size(); i += 3){
-							Face tempFace; tempFace.s1 = &l_storedVertices[i]; tempFace.s2 = &l_storedVertices[i+1]; tempFace.s3 = &l_storedVertices[i+2];
-							/*** test intersection edge - tempFace ***/
-								
+						if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
+						
+						/* Save the vertices lvl2 */
+						test_cache = drn_writer_add_chunk(&cache, l_storedVertices[n].data(), leafArray[leafIndex[n]].nbVertices_lvl2*sizeof(Vertex));
+						
+						/* Set Leaf id */
+						leafArray[leafIndex[n]].id = (drn_writer_get_last_chunk_id(&cache)-2)/2;
+						std::cout<<"//-> Leaf Id : "<<leafArray[leafIndex[n]].id<<std::endl;
+						
+						/*** TRIANGULARISATION HERE ***/					
+						/* compute leaf's corners */
+						glm::dvec3 vert0 = leafArray[leafIndex[n]].pos;
+						glm::dvec3 vert1 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z);
+						glm::dvec3 vert2 = glm::dvec3(vert0.x + l_size, vert0.y + l_size, vert0.z);
+						glm::dvec3 vert3 = glm::dvec3(vert0.x, vert0.y + l_size, vert0.z);
+						glm::dvec3 vert4 = glm::dvec3(vert0.x, vert0.y, vert0.z + l_size);
+						glm::dvec3 vert5 = glm::dvec3(vert0.x + l_size, vert0.y, vert0.z + l_size);
+						glm::dvec3 vert6 = glm::dvec3(vert0.x + l_size, vert0.y + l_size, vert0.z + l_size);
+						glm::dvec3 vert7 = glm::dvec3(vert0.x, vert0.y + l_size, vert0.z + l_size);
+						
+						/* compute leaf's edges */
+						Edge e0 = createEdge(vert0, vert1);
+						Edge e1 = createEdge(vert1, vert2);
+						Edge e2 = createEdge(vert2, vert3);
+						Edge e3 = createEdge(vert3, vert0);
+						Edge e4 = createEdge(vert4, vert5);
+						Edge e5 = createEdge(vert5, vert6);
+						Edge e6 = createEdge(vert6, vert7);
+						Edge e7 = createEdge(vert7, vert4);
+						Edge e8 = createEdge(vert0, vert4);
+						Edge e9 = createEdge(vert1, vert5);
+						Edge e10 = createEdge(vert2, vert6);
+						Edge e11 = createEdge(vert3, vert7);
+						
+						std::vector<Edge> leafEdges;
+						leafEdges.push_back(e0);
+						leafEdges.push_back(e1);
+						leafEdges.push_back(e2);
+						leafEdges.push_back(e3);
+						leafEdges.push_back(e4);
+						leafEdges.push_back(e5);
+						leafEdges.push_back(e6);
+						leafEdges.push_back(e7);
+						leafEdges.push_back(e8);
+						leafEdges.push_back(e9);
+						leafEdges.push_back(e10);
+						leafEdges.push_back(e11);
+						
+						
+						/* Intersection triangle - edge */
+						/* browse edges */
+						
+						std::vector<Vertex> intersectionPoints;
+						
+						/* average datas of the leaf */
+						glm::dvec3 averageNormal(0., 0., 0.);
+						float averageBending = 0.;
+						float averageDrain = 0.;
+						float averageGradient = 0.;
+						float averageSurface = 0.;
+						
+						//~ std::cout << "---- LEAF ----" << std::endl;
+						for(std::vector<Edge>::iterator e_it = leafEdges.begin(); e_it < leafEdges.end(); ++e_it){
+							std::vector<Vertex> edgeIntPoints;
+							bool edgeIntersected = false;
+							
+							/* browse saved triangles */
+							//~ std::cout << "Edge : " << std::endl; 
+							//~ std::cout << "Origin : " << (*e_it).origin.x << " " << (*e_it).origin.y << " " << (*e_it).origin.z << std::endl;
+							//~ std::cout << "Dir : " << (*e_it).dir.x << " " << (*e_it).dir.y << " " << (*e_it).dir.z << std::endl;
+							for(size_t i = 0; i < l_storedVertices[n].size(); i += 3){
+								Face tempFace; tempFace.s1 = &l_storedVertices[n][i]; tempFace.s2 = &l_storedVertices[n][i+1]; tempFace.s3 = &l_storedVertices[n][i+2];
+								/*** test intersection edge - tempFace ***/
+									
 								glm::dvec3 u = createVector(tempFace.s1->pos, tempFace.s2->pos);
 								glm::dvec3 v = createVector(tempFace.s1->pos, tempFace.s3->pos);
 								
@@ -630,8 +724,6 @@ int main(int argc, char** argv) {
 								/* intersection point */								
 								glm::dvec3 intPoint;
 								if((*e_it).computeIntersectionPoint(u, v, tempFace.s1->pos, intPoint)){
-									std::cout << "Intersection Point : " << intPoint.x << " " << intPoint.y << " " << intPoint.z << std::endl;
-									
 									Vertex intVertex;
 									intVertex.pos = intPoint;
 									intVertex.normal = normale;
@@ -640,122 +732,107 @@ int main(int argc, char** argv) {
 									
 									edgeIntersected = true;
 								}
-						}
-						
-						averageNormal /= l_storedVertices.size();
-						averageBending /= l_storedVertices.size();
-						averageDrain /= l_storedVertices.size();
-						averageGradient /= l_storedVertices.size();
-						averageSurface /= l_storedVertices.size();
-						
-						if(edgeIntersected){
-							/* average of the faces intersecting the edge */
-							Vertex averageVertex;
-							
-							glm::dvec3 averagePos(0.,0.,0.);
-							glm::dvec3 averageNorm(0.,0.,0.);
-
-							for(unsigned int i = 0; i < edgeIntPoints.size(); ++i){
-								averagePos += edgeIntPoints[i].pos;
-								averageNorm += edgeIntPoints[i].normal;
 							}
 							
-							averagePos /= edgeIntPoints.size();
-							averageNorm /= edgeIntPoints.size();
-							std::cout << "average Pos : " << averagePos.x << " " << averagePos.y << " " << averagePos.z << std::endl;
-							std::cout << "average Norm : " << averageNorm.x << " " << averageNorm.y << " " << averageNorm.z << std::endl;
+							averageNormal /= l_storedVertices[n].size();
+							averageBending /= l_storedVertices[n].size();
+							averageDrain /= l_storedVertices[n].size();
+							averageGradient /= l_storedVertices[n].size();
+							averageSurface /= l_storedVertices[n].size();
+							
+							if(edgeIntersected){
+								/* average of the faces intersecting the edge */
+								Vertex averageVertex;
+								
+								glm::dvec3 averagePos(0.,0.,0.);
+								glm::dvec3 averageNorm(0.,0.,0.);
 
-							averageVertex.pos = averagePos;
-							averageVertex.normal = averageNorm;
+								for(unsigned int i = 0; i < edgeIntPoints.size(); ++i){
+									averagePos += edgeIntPoints[i].pos;
+									averageNorm += edgeIntPoints[i].normal;
+								}
+								
+								averagePos /= edgeIntPoints.size();
+								averageNorm /= edgeIntPoints.size();
+								//~ std::cout << "average Pos : " << averagePos.x << " " << averagePos.y << " " << averagePos.z << std::endl;
+								//~ std::cout << "average Norm : " << averageNorm.x << " " << averageNorm.y << " " << averageNorm.z << std::endl;
+
+								averageVertex.pos = averagePos;
+								averageVertex.normal = averageNorm;
+								
+								/* add the average intersection point to the vector */
+								intersectionPoints.push_back(averageVertex);
+							}
+						}
+						
+						if(intersectionPoints.size() != 0){
+						
+							/* "mass-point" */
+							glm::dvec3 massPoint(0., 0., 0.);
+							for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
+								massPoint += intersectionPoints[i].pos;
+							}
+							massPoint /= intersectionPoints.size();
 							
-							/* add the average intersection point to the vector */
-							intersectionPoints.push_back(averageVertex);
+							/* Compute the "optimalPoint" (Eigen) */
+							Eigen::MatrixXd MatA = Eigen::MatrixXd::Zero(intersectionPoints.size(), 3);
+							Eigen::VectorXd VecB = Eigen::VectorXd::Zero(intersectionPoints.size());
+							
+							for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
+								MatA(i, 0) = intersectionPoints[i].normal.x;
+								MatA(i, 1) = intersectionPoints[i].normal.y;
+								MatA(i, 2) = intersectionPoints[i].normal.z;
+								
+								VecB(i) = (double)glm::dot(intersectionPoints[i].pos - massPoint, intersectionPoints[i].normal);
+							}
+							
+							Eigen::JacobiSVD<Eigen::MatrixXd> MatSVD(MatA, Eigen::ComputeThinU | Eigen::ComputeThinV);
+							Eigen::VectorXd eigenOptimalPoint = MatSVD.solve(VecB);
+							
+							glm::dvec3 dvec_optimalPoint(eigenOptimalPoint(0), eigenOptimalPoint(1), eigenOptimalPoint(2));
+							dvec_optimalPoint += massPoint;
+							
+							Vertex optimalPoint;
+							optimalPoint.pos = dvec_optimalPoint;
+							optimalPoint.normal = averageNormal;
+							optimalPoint.bending = averageBending;
+							optimalPoint.drain = averageDrain;
+							optimalPoint.gradient = averageGradient;
+							optimalPoint.surface = averageSurface;
+							
+							//~ std::cout << std::endl << "optimal point : " << optimalPoint.pos.x << " " << optimalPoint.pos.y << " " << optimalPoint.pos.z << std::endl;
+							
+							//cap the average Point
+							if(optimalPoint.pos.x < leafArray[leafIndex[n]].pos.x){ optimalPoint.pos.x = leafArray[leafIndex[n]].pos.x; }
+							if(optimalPoint.pos.y < leafArray[leafIndex[n]].pos.y){ optimalPoint.pos.y = leafArray[leafIndex[n]].pos.y; }
+							if(optimalPoint.pos.z < leafArray[leafIndex[n]].pos.z){ optimalPoint.pos.z = leafArray[leafIndex[n]].pos.z; }
+							if(optimalPoint.pos.x > leafArray[leafIndex[n]].pos.x + l_size){ optimalPoint.pos.x = leafArray[leafIndex[n]].pos.x + l_size; }
+							if(optimalPoint.pos.y > leafArray[leafIndex[n]].pos.y + l_size){ optimalPoint.pos.y = leafArray[leafIndex[n]].pos.y + l_size; }
+							if(optimalPoint.pos.z > leafArray[leafIndex[n]].pos.z + l_size){ optimalPoint.pos.z = leafArray[leafIndex[n]].pos.z + l_size; }
+							leafArray[leafIndex[n]].optimal = optimalPoint;
+
+							//~ std::cout << std::endl << "average point : " << optimalPoint.pos.x << " " << optimalPoint.pos.y << " " << optimalPoint.pos.z << std::endl;
+							
+						}else{
+							//~ std::cout << std::endl << "--- No edge intersection ---" << std::endl;
+							glm::dvec3 dvec_optimalPoint((leafArray[leafIndex[n]].pos.x + l_size)/2., (leafArray[leafIndex[n]].pos.y + l_size)/2., (leafArray[leafIndex[n]].pos.z + l_size)/2.);
+							
+							Vertex optimalPoint;
+							optimalPoint.pos = dvec_optimalPoint;
+							optimalPoint.normal = averageNormal;
+							optimalPoint.bending = averageBending;
+							optimalPoint.drain = averageDrain;
+							optimalPoint.gradient = averageGradient;
+							optimalPoint.surface = averageSurface;
+							
+							leafArray[leafIndex[n]].optimal = optimalPoint;
+							//~ std::cout << std::endl << "average point : " << optimalPoint.pos.x << " " << optimalPoint.pos.y << " " << optimalPoint.pos.z << std::endl;
 						}
 					}
-					
-					if(intersectionPoints.size() != 0){
-					
-						/* "mass-point" */
-						glm::dvec3 massPoint(0., 0., 0.);
-						for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
-							massPoint += intersectionPoints[i].pos;
-						}
-						massPoint /= intersectionPoints.size();
-						
-						//~ std::cout << std::endl << "mass point : " << massPoint.x << " " << massPoint.y << " " << massPoint.z << std::endl;
-						
-						/* Compute the "optimalPoint" (Eigen) */
-						Eigen::MatrixXd MatA = Eigen::MatrixXd::Zero(intersectionPoints.size(), 3);
-						Eigen::VectorXd VecB = Eigen::VectorXd::Zero(intersectionPoints.size());
-						
-						for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
-							MatA(i, 0) = intersectionPoints[i].normal.x;
-							MatA(i, 1) = intersectionPoints[i].normal.y;
-							MatA(i, 2) = intersectionPoints[i].normal.z;
-							
-							VecB(i) = (double)glm::dot(intersectionPoints[i].pos - massPoint, intersectionPoints[i].normal);
-						}
-						
-						//~ std::cout << "MatA : " << std::endl << MatA << std::endl;
-						//~ std::cout << "VecB : " << std::endl << VecB << std::endl;
-						
-						Eigen::JacobiSVD<Eigen::MatrixXd> MatSVD(MatA, Eigen::ComputeThinU | Eigen::ComputeThinV);
-						Eigen::VectorXd eigenOptimalPoint = MatSVD.solve(VecB);
-						
-						glm::dvec3 dvec_optimalPoint(eigenOptimalPoint(0), eigenOptimalPoint(1), eigenOptimalPoint(2));
-						dvec_optimalPoint += massPoint;
-						
-						Vertex optimalPoint;
-						optimalPoint.pos = dvec_optimalPoint;
-						optimalPoint.normal = averageNormal;
-						optimalPoint.bending = averageBending;
-						optimalPoint.drain = averageDrain;
-						optimalPoint.gradient = averageGradient;
-						optimalPoint.surface = averageSurface;
-						
-						std::cout << std::endl << "optimal point : " << optimalPoint.pos.x << " " << optimalPoint.pos.y << " " << optimalPoint.pos.z << std::endl;
-						
-						//cap the average Point
-						if(optimalPoint.pos.x < currentLeaf.pos.x){ optimalPoint.pos.x = currentLeaf.pos.x; }
-						if(optimalPoint.pos.y < currentLeaf.pos.y){ optimalPoint.pos.y = currentLeaf.pos.y; }
-						if(optimalPoint.pos.z < currentLeaf.pos.z){ optimalPoint.pos.z = currentLeaf.pos.z; }
-						if(optimalPoint.pos.x > currentLeaf.pos.x + l_size){ optimalPoint.pos.x = currentLeaf.pos.x + l_size; }
-						if(optimalPoint.pos.y > currentLeaf.pos.y + l_size){ optimalPoint.pos.y = currentLeaf.pos.y + l_size; }
-						if(optimalPoint.pos.z > currentLeaf.pos.z + l_size){ optimalPoint.pos.z = currentLeaf.pos.z + l_size; }
-						currentLeaf.optimal = optimalPoint;						
-					}else{
-						std::cout << std::endl << "--- No edge intersection ---" << std::endl;
-						glm::dvec3 dvec_optimalPoint((currentLeaf.pos.x + l_size)/2., (currentLeaf.pos.y + l_size)/2., (currentLeaf.pos.z + l_size)/2.);
-						
-						Vertex optimalPoint;
-						optimalPoint.pos = dvec_optimalPoint;
-						optimalPoint.normal = averageNormal;
-						optimalPoint.bending = averageBending;
-						optimalPoint.drain = averageDrain;
-						optimalPoint.gradient = averageGradient;
-						optimalPoint.surface = averageSurface;
-						
-						currentLeaf.optimal = optimalPoint;
-						std::cout << std::endl << "optimal point : " << optimalPoint.pos.x << " " << optimalPoint.pos.y << " " << optimalPoint.pos.z << std::endl;
-					}
-					
-					/* Save the VoxelData array */
-					test_cache = drn_writer_add_chunk(&cache, l_voxelArray, l_voxArrLength*sizeof(VoxelData));
-					if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
-					
-					/* Save the vertices lvl2 */
-					test_cache = drn_writer_add_chunk(&cache, l_storedVertices.data(), currentLeaf.nbVertices_lvl2*sizeof(Vertex));
-					
-					/* Set Leaf id */
-					currentLeaf.id = (drn_writer_get_last_chunk_id(&cache)-2)/2;
-					std::cout<<"//-> Leaf Id : "<<currentLeaf.id<<std::endl;
-					
-					/* updade the Leaf indexation */
-					leafArray[currentLeafIndex] = currentLeaf;
 				}
-			}
-		}
-	}//end foreach leaf
+			} //end
+		} // 	foreach
+	} // 		leaf
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
 	
 	/* Build the triangles */
@@ -763,17 +840,17 @@ int main(int argc, char** argv) {
 	std::vector< std::vector<Vertex> > l_computedVertices((drn_writer_get_last_chunk_id(&cache)-1)/2);
 	std::cout<<"// computed vertices vector size : "<<l_computedVertices.size()<<std::endl;
 
-	for(uint16_t l_i=0;l_i<nbSub_lvl1-1;++l_i){
-		for(uint16_t l_j=0;l_j<nbSub_lvl1-1;++l_j){
-			for(uint16_t l_k=0;l_k<nbSub_lvl1-1;++l_k){			
-				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
+	for(uint16_t l_j=0;l_j<nbSub_lvl1-1;++l_j){
+		for(uint16_t l_k=0;l_k<nbSub_lvl1-1;++l_k){			
+			for(uint16_t l_i=0;l_i<nbSub_lvl1-1;++l_i){
+				uint32_t currentLeafIndex = 	l_i 		+ nbSub_lvl1*l_k 		+ l_j*nbSub_lvl1*nbSub_lvl1;
 				
-				uint32_t rightLeaf = (l_i+1) + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
-				uint32_t diagonalRightLeaf = (l_i+1) + nbSub_lvl1*l_j + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
-				uint32_t frontLeaf = l_i + nbSub_lvl1*l_j + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
-				uint32_t topRightLeaf = (l_i+1) + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
-				uint32_t topLeaf = l_i + nbSub_lvl1*(l_j+1) + l_k*nbSub_lvl1*nbSub_lvl1;
-				uint32_t topFrontLeaf = l_i + nbSub_lvl1*(l_j+1) + (l_k+1)*nbSub_lvl1*nbSub_lvl1;
+				uint32_t rightLeaf = 			(l_i+1) 	+ nbSub_lvl1*l_k 		+ l_j*nbSub_lvl1*nbSub_lvl1;
+				uint32_t diagonalRightLeaf = 	(l_i+1) 	+ nbSub_lvl1*(l_k+1) 	+ l_j*nbSub_lvl1*nbSub_lvl1;
+				uint32_t frontLeaf = 			l_i 		+ nbSub_lvl1*(l_k+1) 	+ l_j*nbSub_lvl1*nbSub_lvl1;
+				uint32_t topRightLeaf = 		(l_i+1) 	+ nbSub_lvl1*l_k 		+ (l_j+1)*nbSub_lvl1*nbSub_lvl1;
+				uint32_t topLeaf = 				l_i 		+ nbSub_lvl1*l_k 		+ (l_j+1)*nbSub_lvl1*nbSub_lvl1;
+				uint32_t topFrontLeaf = 		l_i 		+ nbSub_lvl1*(l_k+1) 	+ (l_j+1)*nbSub_lvl1*nbSub_lvl1;
 				if(leafArray[currentLeafIndex].nbIntersection != 0){
 					Vertex vx1;
 					Vertex vx2;
@@ -877,19 +954,27 @@ int main(int argc, char** argv) {
 		}
 	}
 	
-	/* Save the computed triangle */
-	for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
-		for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
-			for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){			
-				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_j + l_k*nbSub_lvl1*nbSub_lvl1;
+	/* Save the computed triangle */	
+	for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
+		for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
+			for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
+				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_k + l_j*nbSub_lvl1*nbSub_lvl1;
+				//~ std::cout << "index : " << currentLeafIndex << std::endl;
 				if(leafArray[currentLeafIndex].nbIntersection != 0){
 					std::cout<<"//-> NB Vertices saved in leaf : "<<l_computedVertices[leafArray[currentLeafIndex].id].size()<<std::endl;
-					test_cache = drn_writer_add_chunk(&cache, l_computedVertices[leafArray[currentLeafIndex].id].data(), l_computedVertices[leafArray[currentLeafIndex].id].size()*sizeof(Vertex));
 					leafArray[currentLeafIndex].nbVertices_lvl1 = l_computedVertices[leafArray[currentLeafIndex].id].size();
 					l_queue.push_back(leafArray[currentLeafIndex]);
 				}
 			}
 		}
+	}
+	
+	//~ sort the leaves by chunk_id
+	std::cout << std::endl;
+	std::sort(l_queue.begin(), l_queue.end(), l_queue.front());
+	
+	for(unsigned int n = 0; n < l_queue.size(); ++n){
+		test_cache = drn_writer_add_chunk(&cache, l_computedVertices[l_queue[n].id].data(), l_computedVertices[l_queue[n].id].size()*sizeof(Vertex));
 	}
 	
 	std::cout << "Number of leaves saved : "<< l_queue.size() << std::endl;
@@ -903,7 +988,9 @@ int main(int argc, char** argv) {
 
 	delete[] tabV;
 	delete[] tabF;
-	delete[] l_voxelArray;
+	for(unsigned int n = 0; n < 8; ++n){
+		delete[] l_voxelArray[n];
+	}
 	delete[] leafArray;
 	delete[] maxCoeffArray;
 
