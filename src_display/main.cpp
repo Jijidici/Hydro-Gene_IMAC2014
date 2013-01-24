@@ -321,6 +321,7 @@ int main(int argc, char** argv){
 	bool displayBending = false;
 	bool displaySurface = false;
 	bool displayGradient = false;
+	bool displayVegetation = true;
 	float thresholdDistance = 0.5f;
 
 	/* ************************************************************* */
@@ -385,12 +386,16 @@ int main(int argc, char** argv){
 								//FRUSTUM CULLING
 								if(ffCam.leavesFrustum(leafArray[idx])){
 									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
-									display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+									if(displayVegetation){
+										display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+									}
 									break;
 								}
 							}else{
 								display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
-								display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+								if(displayVegetation){
+									display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+								}
 								break;
 							}
 						}
@@ -542,6 +547,14 @@ int main(int argc, char** argv){
 							
 						case SDLK_DOWN:
 							thresholdDistance -= 0.1f;
+							break;
+						
+						case SDLK_v:
+							if(displayVegetation){
+								displayVegetation=false;
+							}else{
+								displayVegetation=true;							
+							}
 							break;
 						
 						default:
