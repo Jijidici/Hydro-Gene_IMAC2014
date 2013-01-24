@@ -24,10 +24,10 @@ uniform sampler2D uGrassTex;
 uniform sampler2D uWaterTex;
 uniform int uMode;
 uniform int uChoice;
-uniform float uMaxBending;
-uniform float uMaxDrain;
-uniform float uMaxGradient;
-uniform float uMaxSurface;
+uniform float uMaxBending = 0;
+uniform float uMaxDrain = 0;
+uniform float uMaxGradient = 0;
+uniform float uMaxSurface = 0;
 
 out vec4 fFragColor;
 
@@ -35,17 +35,20 @@ void main() {
 	if(uMode == TRIANGLES){
 	
 		/* ratios */
-		float ratioDrain = gDrain/uMaxDrain;
-		vec3 dColor = (1.-ratioDrain)*texture(uGrassTex, gTexCoords).rgb + ratioDrain*texture(uWaterTex, gTexCoords).rgb;
-		
 		float ratio;
+		if(uMaxDrain == 0){
+			ratio = 0;
+		}else{
+			ratio = gDrain/uMaxDrain;
+		}
+		vec3 dColor = (1.-ratio)*texture(uGrassTex, gTexCoords).rgb + ratio*texture(uWaterTex, gTexCoords).rgb;
 
 		if(uChoice == BENDING){
 			ratio = gBending/uMaxBending;
 			dColor = vec3(1.f - ratio, ratio, 1.f - ratio);
 		}
 		else if(uChoice == DRAIN){
-			dColor = vec3(1.f - ratioDrain, 1.f - ratioDrain, ratioDrain);
+			dColor = vec3(1.f - ratio, 1.f - ratio, ratio);
 		}
 		else if(uChoice == GRADIENT){
 			ratio = gGradient/uMaxGradient;
