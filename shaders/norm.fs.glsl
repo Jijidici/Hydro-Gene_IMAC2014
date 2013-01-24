@@ -29,6 +29,7 @@ uniform float uMaxBending = 0;
 uniform float uMaxDrain = 0;
 uniform float uMaxGradient = 0;
 uniform float uMaxSurface = 0;
+uniform float uMaxAltitude = 0;
 
 out vec4 fFragColor;
 

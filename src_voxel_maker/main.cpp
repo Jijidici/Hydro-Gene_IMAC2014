@@ -245,8 +245,8 @@ int main(int argc, char** argv) {
 	Vertex * tabV = new Vertex[nbVertice];
 
 	//Max values
-	float *maxCoeffArray = new float[4];
-	for(int n = 0; n<4; ++n){
+	float *maxCoeffArray = new float[5];
+	for(int n = 0; n<5; ++n){
 		maxCoeffArray[n] = 0;
 	}
 	
@@ -281,6 +281,7 @@ int main(int argc, char** argv) {
 		if(tabV[n].pos.z < terrainMinZ){ terrainMinZ = tabV[n].pos.z; }
 		if(tabV[n].pos.x > terrainMaxX){ terrainMaxX = tabV[n].pos.x; }
 		if(tabV[n].pos.y > terrainMaxY){ terrainMaxY = tabV[n].pos.y; }
+		maxCoeffArray[4] = terrainMaxY;
 		if(tabV[n].pos.z > terrainMaxZ){ terrainMaxZ = tabV[n].pos.z; }
 	}
 
@@ -426,7 +427,7 @@ int main(int argc, char** argv) {
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 	
 	/* Saving the maximum data */
-	test_cache = drn_writer_add_chunk(&cache, maxCoeffArray, 4*sizeof(float));
+	test_cache = drn_writer_add_chunk(&cache, maxCoeffArray, 5*sizeof(float));
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 		
 	/* Initialize the Leaves vector */

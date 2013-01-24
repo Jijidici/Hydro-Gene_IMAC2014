@@ -104,7 +104,7 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
 	
 	/* Getting the maximum hydro properties coefficients */
-	float * maxCoeffArray = new float[4];
+	float * maxCoeffArray = new float[5];
 	test_cache = drn_read_chunk(&cache, 1, maxCoeffArray);
 
 	/* Getting the leaf chunk (last chunk) */
@@ -281,13 +281,15 @@ int main(int argc, char** argv){
 	/* Max properties */
 	GLint MaxBendingLocation = glGetUniformLocation(program, "uMaxBending");
 	GLint MaxDrainLocation = glGetUniformLocation(program, "uMaxDrain");
-	GLint MaxSurfaceLocation = glGetUniformLocation(program, "uMaxSurface");
 	GLint MaxGradientLocation = glGetUniformLocation(program, "uMaxGradient");
+	GLint MaxSurfaceLocation = glGetUniformLocation(program, "uMaxSurface");
+	GLint MaxAltitudeLocation = glGetUniformLocation(program, "uMaxAltitude");
 
 	glUniform1f(MaxBendingLocation, maxCoeffArray[0]);	
 	glUniform1f(MaxDrainLocation, maxCoeffArray[1]);
 	glUniform1f(MaxGradientLocation, maxCoeffArray[2]);
 	glUniform1f(MaxSurfaceLocation, maxCoeffArray[3]);
+	glUniform1f(MaxAltitudeLocation, maxCoeffArray[4]);
 	
 	// Send terrain textures
 	glUniform1i(GrassTexLocation,0);
