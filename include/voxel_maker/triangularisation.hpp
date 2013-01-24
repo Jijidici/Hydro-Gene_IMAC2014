@@ -16,4 +16,7 @@ Vertex computeOptimalPoint(Leaf& l, std::vector<Vertex>& l_storedVertices);
 /* Solve system with SVD */
 glm::dvec3 useSVD(std::vector<Vertex>& vertices);
 
+/* Build Triangularized triangle */
+void buildTriangles(std::vector< std::vector<Vertex> >& l_computedVertices, Leaf* leafArray, uint32_t nbSub);
+
 #endif

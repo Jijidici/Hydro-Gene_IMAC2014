@@ -231,3 +231,120 @@ glm::dvec3 useSVD(std::vector<Vertex>& vertices){
 	
 	return dvec_optimalPoint;
 }
+
+/* Build Triangularized triangle */
+void buildTriangles(std::vector< std::vector<Vertex> >& l_computedVertices, Leaf* leafArray, uint32_t nbSub){
+	for(uint16_t l_j=0;l_j<nbSub-1;++l_j){
+		for(uint16_t l_k=0;l_k<nbSub-1;++l_k){			
+			for(uint16_t l_i=0;l_i<nbSub-1;++l_i){
+				uint32_t currentLeafIndex = 	l_i 		+ nbSub*l_k 		+ l_j*nbSub*nbSub;
+				
+				uint32_t rightLeaf = 			(l_i+1) 	+ nbSub*l_k 		+ l_j*nbSub*nbSub;
+				uint32_t diagonalRightLeaf = 	(l_i+1) 	+ nbSub*(l_k+1) 	+ l_j*nbSub*nbSub;
+				uint32_t frontLeaf = 			l_i 		+ nbSub*(l_k+1) 	+ l_j*nbSub*nbSub;
+				uint32_t topRightLeaf = 		(l_i+1) 	+ nbSub*l_k 		+ (l_j+1)*nbSub*nbSub;
+				uint32_t topLeaf = 				l_i 		+ nbSub*l_k 		+ (l_j+1)*nbSub*nbSub;
+				uint32_t topFrontLeaf = 		l_i 		+ nbSub*(l_k+1) 	+ (l_j+1)*nbSub*nbSub;
+				if(leafArray[currentLeafIndex].nbIntersection != 0){
+					Vertex vx1;
+					Vertex vx2;
+					Vertex vx3;
+					
+					//corner edge
+					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[diagonalRightLeaf].nbIntersection != 0)&&(leafArray[frontLeaf].nbIntersection != 0)){
+						vx1 = leafArray[currentLeafIndex].optimal;
+						vx2 = leafArray[rightLeaf].optimal;
+						vx3 = leafArray[diagonalRightLeaf].optimal;
+						
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx3);
+
+
+						vx1 = leafArray[currentLeafIndex].optimal;
+						vx2 = leafArray[diagonalRightLeaf].optimal;
+						vx3 = leafArray[frontLeaf].optimal;
+						
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[diagonalRightLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx3);
+					}
+					//right edge
+					if((leafArray[rightLeaf].nbIntersection != 0)&&(leafArray[topRightLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)){
+						vx1 = leafArray[currentLeafIndex].optimal;
+						vx2 = leafArray[rightLeaf].optimal;
+						vx3 = leafArray[topRightLeaf].optimal;
+						
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[rightLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx3);
+
+
+						vx1 = leafArray[currentLeafIndex].optimal;
+						vx2 = leafArray[topRightLeaf].optimal;
+						vx3 = leafArray[topLeaf].optimal;
+						
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topRightLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx3);
+					}
+					//front edge
+					if((leafArray[frontLeaf].nbIntersection != 0)&&(leafArray[topLeaf].nbIntersection != 0)&&(leafArray[topFrontLeaf].nbIntersection != 0)){
+						vx1 = leafArray[currentLeafIndex].optimal;
+						vx2 = leafArray[frontLeaf].optimal;
+						vx3 = leafArray[topFrontLeaf].optimal;
+						
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[frontLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx3);
+
+
+						vx1 = leafArray[currentLeafIndex].optimal;
+						vx2 = leafArray[topFrontLeaf].optimal;
+						vx3 = leafArray[topLeaf].optimal;
+						
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx1);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx2);
+						l_computedVertices[leafArray[currentLeafIndex].id].push_back(vx3);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topFrontLeaf].id].push_back(vx3);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx1);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx2);
+						l_computedVertices[leafArray[topLeaf].id].push_back(vx3);
+					}
+				}
+			}
+		}
+	}
+}
