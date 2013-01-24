@@ -104,7 +104,7 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
 	
 	/* Getting the maximum hydro properties coefficients */
-	float * maxCoeffArray = new float[5];
+	float * maxCoeffArray = new float[6];
 	test_cache = drn_read_chunk(&cache, 1, maxCoeffArray);
 
 	/* Getting the leaf chunk (last chunk) */
@@ -373,6 +373,7 @@ int main(int argc, char** argv){
 			}else if(currentCam == TRACK_BALL){
 				ms.mult(tbCam.getViewMatrix());
 			}
+			ms.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
 			ms.scale(glm::vec3(100.f, 100.f, 100.f));
 			glUniform1i(ChoiceLocation, NORMAL);
 			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
