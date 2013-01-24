@@ -13,6 +13,7 @@ in float vBending[];
 in float vDrain[];
 in float vGradient[];
 in float vSurface[];
+in float vAltitude[];
 
 uniform mat4 uMVPMatrix = mat4(1.f);
 uniform int uMode;
@@ -24,6 +25,7 @@ out float gBending;
 out float gDrain;
 out float gGradient;
 out float gSurface;
+out float gAltitude;
 
 void main(){	
 	if(uMode == SKYBOX){
@@ -68,6 +70,7 @@ void main(){
 				gDrain = vDrain[i];
 				gGradient = vGradient[i];
 				gSurface = vSurface[i];
+				gAltitude = vAltitude[i];
 				gl_Position = gl_in[i].gl_Position;
 		 	  EmitVertex();
 

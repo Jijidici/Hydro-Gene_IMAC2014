@@ -166,6 +166,7 @@ int main(int argc, char** argv){
 	GLuint texture_grass = CreateTexture("textures/grass.jpg");
 	GLuint texture_water = CreateTexture("textures/water.png");
 	GLuint texture_stone = CreateTexture("textures/stone.jpg");
+	GLuint texture_snow = CreateTexture("textures/snow.jpg");
 	
 	/* Leaves VBOs & VAOs creation */
 	GLuint* l_VBOs = new GLuint[nbLeaves];
@@ -275,6 +276,7 @@ int main(int argc, char** argv){
 	GLint GrassTexLocation = glGetUniformLocation(program, "uGrassTex");
 	GLint WaterTexLocation = glGetUniformLocation(program, "uWaterTex");
 	GLint StoneTexLocation = glGetUniformLocation(program, "uStoneTex");
+	GLint SnowTexLocation = glGetUniformLocation(program, "uSnowTex");
 	/* Shaders modes */
 	GLint ModeLocation = glGetUniformLocation(program, "uMode");
 	GLint ChoiceLocation = glGetUniformLocation(program, "uChoice");
@@ -295,6 +297,7 @@ int main(int argc, char** argv){
 	glUniform1i(GrassTexLocation,0);
 	glUniform1i(WaterTexLocation, 1);
 	glUniform1i(StoneTexLocation, 2);
+	glUniform1i(SnowTexLocation, 3);
 	
 	// Creation Light
 	float coefLight = 0.;
@@ -411,7 +414,9 @@ int main(int argc, char** argv){
 									BindTexture(texture_grass, GL_TEXTURE0);
 									BindTexture(texture_water, GL_TEXTURE1);
 									BindTexture(texture_stone, GL_TEXTURE2);
+									BindTexture(texture_snow, GL_TEXTURE3);
 										display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
+									BindTexture(0, GL_TEXTURE3);
 									BindTexture(0, GL_TEXTURE2);
 									BindTexture(0, GL_TEXTURE1);
 									BindTexture(0, GL_TEXTURE0);
@@ -424,7 +429,9 @@ int main(int argc, char** argv){
 								BindTexture(texture_grass, GL_TEXTURE0);
 								BindTexture(texture_water, GL_TEXTURE1);
 								BindTexture(texture_stone, GL_TEXTURE2);
+								BindTexture(texture_snow, GL_TEXTURE3);
 									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
+								BindTexture(0, GL_TEXTURE3);
 								BindTexture(0, GL_TEXTURE2);
 								BindTexture(0, GL_TEXTURE1);
 								BindTexture(0, GL_TEXTURE0);
@@ -441,9 +448,11 @@ int main(int argc, char** argv){
 					BindTexture(texture_grass, GL_TEXTURE0);
 					BindTexture(texture_water, GL_TEXTURE1);
 					BindTexture(texture_stone, GL_TEXTURE2);
+					BindTexture(texture_snow, GL_TEXTURE3);
 						glBindVertexArray(l_VAOs[idx]);
 							glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
 						glBindVertexArray(0);
+					BindTexture(0, GL_TEXTURE3);
 					BindTexture(0, GL_TEXTURE2);
 					BindTexture(0, GL_TEXTURE1);
 					BindTexture(0, GL_TEXTURE0);

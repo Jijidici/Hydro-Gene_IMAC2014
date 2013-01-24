@@ -17,12 +17,14 @@ in float gBending;
 in float gDrain;
 in float gGradient;
 in float gSurface;
+in float gAltitude;
 
 uniform vec3 uLightVect = vec3(0.,0.,0.);
 uniform sampler2D uTexture;
 uniform sampler2D uGrassTex;
 uniform sampler2D uWaterTex;
 uniform sampler2D uStoneTex;
+uniform sampler2D uSnowTex;
 uniform int uMode;
 uniform int uChoice;
 uniform float uMaxBending = 0;
@@ -45,10 +47,18 @@ void main() {
 		if(uMaxGradient == 0){	ratioGradient = 0;}
 		else{ratioGradient = gGradient/uMaxGradient;}
 		
+		float ratioAltitude;
+		if(uMaxAltitude == 0){	ratioAltitude = 0;}
+		else{ratioAltitude = gAltitude/uMaxAltitude;}
+		
 		float coefWater = min(10*ratioDrain, 1.);
+		float coefSnow = min((1.-coefWater)*pow(ratioAltitude,3), 1.-coefWater);
 		float coefStone = min((1.-coefWater)*ratioGradient, 1.-coefWater);
-		float coefGrass = 1.- coefWater - coefStone;
-		vec3 dColor = coefWater*texture(uWaterTex, gTexCoords).rgb + coefStone*texture(uStoneTex, gTexCoords).rgb + coefGrass*texture(uGrassTex, gTexCoords).rgb;
+		float coefGrass = 1.- coefWater - coefStone - coefSnow;
+		vec3 dColor = coefWater*texture(uWaterTex, gTexCoords).rgb;
+		dColor += coefStone*texture(uStoneTex, gTexCoords).rgb;
+		dColor += coefSnow*texture(uSnowTex, gTexCoords).rgb;
+		dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
 		
 		float ratio;
 		if(uChoice == BENDING){

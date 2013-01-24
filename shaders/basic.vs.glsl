@@ -14,12 +14,14 @@ layout(location = 6) in float surface;
 uniform mat4 uMVPMatrix = mat4(1.f);
 uniform int uMode;
 
+out vec3 vPos;
 out vec3 vNormal;
 out vec2 vTexCoords;
 out float vBending;
 out float vDrain;
 out float vGradient;
 out float vSurface;
+out float vAltitude;
 
 void main(){
 
@@ -36,6 +38,7 @@ void main(){
 		vDrain = drain;
 		vGradient = gradient;
 		vSurface = surface;
+		vAltitude = position.y;
 		gl_Position = uMVPMatrix * vec4(position, 1.f);
 	}
 }
