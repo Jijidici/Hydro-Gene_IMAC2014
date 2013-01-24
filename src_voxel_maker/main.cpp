@@ -185,7 +185,9 @@ int main(int argc, char** argv) {
 	//lecture du nombre de vertex et de faces, puis affichage ds la console
 	uint32_t nbVertice = 0, nbFace = 0;	
 	test_fic = fread(&nbVertice, sizeof(nbVertice), 1, dataFile);
+	if(test_fic == 0){ throw std::runtime_error("unable to read the original data file"); }
 	test_fic =fread(&nbFace, sizeof(nbFace), 1, dataFile);
+	if(test_fic == 0){ throw std::runtime_error("unable to read the original data file"); }
 
 	// terrain minimal and maximum
 	double terrainMinX = 1.;
@@ -197,9 +199,11 @@ int main(int argc, char** argv) {
 	
 	double * positionsData = new double[3*nbVertice];
 	test_fic = fread(positionsData, sizeof(double), 3*nbVertice, dataFile); // to read the positions of the vertices
+	if(test_fic == 0){ throw std::runtime_error("unable to read the original data file"); }
 	
 	uint32_t * facesData = new uint32_t[3*nbFace];
 	test_fic = fread(facesData, sizeof(uint32_t), 3*nbFace, dataFile); // to read the indexes of the vertices which compose each face
+	if(test_fic == 0){ throw std::runtime_error("unable to read the original data file"); }
 	
 	fclose(dataFile);
 	
@@ -213,6 +217,7 @@ int main(int argc, char** argv) {
 
 	double * normalData = new double[3*nbFace+3*nbVertice];
 	test_fic = fread(normalData, sizeof(double), 3*nbFace+3*nbVertice, normalFile);
+	if(test_fic == 0){ throw std::runtime_error("unable to read the original data file"); }
 	
 	fclose(normalFile);
 	
@@ -232,7 +237,9 @@ int main(int argc, char** argv) {
 
 		for(uint32_t n=0;n<nbVertice+nbFace;++n){
 			test_fic = fread(&(drainData[n]), sizeof(int), 1, page4File);
+			if(test_fic == 0){ throw std::runtime_error("unable to read the original data file"); }
 			test_fic = fread(&(otherData[3*n]), sizeof(double), 3, page4File);
+			if(test_fic == 0){ throw std::runtime_error("unable to read the original data file"); }
 		}
 		
 		fclose(page4File);

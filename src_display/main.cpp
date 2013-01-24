@@ -306,6 +306,7 @@ int main(int argc, char** argv){
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
+	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4], 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize);
 
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
@@ -314,8 +315,6 @@ int main(int argc, char** argv){
 	size_t currentMemCache = initMemory(memory, leafArray, loadedLeaf, nbLeaves, nbSub_lvl2,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
 	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
 	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
-	
-	hydrogene::FreeFlyCamera ffCam(nearDistance, farDistance, verticalFieldOfView, leafSize);
 
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);

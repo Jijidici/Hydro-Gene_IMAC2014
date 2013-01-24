@@ -7,7 +7,7 @@
 namespace hydrogene{
 
 // --> DEFAULT CONSTRUCTOR
-TrackBallCamera::TrackBallCamera() : m_fDistance(5), m_fAngleX(0), m_fAngleY(0){
+TrackBallCamera::TrackBallCamera() : m_fDistance(5), m_fAngleX(60), m_fAngleY(0){
 }
 
 void TrackBallCamera::moveFront(float distance){

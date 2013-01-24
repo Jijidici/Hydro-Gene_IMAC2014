@@ -39,7 +39,7 @@ class FreeFlyCamera{
 		glm::vec3 m_frustumLeftPlaneNormal;
 	
 	
-		FreeFlyCamera(float nearDistance, float farDistance, float verticalFieldOfView, double leafSize);
+		FreeFlyCamera(glm::vec3 position, float nearDistance, float farDistance, float verticalFieldOfView, double leafSize);
 		//~ FreeFlyCamera();
 		void moveLeft(float const t);
 		void moveFront(float const t);
