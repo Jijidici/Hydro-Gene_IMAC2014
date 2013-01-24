@@ -161,34 +161,8 @@ Vertex computeOptimalPoint(Leaf& l, std::vector<Vertex>& l_storedVertices){
 	}
 	
 	if(intersectionPoints.size() != 0){
-	
-		/* "mass-point" */
-		glm::dvec3 massPoint(0., 0., 0.);
-		for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
-			massPoint += intersectionPoints[i].pos;
-		}
-		massPoint /= intersectionPoints.size();
-		
-		/* Compute the "optimalPoint" (Eigen) */
-		Eigen::MatrixXd MatA = Eigen::MatrixXd::Zero(intersectionPoints.size(), 3);
-		Eigen::VectorXd VecB = Eigen::VectorXd::Zero(intersectionPoints.size());
-		
-		for(unsigned int i = 0; i < intersectionPoints.size(); ++i){
-			MatA(i, 0) = intersectionPoints[i].normal.x;
-			MatA(i, 1) = intersectionPoints[i].normal.y;
-			MatA(i, 2) = intersectionPoints[i].normal.z;
-			
-			VecB(i) = (double)glm::dot(intersectionPoints[i].pos - massPoint, intersectionPoints[i].normal);
-		}
-		
-		Eigen::JacobiSVD<Eigen::MatrixXd> MatSVD(MatA, Eigen::ComputeThinU | Eigen::ComputeThinV);
-		Eigen::VectorXd eigenOptimalPoint = MatSVD.solve(VecB);
-		
-		glm::dvec3 dvec_optimalPoint(eigenOptimalPoint(0), eigenOptimalPoint(1), eigenOptimalPoint(2));
-		dvec_optimalPoint += massPoint;
-		
 		Vertex optimalPoint;
-		optimalPoint.pos = dvec_optimalPoint;
+		optimalPoint.pos = useSVD(intersectionPoints);
 		optimalPoint.normal = averageNormal;
 		optimalPoint.bending = averageBending;
 		optimalPoint.drain = averageDrain;
@@ -225,4 +199,35 @@ Vertex computeOptimalPoint(Leaf& l, std::vector<Vertex>& l_storedVertices){
 		//~ std::cout << std::endl << "average point : " << optimalPoint.pos.x << " " << optimalPoint.pos.y << " " << optimalPoint.pos.z << std::endl;
 	}
 	return createVertex(glm::dvec3(0., 0., 0.), glm::dvec3(0., 0., 0.), 0.f, 0.f, 0.f, 0.f);
+}
+
+
+/* Solve system with SVD */
+glm::dvec3 useSVD(std::vector<Vertex>& vertices){
+	/* "mass-point" */
+	glm::dvec3 massPoint(0., 0., 0.);
+	for(uint32_t i = 0; i < vertices.size(); ++i){
+		massPoint += vertices[i].pos;
+	}
+	massPoint /= vertices.size();
+	
+	/* Compute the "optimalPoint" (Eigen) */
+	Eigen::MatrixXd MatA = Eigen::MatrixXd::Zero(vertices.size(), 3);
+	Eigen::VectorXd VecB = Eigen::VectorXd::Zero(vertices.size());
+	
+	for(uint32_t i = 0; i < vertices.size(); ++i){
+		MatA(i, 0) = vertices[i].normal.x;
+		MatA(i, 1) = vertices[i].normal.y;
+		MatA(i, 2) = vertices[i].normal.z;
+		
+		VecB(i) = (double)glm::dot(vertices[i].pos - massPoint, vertices[i].normal);
+	}
+	
+	Eigen::JacobiSVD<Eigen::MatrixXd> MatSVD(MatA, Eigen::ComputeThinU | Eigen::ComputeThinV);
+	Eigen::VectorXd eigenOptimalPoint = MatSVD.solve(VecB);
+	
+	glm::dvec3 dvec_optimalPoint(eigenOptimalPoint(0), eigenOptimalPoint(1), eigenOptimalPoint(2));
+	dvec_optimalPoint += massPoint;
+	
+	return dvec_optimalPoint;
 }

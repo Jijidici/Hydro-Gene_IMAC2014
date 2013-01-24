@@ -13,4 +13,7 @@ glm::dvec3 triangleCubefaceIntersection(glm::dvec3 optimal_current, glm::dvec3 o
 /* Compute optimal point */
 Vertex computeOptimalPoint(Leaf& l, std::vector<Vertex>& l_storedVertices);
 
+/* Solve system with SVD */
+glm::dvec3 useSVD(std::vector<Vertex>& vertices);
+
 #endif
