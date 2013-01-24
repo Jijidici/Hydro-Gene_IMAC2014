@@ -29,6 +29,10 @@ typedef struct s_leaf{
 	Vertex optimal;
 
 	s_leaf() : id(0), pos(glm::dvec3(-1.f, -1.f, -1.f)), size(-1), nbIntersection(0), nbVertices_lvl1(0), nbVertices_lvl2(0){ }
+	
+	bool operator()(const s_leaf l1, const s_leaf l2){
+		return l1.id < l2.id;
+	}
 }Leaf;
 
 typedef struct s_chunk{

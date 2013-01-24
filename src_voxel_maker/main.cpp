@@ -350,11 +350,11 @@ int main(int argc, char** argv) {
 		++power_lvl2;
 	}
 	
-	std::cout << "-> Number of vertices : " << nbVertice << std::endl;
-	std::cout << "-> Number of faces : " << nbFace << std::endl;
-	std::cout <<"-> Terrain min & max : X[min:"<<terrainMinX<<" | max:"<<terrainMaxX<<"]"<< std::endl;
-	std::cout <<"-> Terrain min & max : Y[min:"<<terrainMinY<<" | max:"<<terrainMaxY<<"]"<< std::endl;
-	std::cout <<"-> Terrain min & max : Z[min:"<<terrainMinZ<<" | max:"<<terrainMaxZ<<"]"<< std::endl;
+	//~ std::cout << "-> Number of vertices : " << nbVertice << std::endl;
+	//~ std::cout << "-> Number of faces : " << nbFace << std::endl;
+	//~ std::cout <<"-> Terrain min & max : X[min:"<<terrainMinX<<" | max:"<<terrainMaxX<<"]"<< std::endl;
+	//~ std::cout <<"-> Terrain min & max : Y[min:"<<terrainMinY<<" | max:"<<terrainMaxY<<"]"<< std::endl;
+	//~ std::cout <<"-> Terrain min & max : Z[min:"<<terrainMinZ<<" | max:"<<terrainMaxZ<<"]"<< std::endl;
 
 	if(nbSub_lvl1 == 0){
 		nbSub_lvl1 = 16;
@@ -441,12 +441,13 @@ int main(int argc, char** argv) {
 	double Rc = voxelSize * APPROXIM_RANGE;
 
 	//For each group of leaves
+	//~ #pragma omp parallel for
 	for(uint16_t l_j=0;l_j<nbSub_lvl1;l_j+=2){
 		for(uint16_t l_k=0;l_k<nbSub_lvl1;l_k+=2){
 			for(uint16_t l_i=0;l_i<nbSub_lvl1;l_i+=2){
 				uint32_t leafIndex[8];
 				
-				std::cout << "---TEST---" << std::endl;
+				//~ std::cout << "---TEST---" << std::endl;
 				
 				// indexes of the 8 leaves of the group
 				leafIndex[0] = l_i 		+ 	nbSub_lvl1*l_k 		+ 	l_j*nbSub_lvl1*nbSub_lvl1;
@@ -494,9 +495,9 @@ int main(int argc, char** argv) {
 				leafArray[leafIndex[6]].pos = glm::dvec3((l_i*l_size)-1., 		((l_j+1)*l_size)-1., 	((l_k+1)*l_size)-1.);
 				leafArray[leafIndex[7]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	((l_j+1)*l_size)-1., 	((l_k+1)*l_size)-1.);
 				
-				for(int n = 0; n < 8; ++n){
-					std::cout << "pos : " << leafArray[leafIndex[n]].pos.x << " " << leafArray[leafIndex[n]].pos.y << " " << leafArray[leafIndex[n]].pos.z << std::endl;
-				}
+				//~ for(int n = 0; n < 8; ++n){
+					//~ std::cout << "pos : " << leafArray[leafIndex[n]].pos.x << " " << leafArray[leafIndex[n]].pos.y << " " << leafArray[leafIndex[n]].pos.z << std::endl;
+				//~ }
 				
 				/* Intersection flag to know if a leaf have at least one intersection - if it is not the case, we do not save the leaf */
 				bool is_intersec = false;
@@ -682,10 +683,10 @@ int main(int argc, char** argv) {
 				/* if the leaf is not empty, save its voxels */
 				for(unsigned int n = 0; n < 8; ++n){
 					if(leafArray[leafIndex[n]].nbIntersection != 0){ // is_intersect
-						std::cout << "INDEX : " << leafIndex[n] << std::endl;
-						std::cout << "nbInt : " << leafArray[n].nbIntersection << std::endl;
-						std::cout << "nbVert : " << leafArray[n].nbVertices_lvl2 << std::endl;
-						
+						//~ std::cout << "INDEX : " << leafIndex[n] << std::endl;
+						//~ std::cout << "nbInt : " << leafArray[n].nbIntersection << std::endl;
+						//~ std::cout << "nbVert : " << leafArray[n].nbVertices_lvl2 << std::endl;
+						//~ 
 						/* Save the VoxelData array */
 						test_cache = drn_writer_add_chunk(&cache, l_voxelArray[n], l_voxArrLength*sizeof(VoxelData));
 						
@@ -756,9 +757,9 @@ int main(int argc, char** argv) {
 							bool edgeIntersected = false;
 							
 							/* browse saved triangles */
-							std::cout << "Edge : " << std::endl; 
-							std::cout << "Origin : " << (*e_it).origin.x << " " << (*e_it).origin.y << " " << (*e_it).origin.z << std::endl;
-							std::cout << "Dir : " << (*e_it).dir.x << " " << (*e_it).dir.y << " " << (*e_it).dir.z << std::endl;
+							//~ std::cout << "Edge : " << std::endl; 
+							//~ std::cout << "Origin : " << (*e_it).origin.x << " " << (*e_it).origin.y << " " << (*e_it).origin.z << std::endl;
+							//~ std::cout << "Dir : " << (*e_it).dir.x << " " << (*e_it).dir.y << " " << (*e_it).dir.z << std::endl;
 							for(size_t i = 0; i < l_storedVertices[n].size(); i += 3){
 								Face tempFace; tempFace.s1 = &l_storedVertices[n][i]; tempFace.s2 = &l_storedVertices[n][i+1]; tempFace.s3 = &l_storedVertices[n][i+2];
 								/*** test intersection edge - tempFace ***/
@@ -1015,12 +1016,26 @@ int main(int argc, char** argv) {
 				std::cout << "index : " << currentLeafIndex << std::endl;
 				if(leafArray[currentLeafIndex].nbIntersection != 0){
 					std::cout<<"//-> NB Vertices saved in leaf : "<<l_computedVertices[leafArray[currentLeafIndex].id].size()<<std::endl;
-					test_cache = drn_writer_add_chunk(&cache, l_computedVertices[leafArray[currentLeafIndex].id].data(), l_computedVertices[leafArray[currentLeafIndex].id].size()*sizeof(Vertex));
 					leafArray[currentLeafIndex].nbVertices_lvl1 = l_computedVertices[leafArray[currentLeafIndex].id].size();
 					l_queue.push_back(leafArray[currentLeafIndex]);
 				}
 			}
 		}
+	}
+	
+	//~ std::cout << "---test---" << std::endl;
+	//~ 
+	//~ for(unsigned int n = 0; n < l_queue.size(); ++n){
+		//~ std::cout << "id : " << l_queue[n].id << std::endl;
+	//~ }
+	std::cout << std::endl;
+	std::sort(l_queue.begin(), l_queue.end(), l_queue.front());
+	//~ for(unsigned int n = 0; n < l_queue.size(); ++n){
+		//~ std::cout << "id : " << l_queue[n].id << std::endl;
+	//~ }
+	
+	for(unsigned int n = 0; n < l_queue.size(); ++n){
+		test_cache = drn_writer_add_chunk(&cache, l_computedVertices[l_queue[n].id].data(), l_computedVertices[l_queue[n].id].size()*sizeof(Vertex));
 	}
 	
 	std::cout << "Number of leaves saved : "<< l_queue.size() << std::endl;
