@@ -17,6 +17,8 @@
 
 static const double APPROXIM_RANGE = sqrt(3)/2;
 static const size_t GRID_3D_SIZE = 2;
+static const size_t LEAF_STEP = 2;
+static const size_t NB_LEAVES_IN_GROUP = LEAF_STEP*LEAF_STEP*LEAF_STEP;
 
 glm::dvec3 triangleCubefaceIntersection(glm::dvec3 optimal_current, glm::dvec3 optimal_compared, uint16_t face, glm::dvec3 position_current, double leafSize){
 
@@ -344,6 +346,7 @@ int main(int argc, char** argv) {
 	}
 	//END LOADING DATA
 	
+	/* Manage demanded levels of subdivision */
 	uint16_t test_lvl1 = nbSub_lvl1;
 	uint16_t test_lvl2 = nbSub_lvl2;
 	uint16_t power_lvl1 = 0;
@@ -358,8 +361,8 @@ int main(int argc, char** argv) {
 		++power_lvl2;
 	}
 
-	if(nbSub_lvl1 == 0){
-		nbSub_lvl1 = 16;
+	if(nbSub_lvl1 < LEAF_STEP){
+		nbSub_lvl1 = LEAF_STEP;
 		std::cout << "[!] -> nbSub_lvl1 = 0, Number of subdivisions initialized to 16" << std::endl;
 	}else{
 		uint16_t nbLow = pow(2,power_lvl1);
@@ -399,8 +402,8 @@ int main(int argc, char** argv) {
 	double voxelSize = l_size/(double)nbSub_lvl2;
 	
 	size_t const l_voxArrLength = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
-	VoxelData* l_voxelArray[8];
-	for(unsigned int n = 0; n < 8; ++n){
+	VoxelData* l_voxelArray[NB_LEAVES_IN_GROUP];
+	for(unsigned int n = 0; n < NB_LEAVES_IN_GROUP; ++n){
 		l_voxelArray[n] = new VoxelData[l_voxArrLength];
 		if(NULL == l_voxelArray[n]){
 			std::cout<<"[!] -> Allocation failure for l_voxelArray"<<std::endl;
@@ -444,10 +447,10 @@ int main(int argc, char** argv) {
 
 	//For each group of leaves
 	//~ #pragma omp parallel for
-	for(uint16_t l_j=0;l_j<nbSub_lvl1;l_j+=2){
-		for(uint16_t l_k=0;l_k<nbSub_lvl1;l_k+=2){
-			for(uint16_t l_i=0;l_i<nbSub_lvl1;l_i+=2){
-				uint32_t leafIndex[8];
+	for(uint16_t l_j=0;l_j<nbSub_lvl1;l_j+=LEAF_STEP){
+		for(uint16_t l_k=0;l_k<nbSub_lvl1;l_k+=LEAF_STEP){
+			for(uint16_t l_i=0;l_i<nbSub_lvl1;l_i+=LEAF_STEP){
+				uint32_t leafIndex[NB_LEAVES_IN_GROUP];
 				
 				// indexes of the 8 leaves of the group
 				leafIndex[0] = l_i 		+ 	nbSub_lvl1*l_k 		+ 	l_j*nbSub_lvl1*nbSub_lvl1;
@@ -460,10 +463,10 @@ int main(int argc, char** argv) {
 				leafIndex[7] = l_i+1 	+ 	nbSub_lvl1*(l_k+1) 	+ 	(l_j+1)*nbSub_lvl1*nbSub_lvl1;
 				
 				/* Initialize the vertices per leaf vector */
-				std::vector<Vertex> l_storedVertices[8];
+				std::vector<Vertex> l_storedVertices[NB_LEAVES_IN_GROUP];
 				
 				/* Init leaves voxel arrays */
-				for(unsigned int i = 0; i < 8; ++i){
+				for(unsigned int i = 0; i < NB_LEAVES_IN_GROUP; ++i){
 					for(uint32_t n=0;n<l_voxArrLength;++n){
 						l_voxelArray[i][n].nbFaces=0;
 						l_voxelArray[i][n].sumNormal = glm::dvec3(0,0,0);
@@ -475,7 +478,7 @@ int main(int argc, char** argv) {
 				}
 				
 				/* Fix the current leaf */
-				for(unsigned int n = 0; n < 8; ++n){
+				for(unsigned int n = 0; n < NB_LEAVES_IN_GROUP; ++n){
 					leafArray[leafIndex[n]].size = l_size;
 					leafArray[leafIndex[n]].nbIntersection = 0;
 					leafArray[leafIndex[n]].nbVertices_lvl1 = 0;
@@ -631,7 +634,7 @@ int main(int argc, char** argv) {
 				}//end foreach face
 				
 				/* if the leaf is not empty, save its voxels */
-				for(unsigned int n = 0; n < 8; ++n){
+				for(unsigned int n = 0; n < NB_LEAVES_IN_GROUP; ++n){
 					if(leafArray[leafIndex[n]].nbIntersection != 0){ // is_intersect
 						/* Save the VoxelData array */
 						test_cache = drn_writer_add_chunk(&cache, l_voxelArray[n], l_voxArrLength*sizeof(VoxelData));
@@ -954,7 +957,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	
-	/* Save the computed triangle */	
+	/* Fill the leaves queue */
 	for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
 		for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
 			for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
@@ -973,6 +976,7 @@ int main(int argc, char** argv) {
 	std::cout << std::endl;
 	std::sort(l_queue.begin(), l_queue.end(), l_queue.front());
 	
+	/* Save the computed triangle */	
 	for(unsigned int n = 0; n < l_queue.size(); ++n){
 		test_cache = drn_writer_add_chunk(&cache, l_computedVertices[l_queue[n].id].data(), l_computedVertices[l_queue[n].id].size()*sizeof(Vertex));
 	}
