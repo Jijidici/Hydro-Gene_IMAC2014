@@ -645,11 +645,32 @@ int main(int argc, char** argv) {
 	} // 		leaf
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
 	
-	/* Build the triangles */
+	
+	// BUILD THE TRIANGLES
+	
+	/* Set the computed vertices to the upper leafArrays */
+	for(uint32_t lvl=1;lvl<nbLevel;++lvl){
+		uint16_t crt_nbSub = nbSub_lvl1 / pow(2, int(lvl));
+		/* Fill the other LeafArray */
+		for(uint16_t l_i=0;l_i<crt_nbSub;++l_i){
+			for(uint16_t l_j=0;l_j<crt_nbSub;++l_j){
+				for(uint16_t l_k=0;l_k<crt_nbSub;++l_k){
+					uint32_t crt_l = l_i + crt_nbSub*l_k + l_j*crt_nbSub*crt_nbSub;
+					
+					double l_size = leafArrays[lvl-1][crt_l].size*2;
+					leafArrays[lvl][crt_l].size = l_size;
+					leafArrays[lvl][crt_l].pos = glm::dvec3(l_i*l_size -1., l_j*l_size -1., l_k*l_size -1.);
+				}
+			}
+		}
+	}
+	
+	/* Create queue of leaves */
 	std::vector<Leaf> l_queue;
+	
 	std::vector< std::vector<Vertex> > l_computedVertices((drn_writer_get_last_chunk_id(&cache)-1)/2);
 	std::cout<<"// computed vertices vector size : "<<l_computedVertices.size()<<std::endl;
-
+	
 	buildTriangles(l_computedVertices, leafArrays[0], nbSub_lvl1);
 	
 	/* Fill the leaves queue */
@@ -657,7 +678,6 @@ int main(int argc, char** argv) {
 		for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
 			for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
 				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_k + l_j*nbSub_lvl1*nbSub_lvl1;
-				//~ std::cout << "index : " << currentLeafIndex << std::endl;
 				if(leafArrays[0][currentLeafIndex].nbIntersection != 0){
 					std::cout<<"//-> NB Vertices saved in leaf : "<<l_computedVertices[leafArrays[0][currentLeafIndex].id].size()<<std::endl;
 					leafArrays[0][currentLeafIndex].nbVertices_lvl1 = l_computedVertices[leafArrays[0][currentLeafIndex].id].size();
@@ -667,7 +687,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	
-	//~ sort the leaves by chunk_id
+	//sort the leaves by chunk_id
 	std::cout << std::endl;
 	std::sort(l_queue.begin(), l_queue.end(), l_queue.front());
 	
@@ -680,6 +700,7 @@ int main(int argc, char** argv) {
 
 	/* writing the Leaf chunck */
 	test_cache = drn_writer_add_chunk(&cache, l_queue.data(), l_queue.size()*sizeof(Leaf));
+	
 
 	/* Close the DATA file */
 	test_cache = drn_close_writer(&cache);
