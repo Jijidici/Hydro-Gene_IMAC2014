@@ -19,7 +19,8 @@ in float gGradient;
 in float gSurface;
 in float gAltitude;
 
-uniform vec3 uLightVect = vec3(0.,0.,0.);
+uniform vec3 uLightSunVect = vec3(0.,0.,0.);
+uniform vec3 uLightMoonVect = vec3(0.,0.,0.);
 uniform sampler2D uTexture;
 uniform sampler2D uGrassTex;
 uniform sampler2D uWaterTex;
@@ -28,6 +29,7 @@ uniform sampler2D uSnowTex;
 uniform sampler2D uSandTex;
 uniform int uMode;
 uniform int uChoice;
+uniform float uTime;
 uniform float uMaxBending = 0;
 uniform float uMaxDrain = 0;
 uniform float uMaxGradient = 0;
@@ -69,26 +71,36 @@ void main() {
 		dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
 		dColor += coefSand*texture(uSandTex, gTexCoords).rgb;
 		
+		vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
+		vec3 dColorMoon = dColor + vec3(0.f,0.f,0.25f);
+		
+		float dCoeffSun = max(0, dot(normalize(gNormal), -normalize(uLightSunVect)));
+		float dCoeffMoon = max(0, dot(normalize(gNormal), -normalize(uLightMoonVect)));
+		dCoeffSun *= 0.7;
+		dCoeffMoon *= 0.2;
+
+		vec3 aColor = vec3(0.1f, 0.1f, 0.1f);
+		vec3 color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon);
+		
 		float ratio;
 		if(uChoice == BENDING){
 			ratio = gBending/uMaxBending;
 			dColor = vec3(1.f - ratio, ratio, 1.f - ratio);
+			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeffSun + dColor*dCoeffMoon);
 		}
 		else if(uChoice == DRAIN){
 			dColor = vec3(1.f - ratioDrain, 1.f - ratioDrain, ratioDrain);
+			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeffSun + dColor*dCoeffMoon);
 		}
 		else if(uChoice == GRADIENT){
 			dColor = vec3(ratioGradient, 1.f - ratioGradient, 1.f - ratioGradient);
+			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeffSun + dColor*dCoeffMoon);
 		}
 		else if(uChoice == SURFACE){
 			ratio = gSurface/uMaxSurface;
 			dColor = vec3(0.5f - ratio, ratio, 0.5f - ratio);
+			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeffSun + dColor*dCoeffMoon);
 		}
-	
-		float dCoeff = max(0, dot(normalize(gNormal), -normalize(uLightVect)));
-
-		vec3 aColor = vec3(0.1f, 0.1f, 0.1f);
-		vec3 color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeff);
 		
 		fFragColor = vec4(color, 1.f);
 
@@ -103,5 +115,6 @@ void main() {
 	}
 	else if(uMode == SKYBOX){
 		fFragColor = texture(uTexture, gTexCoords);
+		fFragColor += vec4(0.5f*abs(uTime),0.f,0.25f*(1.-abs(uTime)),0.f);
 	}
 }

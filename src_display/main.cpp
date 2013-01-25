@@ -44,18 +44,6 @@ static const size_t BYTES_PER_PIXEL = 32;
 
 static const size_t GRID_3D_SIZE = 2;
 
-void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersectionLocation, GLint &NormSumLocation, GLint &LightVectLocation){
-	glUseProgram(program);
-	
-	// Creation des Matrices
-	MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
-	
-	// Recuperation des variables uniformes
-	NbIntersectionLocation = glGetUniformLocation(program, "uNbIntersection");
-	NormSumLocation = glGetUniformLocation(program, "uNormSum");
-	LightVectLocation = glGetUniformLocation(program, "uLightVect");
-}
-
 void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLint ChoiceLocation, GLint TextureLocation, GLuint texture){
 
 	glUniform1i(ChoiceLocation, VEGET);
@@ -129,8 +117,8 @@ int main(int argc, char** argv){
 	// Initialisation de la SDL
 	SDL_Init(SDL_INIT_VIDEO);
 
-  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 	// Creation de la fenêtre et d'un contexte OpenGL
 	SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, BYTES_PER_PIXEL, SDL_OPENGL);
@@ -143,7 +131,7 @@ int main(int argc, char** argv){
 	}
 	
 	/* *********************************** */
-	/* ****** CREATION DES FORMES ******** */trello
+	/* ****** CREATION DES FORMES ******** */
 	/* *********************************** */
 	
 	/* Differents cube size */
@@ -272,7 +260,9 @@ int main(int argc, char** argv){
 
 	// Recuperation des variables uniformes
 	/* Light */
-	GLint LightVectLocation = glGetUniformLocation(program, "uLightVect");
+	GLint LightSunVectLocation = glGetUniformLocation(program, "uLightSunVect");
+	GLint LightMoonVectLocation = glGetUniformLocation(program, "uLightMoonVect");
+	GLint TimeLocation = glGetUniformLocation(program, "uTime");
 	/* Textures */
 	GLint TextureLocation = glGetUniformLocation(program, "uTexture");
 	GLint GrassTexLocation = glGetUniformLocation(program, "uGrassTex");
@@ -305,7 +295,10 @@ int main(int argc, char** argv){
 	
 	// Creation Light
 	float coefLight = 0.;
-	glm::vec3 light(glm::cos(coefLight),sin(coefLight),0.f);
+	glm::vec3 lightSun(glm::cos(coefLight),glm::sin(coefLight),0.f);
+	glm::vec3 lightMoon(0.f,glm::sin(coefLight-2.5),glm::cos(coefLight-2.5));
+	float time = -1.;
+	float timeStep = 1./720.;
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -369,7 +362,9 @@ int main(int argc, char** argv){
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		glUniform1i(ModeLocation, TRIANGLES);
-		glUniform3fv(LightVectLocation, 1, glm::value_ptr(light));
+		glUniform1f(TimeLocation, time);
+		glUniform3fv(LightSunVectLocation, 1, glm::value_ptr(lightSun));
+		glUniform3fv(LightMoonVectLocation, 1, glm::value_ptr(lightMoon));
 		
 		//Ground
 		ms.push();
@@ -741,11 +736,23 @@ int main(int argc, char** argv){
 		}
 		
 		//Manage the sun
-		coefLight -= 0.00218166156f;		
-		light.x = glm::cos(coefLight);
-		light.y = glm::sin(coefLight);
+		coefLight -= 0.00218166156f;
+		lightSun.x = glm::cos(coefLight);
+		lightSun.y = glm::sin(coefLight);
+		
+		lightMoon.y = glm::sin(coefLight-2.5);
+		lightMoon.z = glm::cos(coefLight-2.5);
+		
+		//~ std::cout << "coefLight : " << coefLight << std::endl;
 		
 		if(coefLight < -4.71238898){ coefLight = 1.57079633; }
+		
+		time += timeStep;
+		
+		if(time > 1){timeStep = -timeStep;}
+		if(time < -1){timeStep = -timeStep;}
+		
+		//~ std::cout << "time : " << time << std::endl;
 		
 		// Gestion compteur
 		end = SDL_GetTicks();
