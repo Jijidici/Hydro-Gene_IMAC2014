@@ -652,18 +652,40 @@ int main(int argc, char** argv) {
 	for(uint32_t lvl=1;lvl<nbLevel;++lvl){
 		uint16_t crt_nbSub = nbSub_lvl1 / pow(2, int(lvl));
 		/* Fill the other LeafArray */
+		uint32_t l_index[8];
 		for(uint16_t l_i=0;l_i<crt_nbSub;++l_i){
 			for(uint16_t l_j=0;l_j<crt_nbSub;++l_j){
 				for(uint16_t l_k=0;l_k<crt_nbSub;++l_k){
-					uint32_t crt_l = l_i + crt_nbSub*l_k + l_j*crt_nbSub*crt_nbSub;
+					uint32_t crt_l = l_i + l_j*crt_nbSub + l_k*crt_nbSub*crt_nbSub;
+					
+					l_index[0] = l_i*2 + l_j*2*crt_nbSub*2 + l_k*2*crt_nbSub*crt_nbSub*4;
+					l_index[1] = l_i*2+1 + l_j*2*crt_nbSub*2 + l_k*2*crt_nbSub*crt_nbSub*4;
+					l_index[2] = l_i*2 + l_j*2*crt_nbSub*2 + (l_k*2+1)*crt_nbSub*crt_nbSub*4;
+					l_index[3] = l_i*2+1 + l_j*2*crt_nbSub*2 + (l_k*2+1)*crt_nbSub*crt_nbSub*4;
+					l_index[4] = l_i*2 + (l_j*2+1)*crt_nbSub*2 + l_k*2*crt_nbSub*crt_nbSub*4;
+					l_index[5] = l_i*2+1 + (l_j*2+1)*crt_nbSub*2 + l_k*2*crt_nbSub*crt_nbSub*4;
+					l_index[6] = l_i*2 + (l_j*2+1)*crt_nbSub*2 + (l_k*2+1)*crt_nbSub*crt_nbSub*4;
+					l_index[7] = l_i*2+1 + (l_j*2+1)*crt_nbSub*2 + (l_k*2+1)*crt_nbSub*crt_nbSub*4;
 					
 					double l_size = leafArrays[lvl-1][crt_l].size*2;
 					leafArrays[lvl][crt_l].size = l_size;
 					leafArrays[lvl][crt_l].pos = glm::dvec3(l_i*l_size -1., l_j*l_size -1., l_k*l_size -1.);
+					std::vector<Vertex> optPoints;
+					for(uint32_t idx=0;idx<8;idx++){
+						leafArrays[lvl][crt_l].nbIntersection += leafArrays[lvl-1][l_index[idx]].nbIntersection;
+						if(leafArrays[lvl-1][l_index[idx]].nbIntersection != 0){
+							optPoints.push_back(leafArrays[lvl-1][l_index[idx]].optimal);
+						}
+					}
+					if(optPoints.size() != 0){
+						leafArrays[lvl][crt_l].optimal = computeAvrOptimalPoint(optPoints);
+						std::cout<<"//-> opt pt : "<<leafArrays[lvl][crt_l].optimal.pos.x<<"\t"<<leafArrays[lvl][crt_l].optimal.pos.y<<"\t"<<leafArrays[lvl][crt_l].optimal.pos.z<<std::endl;
+					}
 				}
 			}
 		}
-	}
+		std::cout<<std::endl;
+	}	
 	
 	/* Create queue of leaves */
 	std::vector<Leaf> l_queue;
@@ -679,7 +701,7 @@ int main(int argc, char** argv) {
 			for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
 				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_k + l_j*nbSub_lvl1*nbSub_lvl1;
 				if(leafArrays[0][currentLeafIndex].nbIntersection != 0){
-					std::cout<<"//-> NB Vertices saved in leaf : "<<l_computedVertices[leafArrays[0][currentLeafIndex].id].size()<<std::endl;
+					//~ std::cout<<"//-> NB Vertices saved in leaf : "<<l_computedVertices[leafArrays[0][currentLeafIndex].id].size()<<std::endl;
 					leafArrays[0][currentLeafIndex].nbVertices_lvl1 = l_computedVertices[leafArrays[0][currentLeafIndex].id].size();
 					l_queue.push_back(leafArrays[0][currentLeafIndex]);
 				}

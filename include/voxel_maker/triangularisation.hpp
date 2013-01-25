@@ -19,4 +19,7 @@ glm::dvec3 useSVD(std::vector<Vertex>& vertices);
 /* Build Triangularized triangle */
 void buildTriangles(std::vector< std::vector<Vertex> >& l_computedVertices, Leaf* leafArray, uint32_t nbSub);
 
+/* Compute average optimal vertex while different lvl of resolution */
+Vertex computeAvrOptimalPoint(std::vector<Vertex>& l_optVertices);
+
 #endif
