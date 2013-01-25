@@ -182,9 +182,9 @@ int main(int argc, char** argv){
 	for(uint32_t l_idx=0;l_idx<nbLeaves;++l_idx){
 		//load the vertices
 		Vertex* trVertices = new Vertex[leafArray[l_idx].nbVertices_lvl1];
-		test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices); /*******/
+		test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices);
 		
-		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]); /*** PROBLEM HERE ***/
+		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]);
 			glBufferData(GL_ARRAY_BUFFER, leafArray[l_idx].nbVertices_lvl1*sizeof(Vertex), trVertices, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		

@@ -422,12 +422,10 @@ int main(int argc, char** argv) {
 	std::vector<Leaf*> leafArrays;
 	for(uint32_t n=0;n<nbLevel;++n){
 		uint16_t tmp_nbSub = nbSub_lvl1 / glm::pow(2, int(n));
-		std::cout<<"//-> TMP NB sub : "<<tmp_nbSub<<std::endl;
 		uint32_t sizeLeafArray = tmp_nbSub*tmp_nbSub*tmp_nbSub;
 		Leaf* l_arr = new Leaf[sizeLeafArray];
 		leafArrays.push_back(l_arr);
 	}
-	std::cout<<"//-> NB Leaf Arrays : "<<leafArrays.size()<<std::endl;
 	
 	//INTERSECTION PROCESSING
 	/* Range approximation for voxelisation */
@@ -648,6 +646,11 @@ int main(int argc, char** argv) {
 	
 	// BUILD THE TRIANGLES
 	
+	/* Save the number of saved Leaves */
+	uint32_t* nbSavedLeaves = new uint32_t[nbLevel];
+	for(uint16_t idx=1;idx<nbLevel;++idx){ nbSavedLeaves[idx] = 0; }
+	nbSavedLeaves[0] = (drn_writer_get_last_chunk_id(&cache)-1)/2; //finest level of resolution - real number of saved leaves
+	
 	/* Set the computed vertices to the upper leafArrays */
 	for(uint32_t lvl=1;lvl<nbLevel;++lvl){
 		uint16_t crt_nbSub = nbSub_lvl1 / pow(2, int(lvl));
@@ -679,7 +682,7 @@ int main(int argc, char** argv) {
 					}
 					if(optPoints.size() != 0){
 						leafArrays[lvl][crt_l].optimal = computeAvrOptimalPoint(optPoints);
-						std::cout<<"//-> opt pt : "<<leafArrays[lvl][crt_l].optimal.pos.x<<"\t"<<leafArrays[lvl][crt_l].optimal.pos.y<<"\t"<<leafArrays[lvl][crt_l].optimal.pos.z<<std::endl;
+						nbSavedLeaves[lvl]++;
 					}
 				}
 			}
@@ -690,7 +693,7 @@ int main(int argc, char** argv) {
 	/* Create queue of leaves */
 	std::vector<Leaf> l_queue;
 	
-	std::vector< std::vector<Vertex> > l_computedVertices((drn_writer_get_last_chunk_id(&cache)-1)/2);
+	std::vector< std::vector<Vertex> > l_computedVertices(nbSavedLeaves[0]);
 	std::cout<<"// computed vertices vector size : "<<l_computedVertices.size()<<std::endl;
 	
 	buildTriangles(l_computedVertices, leafArrays[0], nbSub_lvl1);
@@ -710,7 +713,6 @@ int main(int argc, char** argv) {
 	}
 	
 	//sort the leaves by chunk_id
-	std::cout << std::endl;
 	std::sort(l_queue.begin(), l_queue.end(), l_queue.front());
 	
 	/* Save the computed triangle */	
@@ -737,6 +739,7 @@ int main(int argc, char** argv) {
 		delete[] leafArrays[n];
 	}
 	delete[] maxCoeffArray;
+	delete[] nbSavedLeaves;
 
 	return EXIT_SUCCESS;
 }
