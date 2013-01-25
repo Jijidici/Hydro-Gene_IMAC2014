@@ -733,7 +733,10 @@ int main(int argc, char** argv) {
 		test_cache = drn_writer_add_chunk(&cache, l_queues[lvl].data(), l_queues[lvl].size()*sizeof(Leaf));
 	}
 	
-
+	/* Save the number of saved leaves per level */
+	test_cache = drn_writer_add_chunk(&cache, nbSavedLeaves, nbLevel*sizeof(uint32_t));
+	if(test_cache < 0){ throw std::runtime_error("unable to close the data file"); }		
+	
 	/* Close the DATA file */
 	test_cache = drn_close_writer(&cache);
 	if(test_cache < 0){ throw std::runtime_error("unable to close the data file"); }
