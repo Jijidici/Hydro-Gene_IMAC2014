@@ -146,6 +146,7 @@ int main(int argc, char** argv){
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
 
 	GLuint texture_sky = CreateTexture("textures/sky.jpg");
+	GLuint texture_night = CreateTexture("textures/night.jpg");
 	/* vegetation textures */
 	GLuint texture_plant = CreateTexture("textures/plant.png");
 	GLuint texture_tree = CreateTexture("textures/tree.png");
@@ -263,13 +264,17 @@ int main(int argc, char** argv){
 	GLint LightSunVectLocation = glGetUniformLocation(program, "uLightSunVect");
 	GLint LightMoonVectLocation = glGetUniformLocation(program, "uLightMoonVect");
 	GLint TimeLocation = glGetUniformLocation(program, "uTime");
+	GLint DayLocation = glGetUniformLocation(program, "uDay");
+	GLint NightLocation = glGetUniformLocation(program, "uNight");
 	/* Textures */
-	GLint TextureLocation = glGetUniformLocation(program, "uTexture");
+	GLint SkyTexLocation = glGetUniformLocation(program, "uSkyTex");
+	GLint NightTexLocation = glGetUniformLocation(program, "uNightTex");
 	GLint GrassTexLocation = glGetUniformLocation(program, "uGrassTex");
 	GLint WaterTexLocation = glGetUniformLocation(program, "uWaterTex");
 	GLint StoneTexLocation = glGetUniformLocation(program, "uStoneTex");
 	GLint SnowTexLocation = glGetUniformLocation(program, "uSnowTex");
 	GLint SandTexLocation = glGetUniformLocation(program, "uSandTex");
+	GLint VegetationTexLocation = glGetUniformLocation(program, "uVegetationTex");
 	/* Shaders modes */
 	GLint ModeLocation = glGetUniformLocation(program, "uMode");
 	GLint ChoiceLocation = glGetUniformLocation(program, "uChoice");
@@ -292,13 +297,19 @@ int main(int argc, char** argv){
 	glUniform1i(StoneTexLocation, 2);
 	glUniform1i(SnowTexLocation, 3);
 	glUniform1i(SandTexLocation, 4);
+	glUniform1i(SkyTexLocation, 5);
+	glUniform1i(NightTexLocation, 6);
 	
 	// Creation Light
 	float coefLight = 0.;
 	glm::vec3 lightSun(glm::cos(coefLight),glm::sin(coefLight),0.f);
 	glm::vec3 lightMoon(0.f,glm::sin(coefLight-2.5),glm::cos(coefLight-2.5));
 	float time = -1.;
+	float day = 0.;
+	float night = 0.;
 	float timeStep = 1./720.;
+	float dayStep = 1./720.;
+	//~ float nightStep = 1./720.;
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -363,6 +374,8 @@ int main(int argc, char** argv){
 		
 		glUniform1i(ModeLocation, TRIANGLES);
 		glUniform1f(TimeLocation, time);
+		glUniform1f(DayLocation, day);
+		glUniform1f(NightLocation, night);
 		glUniform3fv(LightSunVectLocation, 1, glm::value_ptr(lightSun));
 		glUniform3fv(LightMoonVectLocation, 1, glm::value_ptr(lightMoon));
 		
@@ -424,7 +437,7 @@ int main(int argc, char** argv){
 									BindTexture(0, GL_TEXTURE1);
 									BindTexture(0, GL_TEXTURE0);
 									if(displayVegetation){
-										display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+										display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
 									}
 									break;
 								}
@@ -441,7 +454,7 @@ int main(int argc, char** argv){
 								BindTexture(0, GL_TEXTURE1);
 								BindTexture(0, GL_TEXTURE0);
 								if(displayVegetation){
-									display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+									display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
 								}
 								break;
 							}
@@ -486,12 +499,14 @@ int main(int argc, char** argv){
 				ms.scale(glm::vec3(100.f, 100.f, 100.f));
 			}
 			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-			glUniform1i(TextureLocation,0);
-			BindTexture(texture_sky, GL_TEXTURE0);
+			//~ glUniform1i(SkyTexLocation,0);
+			BindTexture(texture_sky, GL_TEXTURE5);
+			BindTexture(texture_night, GL_TEXTURE6);
 				glBindVertexArray(cubeVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 36);
 				glBindVertexArray(0);
-			BindTexture(0, GL_TEXTURE0);
+			BindTexture(0, GL_TEXTURE6);
+			BindTexture(0, GL_TEXTURE5);
 		ms.pop();
 
 		// Mise à jour de l'affichage
@@ -748,11 +763,16 @@ int main(int argc, char** argv){
 		if(coefLight < -4.71238898){ coefLight = 1.57079633; }
 		
 		time += timeStep;
+		day += dayStep;
+		night -= dayStep;
 		
-		if(time > 1){timeStep = -timeStep;}
-		if(time < -1){timeStep = -timeStep;}
+		if(time > 1){time = -time;}
+		if(day > 1){dayStep = -dayStep;}
+		if(day < -1){dayStep = -dayStep;}
 		
 		//~ std::cout << "time : " << time << std::endl;
+		//~ std::cout << "day : " << day << std::endl;
+		//~ std::cout << "night : " << night << std::endl;
 		
 		// Gestion compteur
 		end = SDL_GetTicks();
