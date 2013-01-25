@@ -121,24 +121,26 @@ int main(int argc, char** argv){
 		chunkOffset[lvl] = chunkOffset[lvl-1] + nbLeaves[lvl-1];
 	}
 	
-	//~ /* Getting the leaf chunk (last chunk) */
-	//~ uint32_t nbLeaves = (nbChunks-2)/3;
-	//~ uint32_t lvl2_dataOffset = nbLeaves*2;
-	//~ std::cout<<"//-> Nb Leaves saved : "<<nbLeaves<<std::endl;
-//~ 
-	//~ Leaf* leafArray = new Leaf[nbLeaves];
-	//~ test_cache = drn_read_chunk(&cache, nbChunks-1, leafArray);
-	//~ 
-	//~ /* Array which know if a leaf grid is loaded or not */
-	//~ bool* loadedLeaf = new bool[nbLeaves];
-	//~ for(uint16_t idx=0;idx<nbLeaves;++idx){
-		//~ loadedLeaf[idx] = false;
-	//~ }
-	//~ 
-	//~ /* ************************************************************* */
-	//~ /* *************INITIALISATION OPENGL/SDL*********************** */
-	//~ /* ************************************************************* */
-//~ 
+	/* Getting the leaf arrays */
+	uint32_t nbVao = 0;
+	std::vector<Leaf*> leafArrays(nbLevel);
+	for(uint16_t lvl=0;lvl<nbLevel;++lvl){
+		leafArrays[lvl] = new Leaf[nbLeaves[lvl]];
+		test_cache = drn_read_chunk(&cache, nbChunks-1-nbLevel+lvl, leafArrays[lvl]);
+		
+		nbVao+=nbLeaves[lvl];
+	}
+	
+	/* Array which know if a leaf grid is loaded or not */
+	bool* loadedLeaf = new bool[nbLeaves[0]];
+	for(uint16_t idx=0;idx<nbLeaves[0];++idx){
+		loadedLeaf[idx] = false;
+	}
+	
+	/* ************************************************************* */
+	/* *************INITIALISATION OPENGL/SDL*********************** */
+	/* ************************************************************* */
+
 	//~ // Initialisation de la SDL
 	//~ SDL_Init(SDL_INIT_VIDEO);
 //~ 
@@ -192,11 +194,11 @@ int main(int argc, char** argv){
 	//~ 
 	//~ for(uint32_t l_idx=0;l_idx<nbLeaves;++l_idx){
 		//~ //load the vertices
-		//~ Vertex* trVertices = new Vertex[leafArray[l_idx].nbVertices_lvl1];
-		//~ test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices);
+		//~ Vertex* trVertices = new Vertex[leafArrays[l_idx].nbVertices_lvl1];
+		//~ test_cache = drn_read_chunk(&cache, leafArrays[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices);
 		//~ 
 		//~ glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]);
-			//~ glBufferData(GL_ARRAY_BUFFER, leafArray[l_idx].nbVertices_lvl1*sizeof(Vertex), trVertices, GL_STATIC_DRAW);
+			//~ glBufferData(GL_ARRAY_BUFFER, leafArrays[l_idx].nbVertices_lvl1*sizeof(Vertex), trVertices, GL_STATIC_DRAW);
 		//~ glBindBuffer(GL_ARRAY_BUFFER, 0);
 		//~ 
 		//~ glBindVertexArray(l_VAOs[l_idx]);
@@ -266,7 +268,7 @@ int main(int argc, char** argv){
 		//~ glDeleteVertexArrays(1, &groundVAO);
 		//~ delete[] l_VAOs;
 		//~ delete[] l_VBOs;
-		//~ delete[] leafArray;
+		//~ delete[] leafArrays;
 		//~ delete[] loadedLeaf;
 		//~ return (EXIT_FAILURE);
 	//~ }
@@ -329,7 +331,7 @@ int main(int argc, char** argv){
 	//~ std::vector<Chunk> memory;
 	//~ 
 	//~ /* init memory */
-	//~ size_t currentMemCache = initMemory(memory, leafArray, loadedLeaf, nbLeaves, nbSub_lvl2,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
+	//~ size_t currentMemCache = initMemory(memory, leafArrays, loadedLeaf, nbLeaves, nbSub_lvl2,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
 	//~ std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
 	//~ std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
 //~ 
@@ -417,11 +419,11 @@ int main(int argc, char** argv){
 //~ 
 			//~ //For each leaf
 			//~ for(uint16_t idx=0;idx<nbLeaves;++idx){
-				//~ double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
+				//~ double d = computeDistanceLeafCamera(leafArrays[idx], V, halfLeafSize);
 				//~ if(d<thresholdDistance){
 					//~ if(!loadedLeaf[idx]){
 						//~ Chunk voidChunk = freeInMemory(memory, loadedLeaf);
-						//~ loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
+						//~ loadInMemory(memory, leafArrays[idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
 						//~ loadedLeaf[idx] = true;
 						//~ std::sort(memory.begin(), memory.end(), memory.front());
 					//~ }
@@ -429,20 +431,20 @@ int main(int argc, char** argv){
 						//~ if(idx == n->idxLeaf){
 							//~ if(currentCam == FREE_FLY){
 								//~ //FRUSTUM CULLING
-								//~ if(ffCam.leavesFrustum(leafArray[idx])){
+								//~ if(ffCam.leavesFrustum(leafArrays[idx])){
 									//~ BindTexture(texture_grass, GL_TEXTURE0);
 									//~ BindTexture(texture_water, GL_TEXTURE1);
 									//~ BindTexture(texture_stone, GL_TEXTURE2);
 									//~ BindTexture(texture_snow, GL_TEXTURE3);
 									//~ BindTexture(texture_sand, GL_TEXTURE4);
-										//~ display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
+										//~ display_triangle(n->vao, ms, MVPLocation, leafArrays[idx].nbVertices_lvl2);
 									//~ BindTexture(0, GL_TEXTURE4);
 									//~ BindTexture(0, GL_TEXTURE3);
 									//~ BindTexture(0, GL_TEXTURE2);
 									//~ BindTexture(0, GL_TEXTURE1);
 									//~ BindTexture(0, GL_TEXTURE0);
 									//~ if(displayVegetation){
-										//~ display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+										//~ display_vegetation(n->vao, ms, MVPLocation, leafArrays[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
 									//~ }
 									//~ break;
 								//~ }
@@ -452,14 +454,14 @@ int main(int argc, char** argv){
 								//~ BindTexture(texture_stone, GL_TEXTURE2);
 								//~ BindTexture(texture_snow, GL_TEXTURE3);
 								//~ BindTexture(texture_snow, GL_TEXTURE4);
-									//~ display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
+									//~ display_triangle(n->vao, ms, MVPLocation, leafArrays[idx].nbVertices_lvl2);
 								//~ BindTexture(0, GL_TEXTURE4);
 								//~ BindTexture(0, GL_TEXTURE3);
 								//~ BindTexture(0, GL_TEXTURE2);
 								//~ BindTexture(0, GL_TEXTURE1);
 								//~ BindTexture(0, GL_TEXTURE0);
 								//~ if(displayVegetation){
-									//~ display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+									//~ display_vegetation(n->vao, ms, MVPLocation, leafArrays[idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
 								//~ }
 								//~ break;
 							//~ }
@@ -474,7 +476,7 @@ int main(int argc, char** argv){
 					//~ BindTexture(texture_snow, GL_TEXTURE3);
 					//~ BindTexture(texture_snow, GL_TEXTURE4);
 						//~ glBindVertexArray(l_VAOs[idx]);
-							//~ glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
+							//~ glDrawArrays(GL_TRIANGLES, 0, leafArrays[idx].nbVertices_lvl1);
 						//~ glBindVertexArray(0);
 					//~ BindTexture(0, GL_TEXTURE4);
 					//~ BindTexture(0, GL_TEXTURE3);
@@ -797,8 +799,10 @@ int main(int argc, char** argv){
 	//~ glDeleteVertexArrays(nbLeaves, l_VAOs);
 	//~ delete[] l_VAOs;
 	//~ delete[] l_VBOs;
-	//~ delete[] leafArray;
-	//~ delete[] loadedLeaf;
+	for(uint16_t lvl=0;lvl<nbLevel;++lvl){
+		delete[] leafArrays[lvl];
+	}
+	delete[] loadedLeaf;
 	delete[] maxCoeffArray;
 	delete[] nbLeaves;
 	delete[] chunkOffset;
