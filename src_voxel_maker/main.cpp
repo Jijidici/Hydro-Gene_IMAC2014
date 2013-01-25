@@ -654,6 +654,7 @@ int main(int argc, char** argv) {
 	/* Set the computed vertices to the upper leafArrays */
 	for(uint32_t lvl=1;lvl<nbLevel;++lvl){
 		uint16_t crt_nbSub = nbSub_lvl1 / pow(2, int(lvl));
+		uint32_t l_id = 0;
 		/* Fill the other LeafArray */
 		uint32_t l_index[8];
 		for(uint16_t l_i=0;l_i<crt_nbSub;++l_i){
@@ -680,50 +681,57 @@ int main(int argc, char** argv) {
 							optPoints.push_back(leafArrays[lvl-1][l_index[idx]].optimal);
 						}
 					}
-					if(optPoints.size() != 0){
+					if(leafArrays[lvl][crt_l].nbIntersection != 0){
 						leafArrays[lvl][crt_l].optimal = computeAvrOptimalPoint(optPoints);
+						leafArrays[lvl][crt_l].id = l_id;
+						l_id++;
 						nbSavedLeaves[lvl]++;
 					}
 				}
 			}
 		}
 		std::cout<<std::endl;
-	}	
+	}
 	
 	/* Create queue of leaves */
-	std::vector<Leaf> l_queue;
+	std::vector<std::vector<Leaf> > l_queues(nbLevel);
 	
-	std::vector< std::vector<Vertex> > l_computedVertices(nbSavedLeaves[0]);
-	std::cout<<"// computed vertices vector size : "<<l_computedVertices.size()<<std::endl;
-	
-	buildTriangles(l_computedVertices, leafArrays[0], nbSub_lvl1);
-	
-	/* Fill the leaves queue */
-	for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
-		for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
-			for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
-				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_k + l_j*nbSub_lvl1*nbSub_lvl1;
-				if(leafArrays[0][currentLeafIndex].nbIntersection != 0){
-					//~ std::cout<<"//-> NB Vertices saved in leaf : "<<l_computedVertices[leafArrays[0][currentLeafIndex].id].size()<<std::endl;
-					leafArrays[0][currentLeafIndex].nbVertices_lvl1 = l_computedVertices[leafArrays[0][currentLeafIndex].id].size();
-					l_queue.push_back(leafArrays[0][currentLeafIndex]);
+	for(uint16_t lvl=0;lvl<nbLevel;++lvl){
+		uint32_t crt_nbSub = nbSub_lvl1/pow(2, lvl);
+		std::vector< std::vector<Vertex> > l_computedVertices(nbSavedLeaves[lvl]);
+		
+		buildTriangles(l_computedVertices, leafArrays[lvl], crt_nbSub);
+		
+		/* Fill the leaves queue */
+		for(uint16_t l_j=0;l_j<crt_nbSub;++l_j){
+			for(uint16_t l_k=0;l_k<crt_nbSub;++l_k){
+				for(uint16_t l_i=0;l_i<crt_nbSub;++l_i){
+					uint32_t currentLeafIndex = l_i + crt_nbSub*l_k + l_j*crt_nbSub*crt_nbSub;
+					if(leafArrays[lvl][currentLeafIndex].nbIntersection != 0){
+						std::cout<<"//-> NB Vertices saved in leaf : "<<l_computedVertices[leafArrays[0][currentLeafIndex].id].size()<<std::endl;
+						leafArrays[lvl][currentLeafIndex].nbVertices_lvl1 = l_computedVertices[leafArrays[lvl][currentLeafIndex].id].size();
+						l_queues[lvl].push_back(leafArrays[lvl][currentLeafIndex]);
+					}
 				}
 			}
 		}
+		
+		//sort the leaves by chunk_id
+		std::sort(l_queues[lvl].begin(), l_queues[lvl].end(), l_queues[lvl].front());
+		
+		/* Save the computed triangle */	
+		for(unsigned int n = 0; n < l_queues[lvl].size(); ++n){
+			test_cache = drn_writer_add_chunk(&cache, l_computedVertices[l_queues[lvl][n].id].data(), l_computedVertices[l_queues[lvl][n].id].size()*sizeof(Vertex));
+		}
+		
+		std::cout << "Number of leaves saved : "<< l_queues[lvl].size() << std::endl;
 	}
 	
-	//sort the leaves by chunk_id
-	std::sort(l_queue.begin(), l_queue.end(), l_queue.front());
-	
-	/* Save the computed triangle */	
-	for(unsigned int n = 0; n < l_queue.size(); ++n){
-		test_cache = drn_writer_add_chunk(&cache, l_computedVertices[l_queue[n].id].data(), l_computedVertices[l_queue[n].id].size()*sizeof(Vertex));
+	/* Save the leaf queues */
+	for(uint16_t lvl=0;lvl<nbLevel;++lvl){
+		/* writing the Leaf chunck */
+		test_cache = drn_writer_add_chunk(&cache, l_queues[lvl].data(), l_queues[lvl].size()*sizeof(Leaf));
 	}
-	
-	std::cout << "Number of leaves saved : "<< l_queue.size() << std::endl;
-
-	/* writing the Leaf chunck */
-	test_cache = drn_writer_add_chunk(&cache, l_queue.data(), l_queue.size()*sizeof(Leaf));
 	
 
 	/* Close the DATA file */
