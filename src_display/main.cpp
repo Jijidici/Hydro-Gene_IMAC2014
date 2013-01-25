@@ -336,7 +336,7 @@ int main(int argc, char** argv){
 	uint32_t tbC_savedClicX = 0;
 	uint32_t tbC_savedClicY = 0;
 	float tbC_angleX = 0;
-	float tbC_angleY = 0;
+	float tbC_angleY = 60;
 	float tbC_tmpAngleX = 0;
 	float tbC_tmpAngleY = 0;
 	float ffC_angleY = 0;
