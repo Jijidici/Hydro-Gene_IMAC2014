@@ -446,7 +446,7 @@ int main(int argc, char** argv){
 								BindTexture(texture_water, GL_TEXTURE1);
 								BindTexture(texture_stone, GL_TEXTURE2);
 								BindTexture(texture_snow, GL_TEXTURE3);
-								BindTexture(texture_snow, GL_TEXTURE4);
+								BindTexture(texture_sand, GL_TEXTURE4);
 									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
 								BindTexture(0, GL_TEXTURE4);
 								BindTexture(0, GL_TEXTURE3);
@@ -467,7 +467,7 @@ int main(int argc, char** argv){
 					BindTexture(texture_water, GL_TEXTURE1);
 					BindTexture(texture_stone, GL_TEXTURE2);
 					BindTexture(texture_snow, GL_TEXTURE3);
-					BindTexture(texture_snow, GL_TEXTURE4);
+					BindTexture(texture_sand, GL_TEXTURE4);
 						glBindVertexArray(l_VAOs[idx]);
 							glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
 						glBindVertexArray(0);
