@@ -423,46 +423,64 @@ int main(int argc, char** argv){
 			}
 			ms.mult(V);
 
-			//For each leaf
-			for(uint16_t idx=0;idx<nbLeaves[0];++idx){
-				double d = computeDistanceLeafCamera(leafArrays[0][idx], V);
-				if(d<thresholdDistance){
-					if(!loadedLeaf[idx]){
-						Chunk voidChunk = freeInMemory(memory, loadedLeaf);
-						loadInMemory(memory, leafArrays[0][idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
-						loadedLeaf[idx] = true;
-						std::sort(memory.begin(), memory.end(), memory.front());
+			uint32_t vao_idx = 0;
+			//For each level
+			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
+				//For each leaf
+				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
+					double d = computeDistanceLeafCamera(leafArrays[lvl][idx], V);
+					double crt_lvlTD = thresholdDistance*(lvl+1);
+					double nxt_lvlTD = 0;
+					/* special case of uppest level */
+					if(lvl == nbLevel-1){
+						nxt_lvlTD = 1000;
+					}else{
+						nxt_lvlTD = crt_lvlTD+thresholdDistance;
 					}
-					for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
-						if(idx == n->idxLeaf){
-							if(currentCam == FREE_FLY){
-								//FRUSTUM CULLING
-								if(ffCam.leavesFrustum(leafArrays[0][idx])){
-										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
-									if(displayVegetation){
-										display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
-									}
-									break;
-								}
-							}else{
-								display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
-								if(displayVegetation){
-									display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
-								}
-								break;
-							}
-						}
+					
+					if(crt_lvlTD <= d && d < nxt_lvlTD){
+						//display the leaf of this level if it is in the distance fork
+						display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+						//~ if(!loadedLeaf[idx]){
+							//~ Chunk voidChunk = freeInMemory(memory, loadedLeaf);
+							//~ loadInMemory(memory, leafArrays[0][idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
+							//~ loadedLeaf[idx] = true;
+							//~ std::sort(memory.begin(), memory.end(), memory.front());
+						//~ }
+						//~ for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+							//~ if(idx == n->idxLeaf){
+								//~ if(currentCam == FREE_FLY){
+									//~ //FRUSTUM CULLING
+									//~ if(ffCam.leavesFrustum(leafArrays[0][idx])){
+											//~ display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+										//~ if(displayVegetation){
+											//~ display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+										//~ }
+										//~ break;
+									//~ }
+								//~ }else{
+									//~ display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+									//~ if(displayVegetation){
+										//~ display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+									//~ }
+									//~ break;
+								//~ }
+							//~ }
+						//~ }
+					//~ }else{
+						//~ display_triangle(l_VAOs[idx], ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl1, texture_terrain);
 					}
-				}else{
-					display_triangle(l_VAOs[idx], ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl1, texture_terrain);
-				}
 
-				//DISPLAY OF THE COEFFICIENTS
-				if(displayNormal) glUniform1i(ChoiceLocation, NORMAL);
-				else if(displayDrain) glUniform1i(ChoiceLocation, DRAIN);
-				else if(displayBending) glUniform1i(ChoiceLocation, BENDING);
-				else if(displayGradient) glUniform1i(ChoiceLocation, GRADIENT);
-				else if(displaySurface) glUniform1i(ChoiceLocation, SURFACE);
+					//DISPLAY OF THE COEFFICIENTS
+					if(displayNormal) glUniform1i(ChoiceLocation, NORMAL);
+					else if(displayDrain) glUniform1i(ChoiceLocation, DRAIN);
+					else if(displayBending) glUniform1i(ChoiceLocation, BENDING);
+					else if(displayGradient) glUniform1i(ChoiceLocation, GRADIENT);
+					else if(displaySurface) glUniform1i(ChoiceLocation, SURFACE);
+					
+					//set the vao idx
+					++vao_idx;
+				}
 			}
 		ms.pop();
 
