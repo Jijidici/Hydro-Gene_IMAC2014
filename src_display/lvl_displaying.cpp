@@ -70,7 +70,7 @@ void display_lvl1(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, glm::dvec
 	ms.pop();
 }
 
-void display_realTriangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices){
+void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices){
 	glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 	
 	glBindVertexArray(meshVAO);
