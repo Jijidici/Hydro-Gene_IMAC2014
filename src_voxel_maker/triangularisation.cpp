@@ -352,19 +352,21 @@ void buildTriangles(std::vector< std::vector<Vertex> >& l_computedVertices, Leaf
 /* Compute average optimal vertex while different lvl of resolution */
 Vertex computeAvrOptimalPoint(std::vector<Vertex>& l_optVertices){
 	Vertex newOptimal;
+	newOptimal.pos = glm::dvec3(0., 0., 0.);
 	newOptimal.normal = glm::dvec3(0., 0., 0.);
 	newOptimal.bending = 0;
 	newOptimal.drain = 0;
 	newOptimal.gradient = 0;
 	newOptimal.surface = 0;
-	newOptimal.pos = useSVD(l_optVertices);
 	for(uint32_t idx=0;idx<l_optVertices.size();++idx){
+		newOptimal.pos += l_optVertices[idx].pos;
 		newOptimal.normal += l_optVertices[idx].normal;
 		newOptimal.bending += l_optVertices[idx].bending;
 		newOptimal.drain += l_optVertices[idx].drain;
 		newOptimal.gradient += l_optVertices[idx].gradient;
 		newOptimal.surface += l_optVertices[idx].surface;
 	}
+	newOptimal.pos /= l_optVertices.size();
 	newOptimal.normal /= l_optVertices.size();
 	newOptimal.bending /= l_optVertices.size();
 	newOptimal.drain /= l_optVertices.size();
