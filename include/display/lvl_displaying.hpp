@@ -15,7 +15,9 @@ void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbI
 
 void display_lvl1(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, glm::dvec3 pos, double halfLeafSize);
 
-void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices);
+void display_realTriangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices);
+
+void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLint ChoiceLocation, GLint TextureLocation, GLuint texture);
 
 bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, FreeFlyCamera& ffCam);
 

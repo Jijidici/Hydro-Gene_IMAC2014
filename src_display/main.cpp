@@ -56,19 +56,6 @@ void resetShaderProgram(GLuint &program, GLint &MVPLocation, GLint &NbIntersecti
 	LightVectLocation = glGetUniformLocation(program, "uLightVect");
 }
 
-void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLint ChoiceLocation, GLint TextureLocation, GLuint texture){
-
-	glUniform1i(ChoiceLocation, VEGET);
-	glUniform1i(TextureLocation,0);
-	BindTexture(texture, GL_TEXTURE0);
-		glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-	
-		glBindVertexArray(meshVAO);
-			glDrawArrays(GL_TRIANGLES, 0, nbVertices);
-		glBindVertexArray(0);
-	BindTexture(0, GL_TEXTURE0);
-}
-
 int main(int argc, char** argv){
 
 	/* Open DATA file */
@@ -453,7 +440,7 @@ int main(int argc, char** argv){
 									BindTexture(texture_stone, GL_TEXTURE2);
 									BindTexture(texture_snow, GL_TEXTURE3);
 									BindTexture(texture_sand, GL_TEXTURE4);
-										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2);
+										display_realTriangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2);
 									BindTexture(0, GL_TEXTURE4);
 									BindTexture(0, GL_TEXTURE3);
 									BindTexture(0, GL_TEXTURE2);
@@ -470,7 +457,7 @@ int main(int argc, char** argv){
 								BindTexture(texture_stone, GL_TEXTURE2);
 								BindTexture(texture_snow, GL_TEXTURE3);
 								BindTexture(texture_snow, GL_TEXTURE4);
-									display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2);
+									display_realTriangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2);
 								BindTexture(0, GL_TEXTURE4);
 								BindTexture(0, GL_TEXTURE3);
 								BindTexture(0, GL_TEXTURE2);
@@ -635,11 +622,11 @@ int main(int argc, char** argv){
 							break;
 						
 						case SDLK_UP:
-							thresholdDistance += 0.1f;
+							thresholdDistance += 0.05f;
 							break;
 							
 						case SDLK_DOWN:
-							thresholdDistance -= 0.1f;
+							thresholdDistance -= 0.05f;
 							break;
 						
 						case SDLK_v:
