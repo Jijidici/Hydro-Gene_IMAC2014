@@ -61,7 +61,7 @@ size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf,
 	size_t currentMemSize = 0;
 	uint32_t currentLeaf = 0;
 	while(currentMemSize + chunkBytesSize < MAX_MEMORY_SIZE && currentLeaf < nbLeaves){		
-		loadInMemory(memory, leafArray[currentLeaf], currentLeaf, computeDistanceLeafCamera(leafArray[currentLeaf], V, halfLeafSize), nbSub_lvl2, vaos[leafArray[currentLeaf].id], vbos[leafArray[currentLeaf].id]);
+		loadInMemory(memory, leafArray[currentLeaf], currentLeaf, computeDistanceLeafCamera(leafArray[currentLeaf], V), nbSub_lvl2, vaos[leafArray[currentLeaf].id], vbos[leafArray[currentLeaf].id]);
 		loadedLeaf[currentLeaf] = true;
 		currentLeaf++;
 		currentMemSize+= chunkBytesSize; 
@@ -114,7 +114,21 @@ Chunk freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
 	return lastElt;
 }
 
-double computeDistanceLeafCamera(Leaf currentLeaf, glm::mat4& view, double halfLeafSize){
-	glm::vec4 homogenPos = glm::vec4(currentLeaf.pos.x + halfLeafSize, currentLeaf.pos.y + halfLeafSize, currentLeaf.pos.z + halfLeafSize, 1.);
-	return glm::length(view*homogenPos) -1;
+double computeDistanceLeafCamera(Leaf l, glm::mat4& view){
+	glm::vec4 l_vertices[8];
+	l_vertices[0] = glm::vec4(l.pos.x, l.pos.y, l.pos.z, 1.f);
+	l_vertices[1] = glm::vec4(l.pos.x+l.size, l.pos.y, l.pos.z, 1.f);
+	l_vertices[2] = glm::vec4(l.pos.x, l.pos.y, l.pos.z+l.size, 1.f);
+	l_vertices[3] = glm::vec4(l.pos.x+l.size, l.pos.y, l.pos.z+l.size, 1.f);
+	l_vertices[4] = glm::vec4(l.pos.x, l.pos.y+l.size, l.pos.z, 1.f);
+	l_vertices[5] = glm::vec4(l.pos.x+l.size, l.pos.y+l.size, l.pos.z, 1.f);
+	l_vertices[6] = glm::vec4(l.pos.x, l.pos.y+l.size, l.pos.z+l.size, 1.f);
+	l_vertices[7] = glm::vec4(l.pos.x+l.size, l.pos.y+l.size, l.pos.z+l.size, 1.f);
+	
+	double distance = glm::length(view*l_vertices[0]);
+	for(uint16_t idx=1;idx<8;++idx){
+		double tmp_distance = glm::length(view*l_vertices[idx]);
+		if(tmp_distance<distance){ distance = tmp_distance; }
+	}	
+	return distance-1;
 }  

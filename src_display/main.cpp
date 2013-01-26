@@ -435,7 +435,7 @@ int main(int argc, char** argv){
 
 			//For each leaf
 			for(uint16_t idx=0;idx<nbLeaves[0];++idx){
-				double d = computeDistanceLeafCamera(leafArrays[0][idx], V, halfLeafSize);
+				double d = computeDistanceLeafCamera(leafArrays[0][idx], V);
 				if(d<thresholdDistance){
 					if(!loadedLeaf[idx]){
 						Chunk voidChunk = freeInMemory(memory, loadedLeaf);
