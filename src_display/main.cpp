@@ -438,37 +438,39 @@ int main(int argc, char** argv){
 						nxt_lvlTD = crt_lvlTD+thresholdDistance;
 					}
 					
+					//display the leaf of this level if it is in the distance fork
 					if(crt_lvlTD <= d && d < nxt_lvlTD){
-						//display the leaf of this level if it is in the distance fork
 						display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-						//~ if(!loadedLeaf[idx]){
-							//~ Chunk voidChunk = freeInMemory(memory, loadedLeaf);
-							//~ loadInMemory(memory, leafArrays[0][idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
-							//~ loadedLeaf[idx] = true;
-							//~ std::sort(memory.begin(), memory.end(), memory.front());
-						//~ }
-						//~ for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
-							//~ if(idx == n->idxLeaf){
-								//~ if(currentCam == FREE_FLY){
-									//~ //FRUSTUM CULLING
-									//~ if(ffCam.leavesFrustum(leafArrays[0][idx])){
-											//~ display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
-										//~ if(displayVegetation){
-											//~ display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
-										//~ }
-										//~ break;
-									//~ }
-								//~ }else{
-									//~ display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
-									//~ if(displayVegetation){
-										//~ display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
-									//~ }
-									//~ break;
-								//~ }
-							//~ }
-						//~ }
-					//~ }else{
-						//~ display_triangle(l_VAOs[idx], ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl1, texture_terrain);
+					}
+					
+					//special case of lvl 0
+					if(lvl == 0 && d < thresholdDistance){
+						if(!loadedLeaf[idx]){
+							Chunk voidChunk = freeInMemory(memory, loadedLeaf);
+							loadInMemory(memory, leafArrays[0][idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
+							loadedLeaf[idx] = true;
+							std::sort(memory.begin(), memory.end(), memory.front());
+						}
+						for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+							if(idx == n->idxLeaf){
+								if(currentCam == FREE_FLY){
+									//FRUSTUM CULLING
+									if(ffCam.leavesFrustum(leafArrays[0][idx])){
+											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+										if(displayVegetation){
+											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+										}
+										break;
+									}
+								}else{
+									display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+									if(displayVegetation){
+										display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
+									}
+									break;
+								}
+							}
+						}
 					}
 
 					//DISPLAY OF THE COEFFICIENTS
@@ -609,11 +611,11 @@ int main(int argc, char** argv){
 							break;
 						
 						case SDLK_UP:
-							thresholdDistance += 0.05f;
+							thresholdDistance += 0.01f;
 							break;
 							
 						case SDLK_DOWN:
-							thresholdDistance -= 0.05f;
+							thresholdDistance -= 0.01f;
 							break;
 						
 						case SDLK_v:
