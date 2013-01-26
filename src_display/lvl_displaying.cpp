@@ -7,7 +7,15 @@
 #include "data_types.hpp"
 #include "tools/MatrixStack.hpp"
 #include "cameras/FreeFlyCamera.hpp"
+#include "display/cube_model.hpp"
 
+#define TRIANGLES 1
+#define NORMAL 2
+#define BENDING 3
+#define DRAIN 4
+#define GRADIENT 5
+#define SURFACE 6
+#define VEGET 7
 
 void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize, FreeFlyCamera& ffCam, CamType camType){
 	for(uint32_t k=0;k<nbSub;++k){
@@ -62,12 +70,33 @@ void display_lvl1(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, glm::dvec
 	ms.pop();
 }
 
-void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices){
+void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLuint* textures){
 	glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+	BindTexture(textures[0], GL_TEXTURE0);
+	BindTexture(textures[1], GL_TEXTURE1);
+	BindTexture(textures[2], GL_TEXTURE2);
+	BindTexture(textures[3], GL_TEXTURE3);
+	BindTexture(textures[4], GL_TEXTURE4);
+		glBindVertexArray(meshVAO);
+			glDrawArrays(GL_TRIANGLES, 0, nbVertices);
+		glBindVertexArray(0);
+	BindTexture(0, GL_TEXTURE0);
+	BindTexture(0, GL_TEXTURE1);
+	BindTexture(0, GL_TEXTURE2);
+	BindTexture(0, GL_TEXTURE3);
+	BindTexture(0, GL_TEXTURE4);
+}
+
+void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLint ChoiceLocation, GLint TextureLocation, GLuint texture){
+	glUniform1i(ChoiceLocation, VEGET);
+	glUniform1i(TextureLocation,0);
+	BindTexture(texture, GL_TEXTURE0);
+		glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 	
-	glBindVertexArray(meshVAO);
-		glDrawArrays(GL_TRIANGLES, 0, nbVertices);
-	glBindVertexArray(0);
+		glBindVertexArray(meshVAO);
+			glDrawArrays(GL_TRIANGLES, 0, nbVertices);
+		glBindVertexArray(0);
+	BindTexture(0, GL_TEXTURE0);
 }
 
 bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, FreeFlyCamera& ffCam){

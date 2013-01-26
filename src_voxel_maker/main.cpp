@@ -382,9 +382,20 @@ int main(int argc, char** argv) {
 	}
 	
 	/* Setting the config data */
-	uint16_t arguments[7];
+	/* Compute the possible number of resolution level on leaves */
+	uint16_t nbLevel = 1;
+	uint16_t tmp_nbSub_lvl1 = nbSub_lvl1;
+	while(tmp_nbSub_lvl1 > 4){
+		tmp_nbSub_lvl1 /= 2;
+		nbLevel++;
+	}
+	
+	std::cout<<"//-> NB possible level : "<<nbLevel<<std::endl;
+	
+	uint16_t arguments[8];
 	arguments[0] = nbSub_lvl1;
 	arguments[1] = nbSub_lvl2;
+	arguments[7] = nbLevel;
 	for(int i = 2; i<7; ++i){
 		arguments[i] = 0;
 	}
@@ -400,16 +411,21 @@ int main(int argc, char** argv) {
 	if(test_cache < 0){ throw std::runtime_error("unable to open data file"); }
 	
 	/* Saving the config data */
-	test_cache = drn_writer_add_chunk(&cache, arguments, 7*sizeof(uint16_t));
+	test_cache = drn_writer_add_chunk(&cache, arguments, 8*sizeof(uint16_t));
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 	
 	/* Saving the maximum data */
 	test_cache = drn_writer_add_chunk(&cache, maxCoeffArray, 6*sizeof(float));
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 		
-	/* Initialize the Leaves vector */
-	uint32_t sizeLeafArray = nbSub_lvl1*nbSub_lvl1*nbSub_lvl1;
-	Leaf* leafArray = new Leaf[sizeLeafArray];
+	/* Initialize the Leaves array for each level */
+	std::vector<Leaf*> leafArrays;
+	for(uint32_t n=0;n<nbLevel;++n){
+		uint16_t tmp_nbSub = nbSub_lvl1 / glm::pow(2, int(n));
+		uint32_t sizeLeafArray = tmp_nbSub*tmp_nbSub*tmp_nbSub;
+		Leaf* l_arr = new Leaf[sizeLeafArray];
+		leafArrays.push_back(l_arr);
+	}
 	
 	//INTERSECTION PROCESSING
 	/* Range approximation for voxelisation */
@@ -449,20 +465,20 @@ int main(int argc, char** argv) {
 				
 				/* Fix the current leaf */
 				for(unsigned int n = 0; n < NB_LEAVES_IN_GROUP; ++n){
-					leafArray[leafIndex[n]].size = l_size;
-					leafArray[leafIndex[n]].nbIntersection = 0;
-					leafArray[leafIndex[n]].nbVertices_lvl1 = 0;
-					leafArray[leafIndex[n]].nbVertices_lvl2 = 0;
+					leafArrays[0][leafIndex[n]].size = l_size;
+					leafArrays[0][leafIndex[n]].nbIntersection = 0;
+					leafArrays[0][leafIndex[n]].nbVertices_lvl1 = 0;
+					leafArrays[0][leafIndex[n]].nbVertices_lvl2 = 0;
 				}
 				
-				leafArray[leafIndex[0]].pos = glm::dvec3((l_i*l_size)-1., 		(l_j*l_size)-1., 		(l_k*l_size)-1.);
-				leafArray[leafIndex[1]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	(l_j*l_size)-1., 		(l_k*l_size)-1.);
-				leafArray[leafIndex[2]].pos = glm::dvec3((l_i*l_size)-1., 		(l_j*l_size)-1., 		((l_k+1)*l_size)-1.);
-				leafArray[leafIndex[3]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	(l_j*l_size)-1., 		((l_k+1)*l_size)-1.);
-				leafArray[leafIndex[4]].pos = glm::dvec3((l_i*l_size)-1., 		((l_j+1)*l_size)-1., 	(l_k*l_size)-1.);
-				leafArray[leafIndex[5]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	((l_j+1)*l_size)-1., 	(l_k*l_size)-1.);
-				leafArray[leafIndex[6]].pos = glm::dvec3((l_i*l_size)-1., 		((l_j+1)*l_size)-1., 	((l_k+1)*l_size)-1.);
-				leafArray[leafIndex[7]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	((l_j+1)*l_size)-1., 	((l_k+1)*l_size)-1.);
+				leafArrays[0][leafIndex[0]].pos = glm::dvec3((l_i*l_size)-1., 		(l_j*l_size)-1., 		(l_k*l_size)-1.);
+				leafArrays[0][leafIndex[1]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	(l_j*l_size)-1., 		(l_k*l_size)-1.);
+				leafArrays[0][leafIndex[2]].pos = glm::dvec3((l_i*l_size)-1., 		(l_j*l_size)-1., 		((l_k+1)*l_size)-1.);
+				leafArrays[0][leafIndex[3]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	(l_j*l_size)-1., 		((l_k+1)*l_size)-1.);
+				leafArrays[0][leafIndex[4]].pos = glm::dvec3((l_i*l_size)-1., 		((l_j+1)*l_size)-1., 	(l_k*l_size)-1.);
+				leafArrays[0][leafIndex[5]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	((l_j+1)*l_size)-1., 	(l_k*l_size)-1.);
+				leafArrays[0][leafIndex[6]].pos = glm::dvec3((l_i*l_size)-1., 		((l_j+1)*l_size)-1., 	((l_k+1)*l_size)-1.);
+				leafArrays[0][leafIndex[7]].pos = glm::dvec3(((l_i+1)*l_size)-1., 	((l_j+1)*l_size)-1., 	((l_k+1)*l_size)-1.);
 				
 				//For each Face
 				for(uint32_t n=0;n<nbFace;++n){
@@ -576,7 +592,7 @@ int main(int argc, char** argv) {
 									if(k >= nbSub_lvl2){ k -= nbSub_lvl2;}
 									
 									// Voxel Properties 
-									Voxel vox = createVoxel(i*voxelSize + leafArray[insideLeafIndex].pos.x + voxelSize*0.5, j*voxelSize + leafArray[insideLeafIndex].pos.y + voxelSize*0.5, k*voxelSize + leafArray[insideLeafIndex].pos.z + voxelSize*0.5, voxelSize);
+									Voxel vox = createVoxel(i*voxelSize + leafArrays[0][insideLeafIndex].pos.x + voxelSize*0.5, j*voxelSize + leafArrays[0][insideLeafIndex].pos.y + voxelSize*0.5, k*voxelSize + leafArrays[0][insideLeafIndex].pos.z + voxelSize*0.5, voxelSize);
 
 									if(processIntersectionPolygonVoxel(tabF[n], edgS1S2, edgS1S3, edgS2S3, upperPlane, lowerPlane, e1, e2, e3, vox, Rc, mode)){
 										/* update the voxel array */
@@ -589,7 +605,7 @@ int main(int argc, char** argv) {
 										if(bending) l_voxelArray[insideArrayIndex][currentIndex].sumBending = l_voxelArray[insideArrayIndex][currentIndex].sumBending + tabF[n].bending;
 										
 										/* update the leaf info */
-										++leafArray[insideLeafIndex].nbIntersection;
+										++leafArrays[0][insideLeafIndex].nbIntersection;
 									}
 								}
 							}
@@ -599,27 +615,27 @@ int main(int argc, char** argv) {
 						l_storedVertices[insideArrayIndex].push_back(*(tabF[n].s1));
 						l_storedVertices[insideArrayIndex].push_back(*(tabF[n].s2));
 						l_storedVertices[insideArrayIndex].push_back(*(tabF[n].s3));
-						leafArray[insideLeafIndex].nbVertices_lvl2+=3;
+						leafArrays[0][insideLeafIndex].nbVertices_lvl2+=3;
 					}
 				}//end foreach face
 				
 				/* if the leaf is not empty, save its voxels */
 				for(unsigned int n = 0; n < NB_LEAVES_IN_GROUP; ++n){
-					if(leafArray[leafIndex[n]].nbIntersection != 0){ // is_intersect
+					if(leafArrays[0][leafIndex[n]].nbIntersection != 0){ // is_intersect
 						/* Save the VoxelData array */
 						test_cache = drn_writer_add_chunk(&cache, l_voxelArray[n], l_voxArrLength*sizeof(VoxelData));
 						
 						if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 						
 						/* Save the vertices lvl2 */
-						test_cache = drn_writer_add_chunk(&cache, l_storedVertices[n].data(), leafArray[leafIndex[n]].nbVertices_lvl2*sizeof(Vertex));
+						test_cache = drn_writer_add_chunk(&cache, l_storedVertices[n].data(), leafArrays[0][leafIndex[n]].nbVertices_lvl2*sizeof(Vertex));
 						
 						/* Set Leaf id */
-						leafArray[leafIndex[n]].id = (drn_writer_get_last_chunk_id(&cache)-2)/2;
-						std::cout<<"//-> Leaf Id : "<<leafArray[leafIndex[n]].id<<std::endl;
+						leafArrays[0][leafIndex[n]].id = (drn_writer_get_last_chunk_id(&cache)-2)/2;
+						std::cout<<"//-> Leaf Id : "<<leafArrays[0][leafIndex[n]].id<<std::endl;
 						
 						/*** TRIANGULARISATION HERE ***/					
-						leafArray[leafIndex[n]].optimal = computeOptimalPoint(leafArray[leafIndex[n]], l_storedVertices[n]);
+						leafArrays[0][leafIndex[n]].optimal = computeOptimalPoint(leafArrays[0][leafIndex[n]], l_storedVertices[n]);
 					}
 				}
 			} //end
@@ -627,53 +643,114 @@ int main(int argc, char** argv) {
 	} // 		leaf
 	std::cout<<"-> Voxelisation finished !"<<std::endl;
 	
-	/* Build the triangles */
-	std::vector<Leaf> l_queue;
-	std::vector< std::vector<Vertex> > l_computedVertices((drn_writer_get_last_chunk_id(&cache)-1)/2);
-	std::cout<<"// computed vertices vector size : "<<l_computedVertices.size()<<std::endl;
-
-	buildTriangles(l_computedVertices, leafArray, nbSub_lvl1);
 	
-	/* Fill the leaves queue */
-	for(uint16_t l_j=0;l_j<nbSub_lvl1;++l_j){
-		for(uint16_t l_k=0;l_k<nbSub_lvl1;++l_k){
-			for(uint16_t l_i=0;l_i<nbSub_lvl1;++l_i){
-				uint32_t currentLeafIndex = l_i + nbSub_lvl1*l_k + l_j*nbSub_lvl1*nbSub_lvl1;
-				//~ std::cout << "index : " << currentLeafIndex << std::endl;
-				if(leafArray[currentLeafIndex].nbIntersection != 0){
-					std::cout<<"//-> NB Vertices saved in leaf : "<<l_computedVertices[leafArray[currentLeafIndex].id].size()<<std::endl;
-					leafArray[currentLeafIndex].nbVertices_lvl1 = l_computedVertices[leafArray[currentLeafIndex].id].size();
-					l_queue.push_back(leafArray[currentLeafIndex]);
+	// BUILD THE TRIANGLES
+	
+	/* Save the number of saved Leaves */
+	uint32_t* nbSavedLeaves = new uint32_t[nbLevel];
+	for(uint16_t idx=1;idx<nbLevel;++idx){ nbSavedLeaves[idx] = 0; }
+	nbSavedLeaves[0] = (drn_writer_get_last_chunk_id(&cache)-1)/2; //finest level of resolution - real number of saved leaves
+	
+	/* Set the computed vertices to the upper leafArrays */
+	for(uint32_t lvl=1;lvl<nbLevel;++lvl){
+		uint16_t crt_nbSub = nbSub_lvl1 / pow(2, int(lvl));
+		uint32_t l_id = 0;
+		/* Fill the other LeafArray */
+		uint32_t l_index[8];
+		for(uint16_t l_i=0;l_i<crt_nbSub;++l_i){
+			for(uint16_t l_j=0;l_j<crt_nbSub;++l_j){
+				for(uint16_t l_k=0;l_k<crt_nbSub;++l_k){
+					uint32_t crt_l = l_i + l_j*crt_nbSub + l_k*crt_nbSub*crt_nbSub;
+					
+					l_index[0] = l_i*2 + l_j*2*crt_nbSub*2 + l_k*2*crt_nbSub*crt_nbSub*4;
+					l_index[1] = l_i*2+1 + l_j*2*crt_nbSub*2 + l_k*2*crt_nbSub*crt_nbSub*4;
+					l_index[2] = l_i*2 + l_j*2*crt_nbSub*2 + (l_k*2+1)*crt_nbSub*crt_nbSub*4;
+					l_index[3] = l_i*2+1 + l_j*2*crt_nbSub*2 + (l_k*2+1)*crt_nbSub*crt_nbSub*4;
+					l_index[4] = l_i*2 + (l_j*2+1)*crt_nbSub*2 + l_k*2*crt_nbSub*crt_nbSub*4;
+					l_index[5] = l_i*2+1 + (l_j*2+1)*crt_nbSub*2 + l_k*2*crt_nbSub*crt_nbSub*4;
+					l_index[6] = l_i*2 + (l_j*2+1)*crt_nbSub*2 + (l_k*2+1)*crt_nbSub*crt_nbSub*4;
+					l_index[7] = l_i*2+1 + (l_j*2+1)*crt_nbSub*2 + (l_k*2+1)*crt_nbSub*crt_nbSub*4;
+					
+					double l_size = leafArrays[lvl-1][crt_l].size*2;
+					leafArrays[lvl][crt_l].size = l_size;
+					leafArrays[lvl][crt_l].pos = glm::dvec3(l_i*l_size -1., l_j*l_size -1., l_k*l_size -1.);
+					std::vector<Vertex> optPoints;
+					for(uint32_t idx=0;idx<8;idx++){
+						leafArrays[lvl][crt_l].nbIntersection += leafArrays[lvl-1][l_index[idx]].nbIntersection;
+						if(leafArrays[lvl-1][l_index[idx]].nbIntersection != 0){
+							optPoints.push_back(leafArrays[lvl-1][l_index[idx]].optimal);
+						}
+					}
+					if(leafArrays[lvl][crt_l].nbIntersection != 0){
+						leafArrays[lvl][crt_l].optimal = computeAvrOptimalPoint(optPoints);
+						leafArrays[lvl][crt_l].id = l_id;
+						l_id++;
+						nbSavedLeaves[lvl]++;
+					}
 				}
 			}
 		}
+		std::cout<<std::endl;
 	}
 	
-	//~ sort the leaves by chunk_id
-	std::cout << std::endl;
-	std::sort(l_queue.begin(), l_queue.end(), l_queue.front());
+	/* Create queue of leaves */
+	std::vector<std::vector<Leaf> > l_queues(nbLevel);
 	
-	/* Save the computed triangle */	
-	for(unsigned int n = 0; n < l_queue.size(); ++n){
-		test_cache = drn_writer_add_chunk(&cache, l_computedVertices[l_queue[n].id].data(), l_computedVertices[l_queue[n].id].size()*sizeof(Vertex));
+	for(uint16_t lvl=0;lvl<nbLevel;++lvl){
+		uint32_t crt_nbSub = nbSub_lvl1/pow(2, lvl);
+		std::vector< std::vector<Vertex> > l_computedVertices(nbSavedLeaves[lvl]);
+		
+		buildTriangles(l_computedVertices, leafArrays[lvl], crt_nbSub);
+		
+		/* Fill the leaves queue */
+		for(uint16_t l_j=0;l_j<crt_nbSub;++l_j){
+			for(uint16_t l_k=0;l_k<crt_nbSub;++l_k){
+				for(uint16_t l_i=0;l_i<crt_nbSub;++l_i){
+					uint32_t currentLeafIndex = l_i + crt_nbSub*l_k + l_j*crt_nbSub*crt_nbSub;
+					if(leafArrays[lvl][currentLeafIndex].nbIntersection != 0){
+						std::cout<<"//-> NB Vertices saved in leaf : "<<l_computedVertices[leafArrays[0][currentLeafIndex].id].size()<<std::endl;
+						leafArrays[lvl][currentLeafIndex].nbVertices_lvl1 = l_computedVertices[leafArrays[lvl][currentLeafIndex].id].size();
+						l_queues[lvl].push_back(leafArrays[lvl][currentLeafIndex]);
+					}
+				}
+			}
+		}
+		
+		//sort the leaves by chunk_id
+		std::sort(l_queues[lvl].begin(), l_queues[lvl].end(), l_queues[lvl].front());
+		
+		/* Save the computed triangle */	
+		for(unsigned int n = 0; n < l_queues[lvl].size(); ++n){
+			test_cache = drn_writer_add_chunk(&cache, l_computedVertices[l_queues[lvl][n].id].data(), l_computedVertices[l_queues[lvl][n].id].size()*sizeof(Vertex));
+		}
+		
+		std::cout << "Number of leaves saved : "<< l_queues[lvl].size() << std::endl;
 	}
 	
-	std::cout << "Number of leaves saved : "<< l_queue.size() << std::endl;
-
-	/* writing the Leaf chunck */
-	test_cache = drn_writer_add_chunk(&cache, l_queue.data(), l_queue.size()*sizeof(Leaf));
-
+	/* Save the leaf queues */
+	for(uint16_t lvl=0;lvl<nbLevel;++lvl){
+		/* writing the Leaf chunck */
+		test_cache = drn_writer_add_chunk(&cache, l_queues[lvl].data(), l_queues[lvl].size()*sizeof(Leaf));
+	}
+	
+	/* Save the number of saved leaves per level */
+	test_cache = drn_writer_add_chunk(&cache, nbSavedLeaves, nbLevel*sizeof(uint32_t));
+	if(test_cache < 0){ throw std::runtime_error("unable to close the data file"); }		
+	
 	/* Close the DATA file */
 	test_cache = drn_close_writer(&cache);
 	if(test_cache < 0){ throw std::runtime_error("unable to close the data file"); }
 
 	delete[] tabV;
 	delete[] tabF;
-	for(unsigned int n = 0; n < 8; ++n){
+	for(uint32_t n = 0; n < NB_LEAVES_IN_GROUP; ++n){
 		delete[] l_voxelArray[n];
 	}
-	delete[] leafArray;
+	for(uint32_t n = 0; n < nbLevel; ++n){
+		delete[] leafArrays[n];
+	}
 	delete[] maxCoeffArray;
+	delete[] nbSavedLeaves;
 
 	return EXIT_SUCCESS;
 }
