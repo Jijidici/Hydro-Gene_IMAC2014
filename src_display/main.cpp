@@ -168,11 +168,14 @@ int main(int argc, char** argv){
 	GLuint texture_pinetree = CreateTexture("textures/pine_tree.png");
 	GLuint texture_waterplant = CreateTexture("textures/water_plant.png");
 	/* terrain textures */
-	GLuint texture_grass = CreateTexture("textures/grass.jpg");
-	GLuint texture_water = CreateTexture("textures/water.png");
-	GLuint texture_stone = CreateTexture("textures/stone.jpg");
-	GLuint texture_snow = CreateTexture("textures/snow.jpg");
-	GLuint texture_sand = CreateTexture("textures/sand.jpeg");
+	GLuint texture_terrain[5];
+	texture_terrain[0] = CreateTexture("textures/grass.jpg");
+	texture_terrain[1] = CreateTexture("textures/water.png");
+	texture_terrain[2] = CreateTexture("textures/stone.jpg");
+	texture_terrain[3] = CreateTexture("textures/snow.jpg");
+	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
+	
+	
 	
 	/* Leaves VBOs & VAOs creation */
 	GLuint* l_VBOs = new GLuint[nbVao];
@@ -400,8 +403,8 @@ int main(int argc, char** argv){
 			ms.scale(glm::vec3(100.f, 100.f, 100.f));
 			glUniform1i(ChoiceLocation, NORMAL);
 			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-			BindTexture(texture_grass, GL_TEXTURE0);
-			BindTexture(texture_water, GL_TEXTURE1);
+			BindTexture(texture_terrain[0], GL_TEXTURE0);
+			BindTexture(texture_terrain[1], GL_TEXTURE1);
 				glBindVertexArray(groundVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 6);
 				glBindVertexArray(0);
@@ -435,34 +438,14 @@ int main(int argc, char** argv){
 							if(currentCam == FREE_FLY){
 								//FRUSTUM CULLING
 								if(ffCam.leavesFrustum(leafArrays[0][idx])){
-									BindTexture(texture_grass, GL_TEXTURE0);
-									BindTexture(texture_water, GL_TEXTURE1);
-									BindTexture(texture_stone, GL_TEXTURE2);
-									BindTexture(texture_snow, GL_TEXTURE3);
-									BindTexture(texture_sand, GL_TEXTURE4);
-										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2);
-									BindTexture(0, GL_TEXTURE4);
-									BindTexture(0, GL_TEXTURE3);
-									BindTexture(0, GL_TEXTURE2);
-									BindTexture(0, GL_TEXTURE1);
-									BindTexture(0, GL_TEXTURE0);
+										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 									if(displayVegetation){
 										display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
 									}
 									break;
 								}
 							}else{
-								BindTexture(texture_grass, GL_TEXTURE0);
-								BindTexture(texture_water, GL_TEXTURE1);
-								BindTexture(texture_stone, GL_TEXTURE2);
-								BindTexture(texture_snow, GL_TEXTURE3);
-								BindTexture(texture_snow, GL_TEXTURE4);
-									display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2);
-								BindTexture(0, GL_TEXTURE4);
-								BindTexture(0, GL_TEXTURE3);
-								BindTexture(0, GL_TEXTURE2);
-								BindTexture(0, GL_TEXTURE1);
-								BindTexture(0, GL_TEXTURE0);
+								display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 								if(displayVegetation){
 									display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, TextureLocation, texture_pinetree);
 								}
@@ -471,19 +454,7 @@ int main(int argc, char** argv){
 						}
 					}
 				}else{
-					/* display the triangularized leaf */
-					glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-					BindTexture(texture_grass, GL_TEXTURE0);
-					BindTexture(texture_water, GL_TEXTURE1);
-					BindTexture(texture_stone, GL_TEXTURE2);
-					BindTexture(texture_snow, GL_TEXTURE3);
-					BindTexture(texture_snow, GL_TEXTURE4);
-						display_triangle(l_VAOs[idx], ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl1);
-					BindTexture(0, GL_TEXTURE4);
-					BindTexture(0, GL_TEXTURE3);
-					BindTexture(0, GL_TEXTURE2);
-					BindTexture(0, GL_TEXTURE1);
-					BindTexture(0, GL_TEXTURE0);
+					display_triangle(l_VAOs[idx], ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl1, texture_terrain);
 				}
 
 				//DISPLAY OF THE COEFFICIENTS
