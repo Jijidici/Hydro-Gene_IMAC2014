@@ -44,19 +44,6 @@ static const size_t BYTES_PER_PIXEL = 32;
 
 static const size_t GRID_3D_SIZE = 2;
 
-void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLint ChoiceLocation, GLint TextureLocation, GLuint texture){
-
-	glUniform1i(ChoiceLocation, VEGET);
-	glUniform1i(TextureLocation,0);
-	BindTexture(texture, GL_TEXTURE0);
-		glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-	
-		glBindVertexArray(meshVAO);
-			glDrawArrays(GL_TRIANGLES, 0, nbVertices);
-		glBindVertexArray(0);
-	BindTexture(0, GL_TEXTURE0);
-}
-
 int main(int argc, char** argv){
 
 	/* Open DATA file */
@@ -69,7 +56,7 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Nb chunks :"<<nbChunks<<std::endl;
 
 	/* Getting the config data */
-	uint16_t arguments[7];
+	uint16_t arguments[8];
 		//0 : nbSub_lvl1
 		//1 : nbSub_lvl2
 		//2 : normal
@@ -77,14 +64,17 @@ int main(int argc, char** argv){
 		//4 : drain
 		//5 : gradient
 		//6 : surface
+		//7 : nbLevel
 	
 	test_cache = drn_read_chunk(&cache, 0, arguments);
 
 	uint16_t nbSub_lvl1 = arguments[0];
 	uint16_t nbSub_lvl2 = arguments[1];
+	uint16_t nbLevel = arguments[7];
 	
 	std::cout<<"//-> Nb Subdivision lvl 1 : "<<nbSub_lvl1<<std::endl;
 	std::cout<<"//-> Nb Subdivision lvl 2 : "<<nbSub_lvl2<<std::endl;
+	std::cout<<"//-> Nb possible levels : "<<nbLevel<<std::endl;
 	
 	uint32_t lengthTabVoxel = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
 	
@@ -94,21 +84,35 @@ int main(int argc, char** argv){
 	/* Getting the maximum hydro properties coefficients */
 	float * maxCoeffArray = new float[6];
 	test_cache = drn_read_chunk(&cache, 1, maxCoeffArray);
-
-	/* Getting the leaf chunk (last chunk) */
-	uint32_t nbLeaves = (nbChunks-2)/3;
-	uint32_t lvl2_dataOffset = nbLeaves*2;
-	std::cout<<"//-> Nb Leaves saved : "<<nbLeaves<<std::endl;
-
-	Leaf* leafArray = new Leaf[nbLeaves];
-	test_cache = drn_read_chunk(&cache, nbChunks-1, leafArray);
 	
+	/* Getting the nb leaves chunk (last chunk) */
+	uint32_t* nbLeaves = new uint32_t[nbLevel];
+	test_cache = drn_read_chunk(&cache, nbChunks-1, nbLeaves);
+	
+	/* create chunk offset array - to getting the right triangle chunk in one specific level */
+	uint32_t* chunkOffset = new uint32_t[nbLevel];
+	chunkOffset[0] = CONFIGCHUNK_OFFSET + 2*nbLeaves[0];
+	for(uint16_t lvl=1;lvl<nbLevel;++lvl){
+		chunkOffset[lvl] = chunkOffset[lvl-1] + nbLeaves[lvl-1];
+	}
+	
+	/* Getting the leaf arrays */
+	uint32_t nbVao = 0;
+	std::vector<Leaf*> leafArrays(nbLevel);
+	for(uint16_t lvl=0;lvl<nbLevel;++lvl){
+		leafArrays[lvl] = new Leaf[nbLeaves[lvl]];
+		test_cache = drn_read_chunk(&cache, nbChunks-1-nbLevel+lvl, leafArrays[lvl]);
+		
+		nbVao+=nbLeaves[lvl];
+	}
 	
 	/* Array which know if a leaf grid is loaded or not */
-	bool* loadedLeaf = new bool[nbLeaves];
-	for(uint16_t idx=0;idx<nbLeaves;++idx){
+	bool* loadedLeaf = new bool[nbLeaves[0]];
+	for(uint16_t idx=0;idx<nbLeaves[0];++idx){
 		loadedLeaf[idx] = false;
 	}
+	
+	std::cout<<"//-> NB VAO & VBO : "<<nbVao<<std::endl;
 	
 	/* ************************************************************* */
 	/* *************INITIALISATION OPENGL/SDL*********************** */
@@ -153,36 +157,49 @@ int main(int argc, char** argv){
 	GLuint texture_pinetree = CreateTexture("textures/pine_tree.png");
 	GLuint texture_waterplant = CreateTexture("textures/water_plant.png");
 	/* terrain textures */
-	GLuint texture_grass = CreateTexture("textures/grass.jpg");
-	GLuint texture_water = CreateTexture("textures/water.png");
-	GLuint texture_stone = CreateTexture("textures/stone.jpg");
-	GLuint texture_snow = CreateTexture("textures/snow.jpg");
-	GLuint texture_sand = CreateTexture("textures/sand.jpeg");
+	GLuint texture_terrain[5];
+	texture_terrain[0] = CreateTexture("textures/grass.jpg");
+	texture_terrain[1] = CreateTexture("textures/water.png");
+	texture_terrain[2] = CreateTexture("textures/stone.jpg");
+	texture_terrain[3] = CreateTexture("textures/snow.jpg");
+	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
+	
+	
 	
 	/* Leaves VBOs & VAOs creation */
-	GLuint* l_VBOs = new GLuint[nbLeaves];
-	glGenBuffers(nbLeaves, l_VBOs);
+	GLuint* l_VBOs = new GLuint[nbVao];
+	glGenBuffers(nbVao, l_VBOs);
 	
-	GLuint* l_VAOs = new GLuint[nbLeaves];
-	glGenVertexArrays(nbLeaves, l_VAOs);
+	GLuint* l_VAOs = new GLuint[nbVao];
+	glGenVertexArrays(nbVao, l_VAOs);
 	
-	for(uint32_t l_idx=0;l_idx<nbLeaves;++l_idx){
+	uint16_t currentLevel=0;
+	uint16_t levelFloor = nbLeaves[0];
+	uint16_t offset_idx = 0;
+	for(uint32_t idx=0;idx<nbVao;++idx){
+		//check the level
+		if(idx >= levelFloor){
+			currentLevel++;
+			offset_idx = levelFloor;
+			levelFloor += nbLeaves[currentLevel];
+		}
+	
 		//load the vertices
-		Vertex* trVertices = new Vertex[leafArray[l_idx].nbVertices_lvl1];
-		test_cache = drn_read_chunk(&cache, leafArray[l_idx].id+lvl2_dataOffset+CONFIGCHUNK_OFFSET, trVertices); /*******/
+		Vertex* trVertices = new Vertex[leafArrays[currentLevel][idx-offset_idx].nbVertices_lvl1];
+		test_cache = drn_read_chunk(&cache, leafArrays[currentLevel][idx-offset_idx].id+chunkOffset[currentLevel], trVertices);
 		
-		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]); /*** PROBLEM HERE ***/
-			glBufferData(GL_ARRAY_BUFFER, leafArray[l_idx].nbVertices_lvl1*sizeof(Vertex), trVertices, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[idx]);
+			glBufferData(GL_ARRAY_BUFFER, leafArrays[currentLevel][idx-offset_idx].nbVertices_lvl1*sizeof(Vertex), trVertices, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		
-		glBindVertexArray(l_VAOs[l_idx]);
+		glBindVertexArray(l_VAOs[idx]);
 			glEnableVertexAttribArray(POSITION_LOCATION);
 			glEnableVertexAttribArray(NORMAL_LOCATION);
 			glEnableVertexAttribArray(BENDING_LOCATION);
 			glEnableVertexAttribArray(DRAIN_LOCATION);
 			glEnableVertexAttribArray(GRADIENT_LOCATION);
 			glEnableVertexAttribArray(SURFACE_LOCATION);
-			glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[l_idx]);
+			glBindBuffer(GL_ARRAY_BUFFER, l_VBOs[idx]);
 				glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
 				glVertexAttribPointer(NORMAL_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3*sizeof(GLdouble)));
 				glVertexAttribPointer(BENDING_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)));
@@ -235,15 +252,19 @@ int main(int argc, char** argv){
 	GLuint program = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
 	if(!program){
 		glDeleteBuffers(1, &cubeVBO);
-		glDeleteBuffers(nbLeaves, l_VBOs);
+		glDeleteBuffers(nbVao, l_VBOs);
 		glDeleteBuffers(1, &groundVBO);
 		glDeleteVertexArrays(1, &cubeVAO);
-		glDeleteVertexArrays(nbLeaves, l_VAOs);
+		glDeleteVertexArrays(nbVao, l_VAOs);
 		glDeleteVertexArrays(1, &groundVAO);
 		delete[] l_VAOs;
 		delete[] l_VBOs;
-		delete[] leafArray;
 		delete[] loadedLeaf;
+		for(uint16_t lvl=0;lvl<nbLevel;++lvl){
+			delete[] leafArrays[lvl];
+		}
+		delete[] nbLeaves;
+		delete[] chunkOffset;
 		return (EXIT_FAILURE);
 	}
 	glUseProgram(program);
@@ -320,14 +341,14 @@ int main(int argc, char** argv){
 	std::vector<Chunk> memory;
 	
 	/* init memory */
-	size_t currentMemCache = initMemory(memory, leafArray, loadedLeaf, nbLeaves, nbSub_lvl2,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
+	size_t currentMemCache = initMemory(memory, leafArrays[0], loadedLeaf, nbLeaves[0], nbSub_lvl2,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
 	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
 	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
 
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
-	//~ glEnable(GL_CULL_FACE); /* not so cool */
-	//~ glCullFace(GL_FRONT);
+	//~ //glEnable(GL_CULL_FACE); /* not so cool */
+	//~ //glCullFace(GL_FRONT);
 	glDepthFunc(GL_LEQUAL);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.f);
 	
@@ -390,8 +411,8 @@ int main(int argc, char** argv){
 			ms.scale(glm::vec3(100.f, 100.f, 100.f));
 			glUniform1i(ChoiceLocation, NORMAL);
 			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-			BindTexture(texture_grass, GL_TEXTURE0);
-			BindTexture(texture_water, GL_TEXTURE1);
+			BindTexture(texture_terrain[0], GL_TEXTURE0);
+			BindTexture(texture_terrain[1], GL_TEXTURE1);
 				glBindVertexArray(groundVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 6);
 				glBindVertexArray(0);
@@ -410,80 +431,66 @@ int main(int argc, char** argv){
 			}
 			ms.mult(V);
 
-			//For each leaf
-			for(uint16_t idx=0;idx<nbLeaves;++idx){
-				double d = computeDistanceLeafCamera(leafArray[idx], V, halfLeafSize);
-				if(d<thresholdDistance){
-					if(!loadedLeaf[idx]){
-						Chunk voidChunk = freeInMemory(memory, loadedLeaf);
-						loadInMemory(memory, leafArray[idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
-						loadedLeaf[idx] = true;
-						std::sort(memory.begin(), memory.end(), memory.front());
+			uint32_t vao_idx = 0;
+			//For each level
+			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
+				//For each leaf
+				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
+					double d = computeDistanceLeafCamera(leafArrays[lvl][idx], V);
+					double crt_lvlTD = thresholdDistance*(lvl+1);
+					double nxt_lvlTD = 0;
+					/* special case of uppest level */
+					if(lvl == nbLevel-1){
+						nxt_lvlTD = 1000;
+					}else{
+						nxt_lvlTD = crt_lvlTD+thresholdDistance;
 					}
-					for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
-						if(idx == n->idxLeaf){
-							if(currentCam == FREE_FLY){
-								//FRUSTUM CULLING
-								if(ffCam.leavesFrustum(leafArray[idx])){
-									BindTexture(texture_grass, GL_TEXTURE0);
-									BindTexture(texture_water, GL_TEXTURE1);
-									BindTexture(texture_stone, GL_TEXTURE2);
-									BindTexture(texture_snow, GL_TEXTURE3);
-									BindTexture(texture_sand, GL_TEXTURE4);
-										display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
-									BindTexture(0, GL_TEXTURE4);
-									BindTexture(0, GL_TEXTURE3);
-									BindTexture(0, GL_TEXTURE2);
-									BindTexture(0, GL_TEXTURE1);
-									BindTexture(0, GL_TEXTURE0);
+					
+					//display the leaf of this level if it is in the distance fork
+					if(crt_lvlTD <= d && d < nxt_lvlTD){
+						display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+					}
+					
+					//special case of lvl 0
+					if(lvl == 0 && d < thresholdDistance){
+						if(!loadedLeaf[idx]){
+							Chunk voidChunk = freeInMemory(memory, loadedLeaf);
+							loadInMemory(memory, leafArrays[0][idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
+							loadedLeaf[idx] = true;
+							std::sort(memory.begin(), memory.end(), memory.front());
+						}
+						for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+							if(idx == n->idxLeaf){
+								if(currentCam == FREE_FLY){
+									//FRUSTUM CULLING
+									if(ffCam.leavesFrustum(leafArrays[0][idx])){
+											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+										if(displayVegetation){
+											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+										}
+										break;
+									}
+								}else{
+									display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 									if(displayVegetation){
-										display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+										display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
 									}
 									break;
 								}
-							}else{
-								BindTexture(texture_grass, GL_TEXTURE0);
-								BindTexture(texture_water, GL_TEXTURE1);
-								BindTexture(texture_stone, GL_TEXTURE2);
-								BindTexture(texture_snow, GL_TEXTURE3);
-								BindTexture(texture_snow, GL_TEXTURE4);
-									display_triangle(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2);
-								BindTexture(0, GL_TEXTURE4);
-								BindTexture(0, GL_TEXTURE3);
-								BindTexture(0, GL_TEXTURE2);
-								BindTexture(0, GL_TEXTURE1);
-								BindTexture(0, GL_TEXTURE0);
-								if(displayVegetation){
-									display_vegetation(n->vao, ms, MVPLocation, leafArray[idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
-								}
-								break;
 							}
 						}
 					}
-				}else{
-					/* display the triangularized leaf */
-					glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-					BindTexture(texture_grass, GL_TEXTURE0);
-					BindTexture(texture_water, GL_TEXTURE1);
-					BindTexture(texture_stone, GL_TEXTURE2);
-					BindTexture(texture_snow, GL_TEXTURE3);
-					BindTexture(texture_snow, GL_TEXTURE4);
-						glBindVertexArray(l_VAOs[idx]);
-							glDrawArrays(GL_TRIANGLES, 0, leafArray[idx].nbVertices_lvl1);
-						glBindVertexArray(0);
-					BindTexture(0, GL_TEXTURE4);
-					BindTexture(0, GL_TEXTURE3);
-					BindTexture(0, GL_TEXTURE2);
-					BindTexture(0, GL_TEXTURE1);
-					BindTexture(0, GL_TEXTURE0);
-				}
 
-				//DISPLAY OF THE COEFFICIENTS
-				if(displayNormal) glUniform1i(ChoiceLocation, NORMAL);
-				else if(displayDrain) glUniform1i(ChoiceLocation, DRAIN);
-				else if(displayBending) glUniform1i(ChoiceLocation, BENDING);
-				else if(displayGradient) glUniform1i(ChoiceLocation, GRADIENT);
-				else if(displaySurface) glUniform1i(ChoiceLocation, SURFACE);
+					//DISPLAY OF THE COEFFICIENTS
+					if(displayNormal) glUniform1i(ChoiceLocation, NORMAL);
+					else if(displayDrain) glUniform1i(ChoiceLocation, DRAIN);
+					else if(displayBending) glUniform1i(ChoiceLocation, BENDING);
+					else if(displayGradient) glUniform1i(ChoiceLocation, GRADIENT);
+					else if(displaySurface) glUniform1i(ChoiceLocation, SURFACE);
+					
+					//set the vao idx
+					++vao_idx;
+				}
 			}
 		ms.pop();
 
@@ -614,11 +621,11 @@ int main(int argc, char** argv){
 							break;
 						
 						case SDLK_UP:
-							thresholdDistance += 0.1f;
+							thresholdDistance += 0.01f;
 							break;
 							
 						case SDLK_DOWN:
-							thresholdDistance -= 0.1f;
+							thresholdDistance -= 0.01f;
 							break;
 						
 						case SDLK_v:
@@ -807,13 +814,17 @@ int main(int argc, char** argv){
 		glDeleteBuffers(1, &(tmpChunk.vbo));
 	}
 	
-	glDeleteBuffers(nbLeaves, l_VBOs);
-	glDeleteVertexArrays(nbLeaves, l_VAOs);
+	glDeleteBuffers(nbVao, l_VBOs);
+	glDeleteVertexArrays(nbVao, l_VAOs);
 	delete[] l_VAOs;
 	delete[] l_VBOs;
-	delete[] leafArray;
+	for(uint16_t lvl=0;lvl<nbLevel;++lvl){
+		delete[] leafArrays[lvl];
+	}
 	delete[] loadedLeaf;
 	delete[] maxCoeffArray;
+	delete[] nbLeaves;
+	delete[] chunkOffset;
 
 	return (EXIT_SUCCESS);
 }
