@@ -37,7 +37,8 @@ void printHelp(){
 	std::cout << "-b : saving the bending coefficients in the voxel_data file" << std::endl;
 	std::cout << "-g : saving the faces gradients in the voxel_data file" << std::endl;
 	std::cout << "-s : saving the surfaces in the voxel_data file" << std::endl;
-	std::cout << "-d : saving the drain coefficients in the voxel_data file" << std::endl;
+	std::cout << "-d : saving the drain coefficients in the voxel_data file" << std::endl << std::endl;
+	std::cout << "-a : saving all these datas" << std::endl << std::endl;
 	std::cout << "##################################" << std::endl << std::endl;
 }
 /*************************************/
@@ -129,6 +130,23 @@ int main(int argc, char** argv) {
 					std::cout << "-> Requested : loading of the gradient coefficients" << std::endl;
 					gradient = 1;
 				}
+			}
+			// everything requested
+			else if(strcmp(tabArguments[i],"-a") == 0){
+				if(!normal && !p4Requested && mode==0) std::cout << "############ REQUESTS ############" << std::endl;
+				p4Requested = 1;
+				
+				std::cout << "-> Requested : everything" << std::endl;
+				std::cout << "-> loading of the normals" << std::endl;
+				normal = 1;
+				std::cout << "-> loading of the drain coefficients" << std::endl;
+				drain = 1;
+				std::cout << "-> loading of the bending coefficients" << std::endl;
+				bending = 1;
+				std::cout << "-> loading of the surfaces" << std::endl;
+				surface = 1;
+				std::cout << "-> loading of the gradient coefficients" << std::endl;
+				gradient = 1;
 			}
 			else{
 				std::cout << std::endl << "[!] -> Warning : the request \"" << tabArguments[i] << "\" does not exist.";
