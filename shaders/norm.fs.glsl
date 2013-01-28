@@ -43,6 +43,11 @@ uniform float uMaxAltitude = 0;
 out vec4 fFragColor;
 
 void main() {
+	float coefDay = uDay;
+	float coefNight = uNight;
+	if(coefDay < 0.){coefDay = 0.;}
+	if(coefNight < 0.){coefNight = 0.;}
+	
 	if(uMode == TRIANGLES){
 	
 		/* ratios */
@@ -118,20 +123,18 @@ void main() {
 		fFragColor = vec4(color, 1.f);
 
 		if(uChoice == VEGET){
-			vec4 texel = texture(uPineTreeTex, gTexCoords);
-				if(texel.a <0.5){
+			vec4 texel = texture(uPineTreeTex, gTexCoords)*0.1;
+				if(texel.a <0.1){
 					discard;
 			}
+			texel += texture(uPineTreeTex, gTexCoords)*min(coefDay, 0.7);
+			texel += vec4(0.1f*abs(uTime)*min(coefDay, 0.3),0.f,0.05f*(1.-abs(uTime))*min(coefNight, 0.3),0.f);
 			fFragColor = texel;
 		}	
 
 	}
 	else if(uMode == SKYBOX){
-		float coefDay = uDay;
-		float coefNight = uNight;
-		if(coefDay < 0.){coefDay = 0.;}
-		if(coefNight < 0.){coefNight = 0.;}
-		fFragColor = texture(uSkyTex, gTexCoords)*(min(coefDay+0.05,1.)) + texture(uNightTex, gTexCoords)*(min(coefNight+0.,1.));
+		fFragColor = texture(uSkyTex, gTexCoords)*(min(coefDay+0.05,1.)) + texture(uNightTex, gTexCoords)*(min(coefNight,1.));
 		fFragColor += vec4(0.1f*abs(uTime),0.f,0.05f*(1.-abs(uTime)),0.f);
 	}
 }

@@ -26,12 +26,14 @@ out float vAltitude;
 void main(){
 
 	if(uMode == SKYBOX){
+		vPos = position;
 		vTexCoords = texcoords;
 		vec4 realPosition = uMVPMatrix * vec4(position, 1.f);
 		realPosition = realPosition.xyww;
 		gl_Position = realPosition;
 	}
 	else if(uMode == TRIANGLES){
+		vPos = position;
 		vTexCoords = (position.xz+1)*0.5;
 		vNormal = normal;
 		vBending = bending;
