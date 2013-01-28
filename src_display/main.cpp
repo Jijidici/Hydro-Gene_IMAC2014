@@ -152,10 +152,13 @@ int main(int argc, char** argv){
 	GLuint texture_sky = CreateTexture("textures/sky.jpg");
 	GLuint texture_night = CreateTexture("textures/night.jpg");
 	/* vegetation textures */
-	GLuint texture_plant = CreateTexture("textures/plant.png");
-	GLuint texture_tree = CreateTexture("textures/tree.png");
-	GLuint texture_pinetree = CreateTexture("textures/pine_tree.png");
-	GLuint texture_waterplant = CreateTexture("textures/water_plant.png");
+	GLuint texture_veget[5];
+	texture_veget[0] = CreateTexture("textures/rock.png");
+	texture_veget[1] = CreateTexture("textures/plant.png");
+	texture_veget[2] = CreateTexture("textures/tree.png");
+	texture_veget[3] = CreateTexture("textures/pine_tree.png");
+	texture_veget[4] = CreateTexture("textures/snow_tree.png");
+
 	/* terrain textures */
 	GLuint texture_terrain[5];
 	texture_terrain[0] = CreateTexture("textures/grass.jpg");
@@ -163,7 +166,6 @@ int main(int argc, char** argv){
 	texture_terrain[2] = CreateTexture("textures/stone.jpg");
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
-	
 	
 	
 	/* Leaves VBOs & VAOs creation */
@@ -296,7 +298,13 @@ int main(int argc, char** argv){
 	GLint StoneTexLocation = glGetUniformLocation(program, "uStoneTex");
 	GLint SnowTexLocation = glGetUniformLocation(program, "uSnowTex");
 	GLint SandTexLocation = glGetUniformLocation(program, "uSandTex");
-	GLint VegetationTexLocation = glGetUniformLocation(program, "uVegetationTex");
+
+	GLint RockTexLocation = glGetUniformLocation(program, "uRockTex");
+	GLint PlantTexLocation = glGetUniformLocation(program, "uPlantTex");
+	GLint TreeTexLocation = glGetUniformLocation(program, "uTreeTex");
+	GLint PineTreeTexLocation = glGetUniformLocation(program, "uPineTreeTex");
+	GLint SnowTreeTexLocation = glGetUniformLocation(program, "uSnowTreeTex");
+
 	/* Shaders modes */
 	GLint ModeLocation = glGetUniformLocation(program, "uMode");
 	GLint ChoiceLocation = glGetUniformLocation(program, "uChoice");
@@ -315,13 +323,19 @@ int main(int argc, char** argv){
 	glUniform1f(MaxAltitudeLocation, maxCoeffArray[4]);
 	
 	// Send terrain textures
-	glUniform1i(GrassTexLocation,0);
+	glUniform1i(GrassTexLocation, 0);
 	glUniform1i(WaterTexLocation, 1);
 	glUniform1i(StoneTexLocation, 2);
 	glUniform1i(SnowTexLocation, 3);
 	glUniform1i(SandTexLocation, 4);
 	glUniform1i(SkyTexLocation, 5);
 	glUniform1i(NightTexLocation, 6);
+
+	glUniform1i(RockTexLocation, 0);
+	glUniform1i(PlantTexLocation, 1);
+	glUniform1i(TreeTexLocation, 2);
+	glUniform1i(PineTreeTexLocation, 3);
+	glUniform1i(SnowTreeTexLocation, 4);
 	
 	// Creation Light
 	float coefLight = 0.;
@@ -474,7 +488,7 @@ int main(int argc, char** argv){
 									if(ffCam.leavesFrustum(leafArrays[0][idx])){
 											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 										if(displayVegetation){
-											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, texture_veget);
 										}
 										break;
 									}
@@ -483,14 +497,14 @@ int main(int argc, char** argv){
 										if(ffCam.leavesFrustum(leafArrays[0][idx])){ // wrong frustum - comment this line to display every leaf with TrackBallCam
 											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 											if(displayVegetation){
-												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, texture_veget);
 											}
 											break;
 										} // comment too
 									}else{
 										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 										if(displayVegetation){
-											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, texture_veget);
 										}
 										break;
 									}

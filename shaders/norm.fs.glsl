@@ -28,7 +28,11 @@ uniform sampler2D uWaterTex;
 uniform sampler2D uStoneTex;
 uniform sampler2D uSnowTex;
 uniform sampler2D uSandTex;
+uniform sampler2D uRockTex;
+uniform sampler2D uPlantTex;
+uniform sampler2D uTreeTex;
 uniform sampler2D uPineTreeTex;
+uniform sampler2D uSnowTreeTex;
 uniform int uMode;
 uniform int uChoice;
 uniform float uTime;
@@ -70,7 +74,7 @@ void main() {
 		float restingCoef = 1.;
 		
 		float coefWater = min(10*ratioDrain, restingCoef);
-		restingCoef -= coefWater;	
+		restingCoef -= coefWater;
 			
 		float coefSnow = min(max(8*(restingCoef*ratioAltitude-0.75), 0.), restingCoef);
 		restingCoef -= coefSnow;
@@ -123,15 +127,47 @@ void main() {
 		fFragColor = vec4(color, 1.f);
 
 		if(uChoice == VEGET){
-			vec4 texel = texture(uPineTreeTex, gTexCoords)*0.1;
-				if(texel.a <0.1){
-					discard;
-			}
-			texel += texture(uPineTreeTex, gTexCoords)*min(coefDay, 0.7);
-			texel += vec4(0.1f*abs(uTime)*min(coefDay, 0.3),0.f,0.05f*(1.-abs(uTime))*min(coefNight, 0.3),0.f);
-			fFragColor = texel;
+			vec4 texel;
+			if(ratioGradient < 0.8){
+				if(ratioGradient < 0.1){
+					texel = texture(uPlantTex, gTexCoords)*0.1;
+						if(texel.a <0.01){
+							discard;
+					}
+					texel += texture(uPlantTex, gTexCoords)*min(coefDay, 0.7);
+				}
+				else if(ratioAltitude > 0.5 && ratioGradient > 0.5){
+					texel = texture(uRockTex, gTexCoords)*0.1;
+						if(texel.a <0.01){
+							discard;
+					}
+					texel += texture(uRockTex, gTexCoords)*min(coefDay, 0.7);
+				}
+				else if(ratioAltitude > 0.5 && ratioAltitude <= 0.8){
+					texel = texture(uPineTreeTex, gTexCoords)*0.1;
+						if(texel.a <0.01){
+							discard;
+					}
+					texel += texture(uPineTreeTex, gTexCoords)*min(coefDay, 0.7);
+				}
+				else if(ratioAltitude > 0.8){
+					texel = texture(uSnowTreeTex, gTexCoords)*0.1;
+						if(texel.a <0.01){
+							discard;
+					}
+					texel += texture(uSnowTreeTex, gTexCoords)*min(coefDay, 0.7);
+				}
+				else{
+					texel = texture(uTreeTex, gTexCoords)*0.1;
+						if(texel.a <0.01){
+							discard;
+					}
+					texel += texture(uTreeTex, gTexCoords)*min(coefDay, 0.7);
+				}
+				texel += vec4(0.1f*abs(uTime)*min(coefDay, 0.3),0.f,0.05f*(1.-abs(uTime))*min(coefNight, 0.3),0.f);
+				fFragColor = texel;
+			}else discard;
 		}	
-
 	}
 	else if(uMode == SKYBOX){
 		fFragColor = texture(uSkyTex, gTexCoords)*(min(coefDay+0.05,1.)) + texture(uNightTex, gTexCoords)*(min(coefNight,1.));

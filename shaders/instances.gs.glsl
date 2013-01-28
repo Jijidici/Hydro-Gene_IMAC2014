@@ -45,6 +45,13 @@ void main(){
 			vec4 testDistance = uViewMatrix * vec4(vPos[0],1.f);
 			if(length(testDistance)-1.05f < distance){
 				for(int i=0; i<gl_in.length(); i++){
+
+					gBending = vBending[i];
+					gDrain = vDrain[i];
+					gGradient = vGradient[i];
+					gSurface = vSurface[i];
+					gAltitude = vAltitude[i];
+
 					gl_Position = gl_in[i].gl_Position;
 					gTexCoords = vec2(0.0, 1.0);
 			 	  EmitVertex();

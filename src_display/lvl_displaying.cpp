@@ -87,16 +87,22 @@ void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint3
 	BindTexture(0, GL_TEXTURE4);
 }
 
-void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLint ChoiceLocation, GLint TextureLocation, GLuint texture){
+void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLint ChoiceLocation, GLuint* textures){
 	glUniform1i(ChoiceLocation, VEGET);
-	glUniform1i(TextureLocation,0);
-	BindTexture(texture, GL_TEXTURE0);
-		glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-	
+	glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+	BindTexture(textures[0], GL_TEXTURE0);
+	BindTexture(textures[1], GL_TEXTURE1);
+	BindTexture(textures[2], GL_TEXTURE2);
+	BindTexture(textures[3], GL_TEXTURE3);
+	BindTexture(textures[4], GL_TEXTURE4);
 		glBindVertexArray(meshVAO);
 			glDrawArrays(GL_TRIANGLES, 0, nbVertices);
 		glBindVertexArray(0);
 	BindTexture(0, GL_TEXTURE0);
+	BindTexture(0, GL_TEXTURE1);
+	BindTexture(0, GL_TEXTURE2);
+	BindTexture(0, GL_TEXTURE3);
+	BindTexture(0, GL_TEXTURE4);
 }
 
 bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, FreeFlyCamera& ffCam){
