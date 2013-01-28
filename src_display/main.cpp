@@ -377,6 +377,7 @@ int main(int argc, char** argv){
 	float thresholdDistance = 0.5f;
 	
 	bool TBFrustum = false;
+	float camSpeed = 0.01;
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -696,11 +697,23 @@ int main(int argc, char** argv){
 							if(currentCam == TRACK_BALL){
 								tbCam.moveFront(-0.08f);
 							}
+							if(currentCam == FREE_FLY){
+								camSpeed += 0.001;
+								if(camSpeed >= 1.){
+									camSpeed = 1.;
+								}
+							}
 							break;
 						
 						case SDL_BUTTON_WHEELDOWN:
 							if(currentCam == TRACK_BALL){
 								tbCam.moveFront(0.08f);
+							}
+							if(currentCam == FREE_FLY){
+								camSpeed -= 0.001;
+								if(camSpeed <= 0.){
+									camSpeed = 0.001;
+								}
 							}
 							break;
 						
@@ -755,12 +768,12 @@ int main(int argc, char** argv){
 					break;
 			}
 		}
-
+		
 		//IDLE
-		if(is_lKeyPressed){ ffCam.moveLeft(0.01); }
-		if(is_rKeyPressed){ ffCam.moveLeft(-0.01); }
-		if(is_uKeyPressed){ ffCam.moveFront(0.01); }
-		if(is_dKeyPressed){ ffCam.moveFront(-0.01); }
+		if(is_lKeyPressed){ ffCam.moveLeft(camSpeed); }
+		if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
+		if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
+		if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
 
 		if(currentCam == FREE_FLY){
 			if(new_positionX >= WINDOW_WIDTH-1){
