@@ -82,7 +82,7 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
 	
 	/* Getting the maximum hydro properties coefficients */
-	float * maxCoeffArray = new float[6];
+	float * maxCoeffArray = new float[7];
 	test_cache = drn_read_chunk(&cache, 1, maxCoeffArray);
 	
 	/* Getting the nb leaves chunk (last chunk) */
@@ -305,7 +305,9 @@ int main(int argc, char** argv){
 	GLint MaxGradientLocation = glGetUniformLocation(program, "uMaxGradient");
 	GLint MaxSurfaceLocation = glGetUniformLocation(program, "uMaxSurface");
 	GLint MaxAltitudeLocation = glGetUniformLocation(program, "uMaxAltitude");
-
+	/* Vegetation */
+	GLint VegetSizeLocation = glGetUniformLocation(program, "uVegetSizeCoef");
+	
 	glUniform1f(MaxBendingLocation, maxCoeffArray[0]);	
 	glUniform1f(MaxDrainLocation, maxCoeffArray[1]);
 	glUniform1f(MaxGradientLocation, maxCoeffArray[2]);
@@ -330,7 +332,12 @@ int main(int argc, char** argv){
 	float night = 0.;
 	float timeStep = 1./720.;
 	float dayStep = 1./720.;
-	//~ float nightStep = 1./720.;
+	
+	// send vegetation size coefficient
+	std::cout << "test : " << maxCoeffArray[6] << std::endl;
+	
+	float vegetSizeCoef = maxCoeffArray[6];
+	glUniform1f(VegetSizeLocation, vegetSizeCoef);
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -374,7 +381,7 @@ int main(int argc, char** argv){
 	bool displaySurface = false;
 	bool displayGradient = false;
 	bool displayVegetation = true;
-	float thresholdDistance = 0.5f;
+	float thresholdDistance = 0.1f;
 	
 	bool TBFrustum = false;
 	float camSpeed = 0.01;
@@ -469,7 +476,7 @@ int main(int argc, char** argv){
 									if(ffCam.leavesFrustum(leafArrays[0][idx])){
 											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 										if(displayVegetation){
-											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, VegetationTexLocation, texture_pinetree);
 										}
 										break;
 									}
@@ -478,14 +485,14 @@ int main(int argc, char** argv){
 										if(ffCam.leavesFrustum(leafArrays[0][idx])){ // wrong frustum - comment this line to display every leaf with TrackBallCam
 											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 											if(displayVegetation){
-												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, VegetationTexLocation, texture_pinetree);
 											}
 											break;
 										} // comment too
 									}else{
 										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 										if(displayVegetation){
-											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, VegetationTexLocation, texture_pinetree);
 										}
 										break;
 									}
