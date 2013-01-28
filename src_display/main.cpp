@@ -335,6 +335,9 @@ int main(int argc, char** argv){
 	float night = 0.;
 	float timeStep = 1./720.;
 	float dayStep = 1./720.;
+	float tempDayStep = 0.;
+	float coefLightStep = 0.00218166156f;
+	bool timePause = false;
 	
 	// send vegetation size coefficient
 	std::cout << "test : " << maxCoeffArray[6] << std::endl;
@@ -699,6 +702,21 @@ int main(int argc, char** argv){
 								is_dKeyPressed = false;
 							}
 							break;
+							
+						case SDLK_SPACE:
+							if(!timePause){
+								coefLightStep = 0.;
+								tempDayStep = dayStep;
+								dayStep = 0.;
+								timeStep = 0.;
+								timePause = true;
+							}else{
+								timeStep = 1./720.;
+								dayStep = tempDayStep;
+								coefLightStep = 0.00218166156f;
+								timePause = false;
+							}
+							break;
 
 						default:
 							break;
@@ -803,7 +821,7 @@ int main(int argc, char** argv){
 		}
 		
 		//Manage the sun
-		coefLight -= 0.00218166156f;
+		coefLight -= coefLightStep;
 		lightSun.x = glm::cos(coefLight);
 		lightSun.y = glm::sin(coefLight);
 		
