@@ -129,14 +129,14 @@ void main() {
 		if(uChoice == VEGET){
 			vec4 texel;
 			if(ratioGradient < 0.8){
-				if(ratioGradient < 0.1){
+				if(ratioAltitude < 0.1 && ratioDrain < 0.1){
 					texel = texture(uPlantTex, gTexCoords)*0.1;
 						if(texel.a <0.01){
 							discard;
 					}
 					texel += texture(uPlantTex, gTexCoords)*min(coefDay, 0.7);
 				}
-				else if(ratioAltitude > 0.5 && ratioGradient > 0.5){
+				else if(ratioGradient < 0.1 && ratioDrain < 0.8){
 					texel = texture(uRockTex, gTexCoords)*0.1;
 						if(texel.a <0.01){
 							discard;
