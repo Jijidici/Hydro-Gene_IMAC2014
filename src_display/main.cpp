@@ -271,6 +271,7 @@ int main(int argc, char** argv){
 
 	// Creation des Matrices
 	GLint MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
+	GLint ViewMatrixLocation = glGetUniformLocation(program, "uViewMatrix");
 	
 	float verticalFieldOfView = 90.0;
 	float nearDistance = 0.001;
@@ -305,6 +306,7 @@ int main(int argc, char** argv){
 	GLint MaxGradientLocation = glGetUniformLocation(program, "uMaxGradient");
 	GLint MaxSurfaceLocation = glGetUniformLocation(program, "uMaxSurface");
 	GLint MaxAltitudeLocation = glGetUniformLocation(program, "uMaxAltitude");
+	GLint DistanceVegetLocation = glGetUniformLocation(program, "uDistance");
 
 	glUniform1f(MaxBendingLocation, maxCoeffArray[0]);	
 	glUniform1f(MaxDrainLocation, maxCoeffArray[1]);
@@ -376,6 +378,8 @@ int main(int argc, char** argv){
 	bool displayVegetation = true;
 	float thresholdDistance = 0.5f;
 
+	glUniform1i(DistanceVegetLocation, thresholdDistance);
+
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
 	/* ************************************************************* */
@@ -430,6 +434,8 @@ int main(int argc, char** argv){
 				V = ffCam.getViewMatrix();
 			}
 			ms.mult(V);
+
+			glUniformMatrix4fv(ViewMatrixLocation, 1, GL_FALSE, glm::value_ptr(V));
 
 			uint32_t vao_idx = 0;
 			//For each level

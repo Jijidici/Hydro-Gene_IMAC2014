@@ -8,6 +8,7 @@ layout(triangles) in;
 layout(triangle_strip, max_vertices=5) out;
 
 in vec3 vNormal[];
+in vec3 vPos[];
 in vec2 vTexCoords[];
 in float vBending[];
 in float vDrain[];
@@ -16,6 +17,8 @@ in float vSurface[];
 in float vAltitude[];
 
 uniform mat4 uMVPMatrix = mat4(1.f);
+uniform mat4 uViewMatrix = mat4(1.f);
+uniform float uDistance;
 uniform int uMode;
 uniform int uChoice;
 
@@ -38,27 +41,30 @@ void main(){
 	}
 	else if(uMode == TRIANGLES){
 		if(uChoice == VEGET){
-			for(int i=0; i<gl_in.length(); i++){
-				gl_Position = gl_in[i].gl_Position;
-			  gTexCoords = vec2(0.0, 1.0);
-		 	  EmitVertex();
-				gl_Position.x = gl_in[i].gl_Position.x;
-				gl_Position.y = gl_in[i].gl_Position.y + 0.01f;
-			  gTexCoords = vec2(0.0, 0.0);
-		 	  EmitVertex();
-				gl_Position.x = gl_in[i].gl_Position.x + 0.005f;
-				gl_Position.y = gl_in[i].gl_Position.y + 0.01f;
-			  gTexCoords = vec2(1.0, 0.0);
-		 	  EmitVertex();
-				gl_Position.x = gl_in[i].gl_Position.x + 0.005f;
-				gl_Position.y = gl_in[i].gl_Position.y;
-			  gTexCoords = vec2(1.0, 1.0);
-		 	  EmitVertex();
-				gl_Position.x = gl_in[i].gl_Position.x;
-				gl_Position.y = gl_in[i].gl_Position.y;
-			  gTexCoords = vec2(0.0, 1.0);
-		 	  EmitVertex();
-
+			float distance = uDistance/2;
+			vec4 testDistance = uViewMatrix * vec4(vPos[0],1.f);
+			if(length(testDistance)-1.05f < distance){
+				for(int i=0; i<gl_in.length(); i++){
+					gl_Position = gl_in[i].gl_Position;
+					gTexCoords = vec2(0.0, 1.0);
+			 	  EmitVertex();
+					gl_Position.x = gl_in[i].gl_Position.x;
+					gl_Position.y = gl_in[i].gl_Position.y + 0.01f;
+					gTexCoords = vec2(0.0, 0.0);
+			 	  EmitVertex();
+					gl_Position.x = gl_in[i].gl_Position.x + 0.005f;
+					gl_Position.y = gl_in[i].gl_Position.y + 0.01f;
+					gTexCoords = vec2(1.0, 0.0);
+			 	  EmitVertex();
+					gl_Position.x = gl_in[i].gl_Position.x + 0.005f;
+					gl_Position.y = gl_in[i].gl_Position.y;
+					gTexCoords = vec2(1.0, 1.0);
+			 	  EmitVertex();
+					gl_Position.x = gl_in[i].gl_Position.x;
+					gl_Position.y = gl_in[i].gl_Position.y;
+					gTexCoords = vec2(0.0, 1.0);
+			 	  EmitVertex();
+				}
 		 	}
 		 	EndPrimitive();
 		}
@@ -73,7 +79,6 @@ void main(){
 				gAltitude = vAltitude[i];
 				gl_Position = gl_in[i].gl_Position;
 		 	  EmitVertex();
-
 		 	}
 		 	EndPrimitive();
 		}
