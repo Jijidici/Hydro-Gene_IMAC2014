@@ -22,6 +22,8 @@ uniform float uDistance;
 uniform int uMode;
 uniform int uChoice;
 
+uniform float uVegetSizeCoef = 0.5;
+
 out vec3 gNormal;
 out vec2 gTexCoords;
 out float gBending;
@@ -56,14 +58,14 @@ void main(){
 					gTexCoords = vec2(0.0, 1.0);
 			 	  EmitVertex();
 					gl_Position.x = gl_in[i].gl_Position.x;
-					gl_Position.y = gl_in[i].gl_Position.y + 0.01f;
+					gl_Position.y = gl_in[i].gl_Position.y + 0.01f*uVegetSizeCoef;
 					gTexCoords = vec2(0.0, 0.0);
 			 	  EmitVertex();
-					gl_Position.x = gl_in[i].gl_Position.x + 0.005f;
-					gl_Position.y = gl_in[i].gl_Position.y + 0.01f;
+					gl_Position.x = gl_in[i].gl_Position.x + 0.005f*uVegetSizeCoef;
+					gl_Position.y = gl_in[i].gl_Position.y + 0.01f*uVegetSizeCoef;
 					gTexCoords = vec2(1.0, 0.0);
 			 	  EmitVertex();
-					gl_Position.x = gl_in[i].gl_Position.x + 0.005f;
+					gl_Position.x = gl_in[i].gl_Position.x + 0.005f*uVegetSizeCoef;
 					gl_Position.y = gl_in[i].gl_Position.y;
 					gTexCoords = vec2(1.0, 1.0);
 			 	  EmitVertex();
