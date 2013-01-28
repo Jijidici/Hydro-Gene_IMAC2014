@@ -318,7 +318,10 @@ int main(int argc, char** argv){
 	/* Vegetation */
 	GLint VegetSizeLocation = glGetUniformLocation(program, "uVegetSizeCoef");
 	GLint DistanceVegetLocation = glGetUniformLocation(program, "uDistance");
-
+	
+	/* Controlers  */
+	GLint FogLocation = glGetUniformLocation(program, "uFog");
+	
 	glUniform1f(MaxBendingLocation, maxCoeffArray[0]);	
 	glUniform1f(MaxDrainLocation, maxCoeffArray[1]);
 	glUniform1f(MaxGradientLocation, maxCoeffArray[2]);
@@ -401,6 +404,7 @@ int main(int argc, char** argv){
 	bool displaySurface = false;
 	bool displayGradient = false;
 	bool displayVegetation = true;
+	bool displayFog = true;
 	float thresholdDistance = 0.1f;
 	
 	bool TBFrustum = false;
@@ -431,6 +435,13 @@ int main(int argc, char** argv){
 		glUniform1f(NightLocation, night);
 		glUniform3fv(LightSunVectLocation, 1, glm::value_ptr(lightSun));
 		glUniform3fv(LightMoonVectLocation, 1, glm::value_ptr(lightMoon));
+		/* Send fog */
+		if(displayFog){
+			glUniform1i(FogLocation, 1);
+		}else{
+			glUniform1i(FogLocation, 0);
+		}
+		
 		
 		//Ground
 		ms.push();
@@ -683,6 +694,14 @@ int main(int argc, char** argv){
 								displayVegetation=false;
 							}else{
 								displayVegetation=true;							
+							}
+							break;
+						
+						case SDLK_g:
+							if(displayFog){
+								displayFog = false;
+							}else{
+								displayFog = true;
 							}
 							break;
 						

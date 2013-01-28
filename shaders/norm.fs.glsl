@@ -35,6 +35,7 @@ uniform sampler2D uPineTreeTex;
 uniform sampler2D uSnowTreeTex;
 uniform int uMode;
 uniform int uChoice;
+uniform int uFog;
 uniform float uTime;
 uniform float uDay;
 uniform float uNight;
@@ -125,13 +126,15 @@ void main() {
 		}
 		
 		/* Simulate fog */
-		float fogDensity = 0.5;
-		const float log2 = 1.442695;
-		float fogZ = (gl_FragCoord.z+1.)/gl_FragCoord.w;
-		float fogCoef = exp2(-fogDensity * fogDensity * fogZ * fogZ * log2);
-		fogCoef = clamp(fogCoef, 0., 1.);
-		vec3 fogColor = vec3(0.2, 0.2, 0.2);
-		color = mix(fogColor, color, fogCoef); 
+		if(uFog == 1){
+			float fogDensity = 0.5;
+			const float log2 = 1.442695;
+			float fogZ = (gl_FragCoord.z+1.)/gl_FragCoord.w;
+			float fogCoef = exp2(-fogDensity * fogDensity * fogZ * fogZ * log2);
+			fogCoef = clamp(fogCoef, 0., 1.);
+			vec3 fogColor = vec3(0.5*((coefDay+1)/2.)+0.1);
+			color = mix(fogColor, color, fogCoef);
+		}
 		
 		fFragColor = vec4(color, 1.f);
 
