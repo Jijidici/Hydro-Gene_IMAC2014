@@ -92,7 +92,7 @@ void main() {
 		dColor += coefSnow*texture(uSnowTex, gTexCoords).rgb;
 		dColor += coefSand*texture(uSandTex, gTexCoords).rgb;
 		dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
-		
+				
 		vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
 		vec3 dColorMoon = dColor + vec3(0.f,0.f,0.25f);
 		
@@ -123,6 +123,15 @@ void main() {
 			dColor = vec3(0.5f - ratio, ratio, 0.5f - ratio);
 			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeffSun + dColor*dCoeffMoon);
 		}
+		
+		/* Simulate fog */
+		float fogDensity = 0.5;
+		const float log2 = 1.442695;
+		float fogZ = (gl_FragCoord.z+1.)/gl_FragCoord.w;
+		float fogCoef = exp2(-fogDensity * fogDensity * fogZ * fogZ * log2);
+		fogCoef = clamp(fogCoef, 0., 1.);
+		vec3 fogColor = vec3(0.2, 0.2, 0.2);
+		color = mix(fogColor, color, fogCoef); 
 		
 		fFragColor = vec4(color, 1.f);
 
