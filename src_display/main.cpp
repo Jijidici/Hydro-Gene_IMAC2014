@@ -377,6 +377,8 @@ int main(int argc, char** argv){
 	bool displayGradient = false;
 	bool displayVegetation = true;
 	float thresholdDistance = 0.5f;
+	
+	bool TBFrustum = false;
 
 	glUniform1i(DistanceVegetLocation, thresholdDistance);
 
@@ -477,11 +479,21 @@ int main(int argc, char** argv){
 										break;
 									}
 								}else{
-									display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
-									if(displayVegetation){
-										display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+									if(TBFrustum){
+										if(ffCam.leavesFrustum(leafArrays[0][idx])){ // wrong frustum - comment this line to display every leaf with TrackBallCam
+											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+											if(displayVegetation){
+												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+											}
+											break;
+										} // comment too
+									}else{
+										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+										if(displayVegetation){
+											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+										}
+										break;
 									}
-									break;
 								}
 							}
 						}
@@ -575,6 +587,12 @@ int main(int argc, char** argv){
 						case SDLK_s:
 							if(currentCam == FREE_FLY){
 								is_dKeyPressed = true;
+							}
+							break;
+							
+						case SDLK_f:
+							if(currentCam == TRACK_BALL){
+								TBFrustum = !TBFrustum;
 							}
 							break;
 							
