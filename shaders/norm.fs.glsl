@@ -62,18 +62,27 @@ void main() {
 		if(uMaxSurface == 0){	ratioSurface = 0;}
 		else{ratioSurface = gSurface/uMaxSurface;}
 		
-		float coefWater = min(10*ratioDrain, 1.);
-		float coefSnow = min((1.-coefWater)*pow(ratioAltitude,3), 1.-coefWater);
-		float coefStone = min((1.-coefWater)*ratioGradient, 1.-coefWater);
-		float coefSand = min((1.-coefWater)*pow(ratioSurface, 5), 1.-coefWater); /* not really visible... */
-		//~ float coefSand = 0.;
-		float coefGrass = 1. - coefWater - coefStone - coefSnow - coefSand;
+		float restingCoef = 1.;
+		
+		float coefWater = min(10*ratioDrain, restingCoef);
+		restingCoef -= coefWater;	
+			
+		float coefSnow = min(max(8*(restingCoef*ratioAltitude-0.75), 0.), restingCoef);
+		restingCoef -= coefSnow;
+		
+		float coefStone = restingCoef*ratioGradient;
+		restingCoef -= coefStone;		
+		
+		float coefSand = min(max(4*(restingCoef*(1-ratioAltitude)-0.75), 0.), restingCoef);
+		restingCoef -= coefSand;
+		
+		float coefGrass = restingCoef;
 		
 		vec3 dColor = coefWater*texture(uWaterTex, gTexCoords).rgb;
 		dColor += coefStone*texture(uStoneTex, gTexCoords).rgb;
 		dColor += coefSnow*texture(uSnowTex, gTexCoords).rgb;
-		dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
 		dColor += coefSand*texture(uSandTex, gTexCoords).rgb;
+		dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
 		
 		vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
 		vec3 dColorMoon = dColor + vec3(0.f,0.f,0.25f);
