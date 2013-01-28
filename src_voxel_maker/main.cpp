@@ -242,8 +242,8 @@ int main(int argc, char** argv) {
 	Vertex * tabV = new Vertex[nbVertice];
 
 	//Min & Max values
-	float *maxCoeffArray = new float[6];
-	for(int n = 0; n<6; ++n){
+	float *maxCoeffArray = new float[7];
+	for(int n = 0; n<7; ++n){
 		maxCoeffArray[n] = 0;
 	}
 	
@@ -282,6 +282,9 @@ int main(int argc, char** argv) {
 		maxCoeffArray[4] = terrainMaxY;
 		if(tabV[n].pos.z > terrainMaxZ){ terrainMaxZ = tabV[n].pos.z; }
 	}
+	
+	std::cout << "TEST :" << 150000. / nbFace << std::endl;
+	maxCoeffArray[6] = 150000. / nbFace; // vegetSizeCoef
 
 	//FACES
 	Face * tabF = new Face[nbFace];
@@ -433,7 +436,7 @@ int main(int argc, char** argv) {
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 	
 	/* Saving the maximum data */
-	test_cache = drn_writer_add_chunk(&cache, maxCoeffArray, 6*sizeof(float));
+	test_cache = drn_writer_add_chunk(&cache, maxCoeffArray, 7*sizeof(float));
 	if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 		
 	/* Initialize the Leaves array for each level */

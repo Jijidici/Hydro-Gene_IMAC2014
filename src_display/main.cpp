@@ -82,7 +82,7 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
 	
 	/* Getting the maximum hydro properties coefficients */
-	float * maxCoeffArray = new float[6];
+	float * maxCoeffArray = new float[7];
 	test_cache = drn_read_chunk(&cache, 1, maxCoeffArray);
 	
 	/* Getting the nb leaves chunk (last chunk) */
@@ -306,6 +306,9 @@ int main(int argc, char** argv){
 	GLint MaxGradientLocation = glGetUniformLocation(program, "uMaxGradient");
 	GLint MaxSurfaceLocation = glGetUniformLocation(program, "uMaxSurface");
 	GLint MaxAltitudeLocation = glGetUniformLocation(program, "uMaxAltitude");
+
+	/* Vegetation */
+	GLint VegetSizeLocation = glGetUniformLocation(program, "uVegetSizeCoef");
 	GLint DistanceVegetLocation = glGetUniformLocation(program, "uDistance");
 
 	glUniform1f(MaxBendingLocation, maxCoeffArray[0]);	
@@ -332,7 +335,15 @@ int main(int argc, char** argv){
 	float night = 0.;
 	float timeStep = 1./720.;
 	float dayStep = 1./720.;
-	//~ float nightStep = 1./720.;
+	float tempDayStep = 0.;
+	float coefLightStep = 0.00218166156f;
+	bool timePause = false;
+	
+	// send vegetation size coefficient
+	std::cout << "test : " << maxCoeffArray[6] << std::endl;
+	
+	float vegetSizeCoef = maxCoeffArray[6];
+	glUniform1f(VegetSizeLocation, vegetSizeCoef);
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -376,9 +387,10 @@ int main(int argc, char** argv){
 	bool displaySurface = false;
 	bool displayGradient = false;
 	bool displayVegetation = true;
-	float thresholdDistance = 0.5f;
+	float thresholdDistance = 0.1f;
 	
 	bool TBFrustum = false;
+	float camSpeed = 0.01;
 
 	glUniform1i(DistanceVegetLocation, thresholdDistance);
 
@@ -474,7 +486,7 @@ int main(int argc, char** argv){
 									if(ffCam.leavesFrustum(leafArrays[0][idx])){
 											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 										if(displayVegetation){
-											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, VegetationTexLocation, texture_pinetree);
 										}
 										break;
 									}
@@ -483,14 +495,14 @@ int main(int argc, char** argv){
 										if(ffCam.leavesFrustum(leafArrays[0][idx])){ // wrong frustum - comment this line to display every leaf with TrackBallCam
 											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 											if(displayVegetation){
-												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, VegetationTexLocation, texture_pinetree);
 											}
 											break;
 										} // comment too
 									}else{
 										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 										if(displayVegetation){
-											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/12, ChoiceLocation, VegetationTexLocation, texture_pinetree);
+											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, VegetationTexLocation, texture_pinetree);
 										}
 										break;
 									}
@@ -690,6 +702,21 @@ int main(int argc, char** argv){
 								is_dKeyPressed = false;
 							}
 							break;
+							
+						case SDLK_SPACE:
+							if(!timePause){
+								coefLightStep = 0.;
+								tempDayStep = dayStep;
+								dayStep = 0.;
+								timeStep = 0.;
+								timePause = true;
+							}else{
+								timeStep = 1./720.;
+								dayStep = tempDayStep;
+								coefLightStep = 0.00218166156f;
+								timePause = false;
+							}
+							break;
 
 						default:
 							break;
@@ -702,11 +729,23 @@ int main(int argc, char** argv){
 							if(currentCam == TRACK_BALL){
 								tbCam.moveFront(-0.08f);
 							}
+							if(currentCam == FREE_FLY){
+								camSpeed += 0.001;
+								if(camSpeed >= 1.){
+									camSpeed = 1.;
+								}
+							}
 							break;
 						
 						case SDL_BUTTON_WHEELDOWN:
 							if(currentCam == TRACK_BALL){
 								tbCam.moveFront(0.08f);
+							}
+							if(currentCam == FREE_FLY){
+								camSpeed -= 0.001;
+								if(camSpeed <= 0.){
+									camSpeed = 0.001;
+								}
 							}
 							break;
 						
@@ -761,12 +800,12 @@ int main(int argc, char** argv){
 					break;
 			}
 		}
-
+		
 		//IDLE
-		if(is_lKeyPressed){ ffCam.moveLeft(0.01); }
-		if(is_rKeyPressed){ ffCam.moveLeft(-0.01); }
-		if(is_uKeyPressed){ ffCam.moveFront(0.01); }
-		if(is_dKeyPressed){ ffCam.moveFront(-0.01); }
+		if(is_lKeyPressed){ ffCam.moveLeft(camSpeed); }
+		if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
+		if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
+		if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
 
 		if(currentCam == FREE_FLY){
 			if(new_positionX >= WINDOW_WIDTH-1){
@@ -782,7 +821,7 @@ int main(int argc, char** argv){
 		}
 		
 		//Manage the sun
-		coefLight -= 0.00218166156f;
+		coefLight -= coefLightStep;
 		lightSun.x = glm::cos(coefLight);
 		lightSun.y = glm::sin(coefLight);
 		
