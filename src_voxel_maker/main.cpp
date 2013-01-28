@@ -450,7 +450,7 @@ int main(int argc, char** argv) {
 	double Rc = voxelSize * APPROXIM_RANGE;
 
 	//For each group of leaves
-	//~ #pragma omp parallel for
+	#pragma omp parallel for
 	for(uint16_t l_j=0;l_j<nbSub_lvl1;l_j+=LEAF_STEP){
 		for(uint16_t l_k=0;l_k<nbSub_lvl1;l_k+=LEAF_STEP){
 			for(uint16_t l_i=0;l_i<nbSub_lvl1;l_i+=LEAF_STEP){
@@ -641,16 +641,19 @@ int main(int argc, char** argv) {
 				for(unsigned int n = 0; n < NB_LEAVES_IN_GROUP; ++n){
 					if(leafArrays[0][leafIndex[n]].nbIntersection != 0){ // is_intersect
 						/* Save the VoxelData array */
+						#pragma omp critical
+						{
 						test_cache = drn_writer_add_chunk(&cache, l_voxelArray[n], l_voxArrLength*sizeof(VoxelData));
-						
 						if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 						
 						/* Save the vertices lvl2 */
 						test_cache = drn_writer_add_chunk(&cache, l_storedVertices[n].data(), leafArrays[0][leafIndex[n]].nbVertices_lvl2*sizeof(Vertex));
+						if(test_cache < 0){ throw std::runtime_error("unable to write in the data file"); }
 						
 						/* Set Leaf id */
 						leafArrays[0][leafIndex[n]].id = (drn_writer_get_last_chunk_id(&cache)-2)/2;
 						std::cout<<"//-> Leaf Id : "<<leafArrays[0][leafIndex[n]].id<<std::endl;
+						}
 						
 						/*** TRIANGULARISATION HERE ***/					
 						leafArrays[0][leafIndex[n]].optimal = computeOptimalPoint(leafArrays[0][leafIndex[n]], l_storedVertices[n]);
