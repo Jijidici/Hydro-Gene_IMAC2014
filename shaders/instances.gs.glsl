@@ -24,6 +24,7 @@ uniform int uChoice;
 
 uniform float uVegetSizeCoef = 0.5;
 
+out vec3 gPos;
 out vec3 gNormal;
 out vec2 gTexCoords;
 out float gBending;
@@ -35,6 +36,7 @@ out float gAltitude;
 void main(){	
 	if(uMode == SKYBOX){
 	  for(int i=0; i<gl_in.length(); i++){
+			gPos = vPos[i];
 			gTexCoords = vTexCoords[i];
 		  gl_Position = gl_in[i].gl_Position;
 	 	  EmitVertex();
