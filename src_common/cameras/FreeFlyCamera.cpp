@@ -119,5 +119,15 @@ namespace hydrogene{
 	glm::vec3 FreeFlyCamera::getCameraPosition(){
 		return m_Position;
 	}
+	
+	void FreeFlyCamera::setCameraPosition(glm::vec3 position){
+		m_Position = position;
+	}
+	
+	void FreeFlyCamera::resetView(float theta, float phi){
+		m_fTheta = theta;
+		m_fPhi = phi;
+		computeDirectionVectors();
+	}
 
 }

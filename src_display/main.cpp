@@ -42,7 +42,7 @@
 
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
-static const size_t WINDOW_WIDTH = 1060, WINDOW_HEIGHT = 600;
+static const size_t WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
 static const size_t BYTES_PER_PIXEL = 32;
 
 static const size_t GRID_3D_SIZE = 2;
@@ -365,6 +365,10 @@ int main(int argc, char** argv){
 	
 	bool displayDebug = false;
 	float camSpeed = 0.01;
+	
+	/* timelaps animation */
+	bool timelaps = false;
+	float timelapsPosOffset = 0.;
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -701,6 +705,15 @@ int main(int argc, char** argv){
 						case SDLK_DOWN:
 							thresholdDistance -= 0.01f;
 							break;
+							
+						case SDLK_t:
+							if(currentCam == FREE_FLY){
+								timelaps = true;
+								timelapsPosOffset = 0.;
+								ffCam.setCameraPosition(glm::vec3(0.,0.1,0.));
+								ffCam.resetView(0., 3.1416);
+							}
+							break;
 						
 						case SDLK_v:
 							if(displayVegetation){
@@ -887,8 +900,19 @@ int main(int argc, char** argv){
 		if(day < -1){dayStep = -dayStep;}
 		
 		//~ std::cout << "time : " << time << std::endl;
-		//~ std::cout << "day : " << day << std::endl;
+		//~ std::cout << "day : " << 0.5 - fabs(day) << std::endl;
 		//~ std::cout << "night : " << night << std::endl;
+		
+		/* timelaps animation */
+		if(timelaps){			
+			ffCam.setCameraPosition(glm::vec3(0.+timelapsPosOffset/10.,0.1-timelapsPosOffset/40.,0.));
+			ffCam.resetView(0., 3.1416);
+			
+			timelapsPosOffset+= 1./2880.;
+			if(timelapsPosOffset >= 1.){
+				timelaps = false;
+			}
+		}
 		
 		// Gestion compteur
 		end = SDL_GetTicks();
