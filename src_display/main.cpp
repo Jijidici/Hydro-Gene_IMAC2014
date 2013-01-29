@@ -41,7 +41,7 @@
 
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
-static const size_t WINDOW_WIDTH = 1060, WINDOW_HEIGHT = 600;
+static const size_t WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
 static const size_t BYTES_PER_PIXEL = 32;
 
 static const size_t GRID_3D_SIZE = 2;
@@ -881,7 +881,7 @@ int main(int argc, char** argv){
 		if(day < -1){dayStep = -dayStep;}
 		
 		//~ std::cout << "time : " << time << std::endl;
-		//~ std::cout << "day : " << day << std::endl;
+		//~ std::cout << "day : " << 0.5 - fabs(day) << std::endl;
 		//~ std::cout << "night : " << night << std::endl;
 		
 		// Gestion compteur
