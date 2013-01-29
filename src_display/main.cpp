@@ -149,7 +149,7 @@ int main(int argc, char** argv){
 	GLuint cubeVBO = CreateCubeVBO();
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
 
-	GLuint texture_sky = CreateTexture("textures/sky.jpg");
+	GLuint texture_sky = CreateTexture("textures/skybox2.png");
 	GLuint texture_night = CreateTexture("textures/night.jpg");
 	/* vegetation textures */
 	GLuint texture_veget[5];
