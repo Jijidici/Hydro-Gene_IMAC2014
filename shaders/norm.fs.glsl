@@ -10,6 +10,7 @@
 #define SURFACE 6
 
 #define VEGET 7
+#define DEBUG 8
 
 in vec3 gNormal;
 in vec2 gTexCoords;
@@ -123,6 +124,8 @@ void main() {
 			ratio = gSurface/uMaxSurface;
 			dColor = vec3(0.5f - ratio, ratio, 0.5f - ratio);
 			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeffSun + dColor*dCoeffMoon);
+		}else if(uChoice == DEBUG){
+			color = vec3(1.f, 0.f, 0.f);
 		}
 		
 		/* Simulate fog */

@@ -37,6 +37,8 @@
 #define SURFACE 6
 
 #define VEGET 7
+#define DEBUG 8
+
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
 static const size_t WINDOW_WIDTH = 1060, WINDOW_HEIGHT = 600;
@@ -407,7 +409,7 @@ int main(int argc, char** argv){
 	bool displayFog = true;
 	float thresholdDistance = 0.1f;
 	
-	bool TBFrustum = false;
+	bool displayDebug = false;
 	float camSpeed = 0.01;
 
 	glUniform1i(DistanceVegetLocation, thresholdDistance);
@@ -516,9 +518,11 @@ int main(int argc, char** argv){
 										break;
 									}
 								}else{
-									if(TBFrustum){
+									if(displayDebug){
 										if(ffCam.leavesFrustum(leafArrays[0][idx])){ // wrong frustum - comment this line to display every leaf with TrackBallCam
 											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+											glUniform1i(ChoiceLocation, DEBUG);
+											display_lvl1(cubeVAO, ms, MVPLocation, n->pos, halfLeafSize);
 											if(displayVegetation){
 												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
 											}
@@ -629,7 +633,7 @@ int main(int argc, char** argv){
 							
 						case SDLK_f:
 							if(currentCam == TRACK_BALL){
-								TBFrustum = !TBFrustum;
+								displayDebug = !displayDebug;
 							}
 							break;
 							

@@ -65,7 +65,7 @@ void display_lvl1(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, glm::dvec
 		glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 	
 		glBindVertexArray(cubeVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glDrawArrays(GL_LINE_LOOP, 0, 36);
 		glBindVertexArray(0);
 	ms.pop();
 }
