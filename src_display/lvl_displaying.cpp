@@ -26,7 +26,8 @@ void sendStaticUniform(GLuint program, float* maxCoeffArray, float thresholdDist
 	GLint StoneTexLocation = glGetUniformLocation(program, "uStoneTex");
 	GLint SnowTexLocation = glGetUniformLocation(program, "uSnowTex");
 	GLint SandTexLocation = glGetUniformLocation(program, "uSandTex");
-
+	GLint CloudsTexLocation = glGetUniformLocation(program, "uCloudsShadows");
+	
 	GLint RockTexLocation = glGetUniformLocation(program, "uRockTex");
 	GLint PlantTexLocation = glGetUniformLocation(program, "uPlantTex");
 	GLint TreeTexLocation = glGetUniformLocation(program, "uTreeTex");
@@ -57,8 +58,9 @@ void sendStaticUniform(GLuint program, float* maxCoeffArray, float thresholdDist
 	glUniform1i(StoneTexLocation, 2);
 	glUniform1i(SnowTexLocation, 3);
 	glUniform1i(SandTexLocation, 4);
-	glUniform1i(SkyTexLocation, 5);
+	glUniform1i(CloudsTexLocation, 5);
 	glUniform1i(NightTexLocation, 6);
+	glUniform1i(SkyTexLocation, 7);
 	// Send details textures
 	glUniform1i(RockTexLocation, 0);
 	glUniform1i(PlantTexLocation, 1);
@@ -130,6 +132,7 @@ void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint3
 	BindTexture(textures[2], GL_TEXTURE2);
 	BindTexture(textures[3], GL_TEXTURE3);
 	BindTexture(textures[4], GL_TEXTURE4);
+	BindTexture(textures[5], GL_TEXTURE5);
 		glBindVertexArray(meshVAO);
 			glDrawArrays(GL_TRIANGLES, 0, nbVertices);
 		glBindVertexArray(0);
@@ -138,6 +141,7 @@ void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint3
 	BindTexture(0, GL_TEXTURE2);
 	BindTexture(0, GL_TEXTURE3);
 	BindTexture(0, GL_TEXTURE4);
+	BindTexture(0, GL_TEXTURE5);
 }
 
 void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLint ChoiceLocation, GLuint* textures){

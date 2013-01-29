@@ -152,7 +152,7 @@ int main(int argc, char** argv){
 	GLuint cubeVBO = CreateCubeVBO();
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
 
-	GLuint texture_sky = CreateTexture("textures/sky.jpg");
+	GLuint texture_sky = CreateTexture("textures/skybox2.png");
 	GLuint texture_night = CreateTexture("textures/night.jpg");
 	/* vegetation textures */
 	GLuint texture_veget[5];
@@ -163,12 +163,13 @@ int main(int argc, char** argv){
 	texture_veget[4] = CreateTexture("textures/snow_tree.png");
 
 	/* terrain textures */
-	GLuint texture_terrain[5];
+	GLuint texture_terrain[6];
 	texture_terrain[0] = CreateTexture("textures/grass.jpg");
 	texture_terrain[1] = CreateTexture("textures/water.png");
 	texture_terrain[2] = CreateTexture("textures/stone.jpg");
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
+	texture_terrain[5] = CreateTexture("textures/clouds2.jpg");
 	
 	
 	/* Leaves VBOs & VAOs creation */
@@ -296,6 +297,7 @@ int main(int argc, char** argv){
 	GLint TimeLocation = glGetUniformLocation(program, "uTime");
 	GLint DayLocation = glGetUniformLocation(program, "uDay");
 	GLint NightLocation = glGetUniformLocation(program, "uNight");
+
 	/* Shaders modes */
 	GLint ModeLocation = glGetUniformLocation(program, "uMode");
 	GLint ChoiceLocation = glGetUniformLocation(program, "uChoice");
@@ -530,7 +532,7 @@ int main(int argc, char** argv){
 			}
 			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 			//~ glUniform1i(SkyTexLocation,0);
-			BindTexture(texture_sky, GL_TEXTURE5);
+			BindTexture(texture_sky, GL_TEXTURE7);
 			BindTexture(texture_night, GL_TEXTURE6);
 				glBindVertexArray(cubeVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 36);
