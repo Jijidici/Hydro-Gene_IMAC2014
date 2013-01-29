@@ -48,6 +48,8 @@ class FreeFlyCamera{
 		bool leavesFrustum(Leaf& l);
 		glm::mat4 getViewMatrix() const;
 		glm::vec3 getCameraPosition();
+		void setCameraPosition(glm::vec3 position);
+		void resetView(float theta, float phi);
 };
 
 }

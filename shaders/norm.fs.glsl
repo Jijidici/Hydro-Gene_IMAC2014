@@ -107,7 +107,9 @@ void main() {
 		dCoeffMoon *= 0.1;
 
 		/* clouds shadowmap */
-		float cloudsColor = texture(uCloudsShadows, gTexCoords+uTime).r;
+		vec2 cloudsTexCoords = gTexCoords;
+		cloudsTexCoords.x += uTime;
+		float cloudsColor = texture(uCloudsShadows, cloudsTexCoords).r;
 
 		dColorSun *= (1. - cloudsColor)*coefDay;
 

@@ -414,6 +414,10 @@ int main(int argc, char** argv){
 	
 	bool displayDebug = false;
 	float camSpeed = 0.01;
+	
+	/* timelaps animation */
+	bool timelaps = false;
+	float timelapsPosOffset = 0.;
 
 	glUniform1i(DistanceVegetLocation, thresholdDistance);
 
@@ -695,6 +699,15 @@ int main(int argc, char** argv){
 						case SDLK_DOWN:
 							thresholdDistance -= 0.01f;
 							break;
+							
+						case SDLK_t:
+							if(currentCam == FREE_FLY){
+								timelaps = true;
+								timelapsPosOffset = 0.;
+								ffCam.setCameraPosition(glm::vec3(0.,0.1,0.));
+								ffCam.resetView(0., 3.1416);
+							}
+							break;
 						
 						case SDLK_v:
 							if(displayVegetation){
@@ -883,6 +896,17 @@ int main(int argc, char** argv){
 		//~ std::cout << "time : " << time << std::endl;
 		//~ std::cout << "day : " << 0.5 - fabs(day) << std::endl;
 		//~ std::cout << "night : " << night << std::endl;
+		
+		/* timelaps animation */
+		if(timelaps){			
+			ffCam.setCameraPosition(glm::vec3(0.+timelapsPosOffset/10.,0.1-timelapsPosOffset/40.,0.));
+			ffCam.resetView(0., 3.1416);
+			
+			timelapsPosOffset+= 1./2880.;
+			if(timelapsPosOffset >= 1.){
+				timelaps = false;
+			}
+		}
 		
 		// Gestion compteur
 		end = SDL_GetTicks();
