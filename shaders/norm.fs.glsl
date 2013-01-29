@@ -10,7 +10,8 @@
 #define SURFACE 6
 
 #define VEGET 7
-#define DEBUG 8
+#define DEBUG_BOX 8
+#define DEBUG_TRI 9
 
 in vec3 gNormal;
 in vec2 gTexCoords;
@@ -120,8 +121,11 @@ void main() {
 				fFragColor = texel;
 			}else discard;
 		}
-		else if(uChoice == DEBUG){
+		else if(uChoice == DEBUG_BOX){
 			fFragColor = vec4(1.f, 0.f, 0.f, 1.f);
+		}
+		else if(uChoice == DEBUG_TRI){
+			fFragColor = vec4(0.f, 1.f, 0.f, 1.f);
 		}
 		else{
 			if(uChoice == BENDING){
