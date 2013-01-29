@@ -160,12 +160,13 @@ int main(int argc, char** argv){
 	texture_veget[4] = CreateTexture("textures/snow_tree.png");
 
 	/* terrain textures */
-	GLuint texture_terrain[5];
+	GLuint texture_terrain[6];
 	texture_terrain[0] = CreateTexture("textures/grass.jpg");
 	texture_terrain[1] = CreateTexture("textures/water.png");
 	texture_terrain[2] = CreateTexture("textures/stone.jpg");
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
+	//~ texture_terrain[5] = CreateTexture("textures/clouds1_edited_alpha.jpg");
 	
 	
 	/* Leaves VBOs & VAOs creation */
@@ -298,6 +299,7 @@ int main(int argc, char** argv){
 	GLint StoneTexLocation = glGetUniformLocation(program, "uStoneTex");
 	GLint SnowTexLocation = glGetUniformLocation(program, "uSnowTex");
 	GLint SandTexLocation = glGetUniformLocation(program, "uSandTex");
+	GLint CloudsTexLocation = glGetUniformLocation(program, "uCloudsShadows");
 
 	GLint RockTexLocation = glGetUniformLocation(program, "uRockTex");
 	GLint PlantTexLocation = glGetUniformLocation(program, "uPlantTex");
@@ -334,8 +336,9 @@ int main(int argc, char** argv){
 	glUniform1i(StoneTexLocation, 2);
 	glUniform1i(SnowTexLocation, 3);
 	glUniform1i(SandTexLocation, 4);
-	glUniform1i(SkyTexLocation, 5);
+	glUniform1i(CloudsTexLocation, 5);
 	glUniform1i(NightTexLocation, 6);
+	glUniform1i(SkyTexLocation, 7);
 
 	glUniform1i(RockTexLocation, 0);
 	glUniform1i(PlantTexLocation, 1);
@@ -562,7 +565,7 @@ int main(int argc, char** argv){
 			}
 			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 			//~ glUniform1i(SkyTexLocation,0);
-			BindTexture(texture_sky, GL_TEXTURE5);
+			BindTexture(texture_sky, GL_TEXTURE7);
 			BindTexture(texture_night, GL_TEXTURE6);
 				glBindVertexArray(cubeVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 36);
