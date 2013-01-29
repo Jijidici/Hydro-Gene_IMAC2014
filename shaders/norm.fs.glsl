@@ -10,7 +10,8 @@
 #define SURFACE 6
 
 #define VEGET 7
-#define DEBUG 8
+#define DEBUG_BOX 8
+#define DEBUG_TRI 9
 
 in vec3 gNormal;
 in vec2 gTexCoords;
@@ -58,8 +59,14 @@ void main() {
 	if(coefNight < 0.){coefNight = 0.;}
 	
 	if(uMode == TRIANGLES){
-	
-		/* ratios */
+		
+		vec3 aColor = vec3(0.05);
+		vec3 dColor;
+		vec3 color;
+		/* clouds shadowmap */
+		float cloudsColor = texture(uCloudsShadows, gTexCoords+uTime).r;
+		
+		/* compute ratios */		
 		float ratioDrain;
 		if(uMaxDrain == 0){	ratioDrain = 0;}
 		else{ratioDrain = gDrain/uMaxDrain;}
@@ -74,84 +81,11 @@ void main() {
 		
 		float ratioSurface;
 		if(uMaxSurface == 0){	ratioSurface = 0;}
-		else{ratioSurface = gSurface/uMaxSurface;}
-		
-		float restingCoef = 1.;
-		
-		float coefWater = min(10*ratioDrain, restingCoef);
-		restingCoef -= coefWater;
-			
-		float coefSnow = min(max(8*(restingCoef*ratioAltitude-0.75), 0.), restingCoef);
-		restingCoef -= coefSnow;
-		
-		float coefStone = restingCoef*ratioGradient;
-		restingCoef -= coefStone;		
-		
-		float coefSand = min(max(4*(restingCoef*(1-ratioAltitude)-0.75), 0.), restingCoef);
-		restingCoef -= coefSand;
-		
-		float coefGrass = restingCoef;
-		
-		vec3 dColor = coefWater*texture(uWaterTex, gTexCoords).rgb;
-		dColor += coefStone*texture(uStoneTex, gTexCoords).rgb;
-		dColor += coefSnow*texture(uSnowTex, gTexCoords).rgb;
-		dColor += coefSand*texture(uSandTex, gTexCoords).rgb;
-		dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
-		
-		vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
-		vec3 dColorMoon = dColor + vec3(0.f,0.f,0.25f);
-		
-		float dCoeffSun = max(0, dot(normalize(gNormal), -normalize(uLightSunVect)));
-		float dCoeffMoon = max(0, dot(normalize(gNormal), -normalize(uLightMoonVect)));
-		dCoeffSun *= 0.7;
-		dCoeffMoon *= 0.1;
-
-		/* clouds shadowmap */
-		vec2 cloudsTexCoords = gTexCoords;
-		cloudsTexCoords.x += uTime;
-		float cloudsColor = texture(uCloudsShadows, cloudsTexCoords).r;
-
-		dColorSun *= (1. - cloudsColor)*coefDay;
-
-		vec3 aColor = vec3(0.05f, 0.05f, 0.05f);
-		vec3 color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon);
-		
+		else{ratioSurface = gSurface/uMaxSurface;}		
 		
 		float ratio;
-		if(uChoice == BENDING){
-			ratio = gBending/uMaxBending;
-			dColor = vec3(1.f - ratio, ratio, 1.f - ratio);
-			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeffSun + dColor*dCoeffMoon);
-		}
-		else if(uChoice == DRAIN){
-			dColor = vec3(1.f - ratioDrain, 1.f - ratioDrain, ratioDrain);
-			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeffSun + dColor*dCoeffMoon);
-		}
-		else if(uChoice == GRADIENT){
-			dColor = vec3(ratioGradient, 1.f - ratioGradient, 1.f - ratioGradient);
-			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeffSun + dColor*dCoeffMoon);
-		}
-		else if(uChoice == SURFACE){
-			ratio = gSurface/uMaxSurface;
-			dColor = vec3(0.5f - ratio, ratio, 0.5f - ratio);
-			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeffSun + dColor*dCoeffMoon);
-		}else if(uChoice == DEBUG){
-			color = vec3(1.f, 0.f, 0.f);
-		}
 		
-		/* Simulate fog */
-		if(uFog == 1){
-			float fogDensity = 0.5;
-			const float log2 = 1.442695;
-			float fogZ = (gl_FragCoord.z+1.)/gl_FragCoord.w;
-			float fogCoef = exp2(-fogDensity * fogDensity * fogZ * fogZ * log2);
-			fogCoef = clamp(fogCoef, 0., 1.);
-			vec3 fogColor = vec3(0.5*((coefDay+1)/2.)+0.1);
-			color = mix(fogColor, color, fogCoef);
-		}
-		
-		fFragColor = vec4(color, 1.f);
-
+		/* case where displaying details */
 		if(uChoice == VEGET){
 			vec4 texel;
 			if(ratioGradient < 0.8){
@@ -194,7 +128,74 @@ void main() {
 				fFragColor = texel;
 				fFragColor *= (1. - cloudsColor)*coefDay;
 			}else discard;
-		}	
+		}
+		else if(uChoice == DEBUG_BOX){
+			fFragColor = vec4(1.f, 0.f, 0.f, 1.f);
+		}
+		else if(uChoice == DEBUG_TRI){
+			fFragColor = vec4(0.f, 1.f, 0.f, 1.f);
+		}
+		else{
+			if(uChoice == BENDING){
+				float ratio = gBending/uMaxBending;
+				dColor = vec3(1.f - ratio, ratio, 1.f - ratio);
+			}
+			else if(uChoice == DRAIN){
+				dColor = vec3(1.f - ratioDrain, 1.f - ratioDrain, ratioDrain);
+			}
+			else if(uChoice == GRADIENT){
+				dColor = vec3(ratioGradient, 1.f - ratioGradient, 1.f - ratioGradient);
+			}
+			else if(uChoice == SURFACE){
+				float ratio = gSurface/uMaxSurface;
+				dColor = vec3(0.5f - ratio, ratio, 0.5f - ratio);
+			}
+			else if(uChoice == NORMAL){
+				/* compute texture coefs */
+				float restingCoef = 1.;
+				
+				float coefWater = min(10*ratioDrain, restingCoef);
+				restingCoef -= coefWater;
+					
+				float coefSnow = min(max(8*(restingCoef*ratioAltitude-0.75), 0.), restingCoef);
+				restingCoef -= coefSnow;
+				
+				float coefStone = restingCoef*ratioGradient;
+				restingCoef -= coefStone;		
+				
+				float coefSand = min(max(4*(restingCoef*(1-ratioAltitude)-0.75), 0.), restingCoef);
+				restingCoef -= coefSand;
+				
+				float coefGrass = restingCoef;
+				
+				dColor = coefWater*texture(uWaterTex, gTexCoords).rgb;
+				dColor += coefStone*texture(uStoneTex, gTexCoords).rgb;
+				dColor += coefSnow*texture(uSnowTex, gTexCoords).rgb;
+				dColor += coefSand*texture(uSandTex, gTexCoords).rgb;
+				dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
+			}
+			
+			vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
+			dColorSun *= (1. - cloudsColor)*coefDay;
+			vec3 dColorMoon = dColor + vec3(0.f,0.f,0.25f);
+			float dCoeffSun = max(0, dot(normalize(gNormal), -normalize(uLightSunVect)));
+			float dCoeffMoon = max(0, dot(normalize(gNormal), -normalize(uLightMoonVect)));
+			dCoeffSun *= 0.7;
+			dCoeffMoon *= 0.1;
+			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon);
+			
+			/* Simulate fog */
+			if(uFog == 1){
+				float fogDensity = 0.5;
+				const float log2 = 1.442695;
+				float fogZ = (gl_FragCoord.z+1.)/gl_FragCoord.w;
+				float fogCoef = exp2(-fogDensity * fogDensity * fogZ * fogZ * log2);
+				fogCoef = clamp(fogCoef, 0., 1.);
+				vec3 fogColor = vec3(0.5*((coefDay+1)/2.)+0.1);
+				color = mix(fogColor, color, fogCoef);
+			}
+			fFragColor = vec4(color, 1.f);	
+		}
 	}
 	else if(uMode == SKYBOX){
 		fFragColor = texture(uSkyTex, gTexCoords)*(min(coefDay+0.05,1.)) + texture(uNightTex, gTexCoords)*(min(coefNight,1.));

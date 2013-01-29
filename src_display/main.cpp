@@ -37,7 +37,8 @@
 #define SURFACE 6
 
 #define VEGET 7
-#define DEBUG 8
+#define DEBUG_BOX 8
+#define DEBUG_TRI 9
 
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
@@ -151,7 +152,7 @@ int main(int argc, char** argv){
 	GLuint cubeVBO = CreateCubeVBO();
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
 
-	GLuint texture_sky = CreateTexture("textures/sky.jpg");
+	GLuint texture_sky = CreateTexture("textures/skybox2.png");
 	GLuint texture_night = CreateTexture("textures/night.jpg");
 	/* vegetation textures */
 	GLuint texture_veget[5];
@@ -285,6 +286,9 @@ int main(int argc, char** argv){
 	
 	MatrixStack ms;
 	ms.set(P);
+	
+	//distance for changing of LOD
+	float thresholdDistance = 0.1f;
 
 	// Recuperation des variables uniformes
 	/* Light */
@@ -293,60 +297,14 @@ int main(int argc, char** argv){
 	GLint TimeLocation = glGetUniformLocation(program, "uTime");
 	GLint DayLocation = glGetUniformLocation(program, "uDay");
 	GLint NightLocation = glGetUniformLocation(program, "uNight");
-	/* Textures */
-	GLint SkyTexLocation = glGetUniformLocation(program, "uSkyTex");
-	GLint NightTexLocation = glGetUniformLocation(program, "uNightTex");
-	GLint GrassTexLocation = glGetUniformLocation(program, "uGrassTex");
-	GLint WaterTexLocation = glGetUniformLocation(program, "uWaterTex");
-	GLint StoneTexLocation = glGetUniformLocation(program, "uStoneTex");
-	GLint SnowTexLocation = glGetUniformLocation(program, "uSnowTex");
-	GLint SandTexLocation = glGetUniformLocation(program, "uSandTex");
-	GLint CloudsTexLocation = glGetUniformLocation(program, "uCloudsShadows");
-
-	GLint RockTexLocation = glGetUniformLocation(program, "uRockTex");
-	GLint PlantTexLocation = glGetUniformLocation(program, "uPlantTex");
-	GLint TreeTexLocation = glGetUniformLocation(program, "uTreeTex");
-	GLint PineTreeTexLocation = glGetUniformLocation(program, "uPineTreeTex");
-	GLint SnowTreeTexLocation = glGetUniformLocation(program, "uSnowTreeTex");
 
 	/* Shaders modes */
 	GLint ModeLocation = glGetUniformLocation(program, "uMode");
 	GLint ChoiceLocation = glGetUniformLocation(program, "uChoice");
-	/* Max properties */
-	GLint MaxBendingLocation = glGetUniformLocation(program, "uMaxBending");
-	GLint MaxDrainLocation = glGetUniformLocation(program, "uMaxDrain");
-	GLint MaxGradientLocation = glGetUniformLocation(program, "uMaxGradient");
-	GLint MaxSurfaceLocation = glGetUniformLocation(program, "uMaxSurface");
-	GLint MaxAltitudeLocation = glGetUniformLocation(program, "uMaxAltitude");
-
-	/* Vegetation */
-	GLint VegetSizeLocation = glGetUniformLocation(program, "uVegetSizeCoef");
-	GLint DistanceVegetLocation = glGetUniformLocation(program, "uDistance");
-	
 	/* Controlers  */
 	GLint FogLocation = glGetUniformLocation(program, "uFog");
 	
-	glUniform1f(MaxBendingLocation, maxCoeffArray[0]);	
-	glUniform1f(MaxDrainLocation, maxCoeffArray[1]);
-	glUniform1f(MaxGradientLocation, maxCoeffArray[2]);
-	glUniform1f(MaxSurfaceLocation, maxCoeffArray[3]);
-	glUniform1f(MaxAltitudeLocation, maxCoeffArray[4]);
-	
-	// Send terrain textures
-	glUniform1i(GrassTexLocation, 0);
-	glUniform1i(WaterTexLocation, 1);
-	glUniform1i(StoneTexLocation, 2);
-	glUniform1i(SnowTexLocation, 3);
-	glUniform1i(SandTexLocation, 4);
-	glUniform1i(CloudsTexLocation, 5);
-	glUniform1i(NightTexLocation, 6);
-	glUniform1i(SkyTexLocation, 7);
-
-	glUniform1i(RockTexLocation, 0);
-	glUniform1i(PlantTexLocation, 1);
-	glUniform1i(TreeTexLocation, 2);
-	glUniform1i(PineTreeTexLocation, 3);
-	glUniform1i(SnowTreeTexLocation, 4);
+	sendStaticUniform(program, maxCoeffArray, thresholdDistance);
 	
 	// Creation Light
 	float coefLight = 0.;
@@ -360,12 +318,6 @@ int main(int argc, char** argv){
 	float tempDayStep = 0.;
 	float coefLightStep = 0.00218166156f;
 	bool timePause = false;
-	
-	// send vegetation size coefficient
-	std::cout << "test : " << maxCoeffArray[6] << std::endl;
-	
-	float vegetSizeCoef = maxCoeffArray[6];
-	glUniform1f(VegetSizeLocation, vegetSizeCoef);
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -410,7 +362,6 @@ int main(int argc, char** argv){
 	bool displayGradient = false;
 	bool displayVegetation = true;
 	bool displayFog = true;
-	float thresholdDistance = 0.1f;
 	
 	bool displayDebug = false;
 	float camSpeed = 0.01;
@@ -418,8 +369,6 @@ int main(int argc, char** argv){
 	/* timelaps animation */
 	bool timelaps = false;
 	float timelapsPosOffset = 0.;
-
-	glUniform1i(DistanceVegetLocation, thresholdDistance);
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -516,33 +465,47 @@ int main(int argc, char** argv){
 						for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 							if(idx == n->idxLeaf){
 								if(currentCam == FREE_FLY){
-									//FRUSTUM CULLING
-									if(ffCam.leavesFrustum(leafArrays[0][idx])){
-											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
-										if(displayVegetation){
-											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
+									if(displayDebug){
+										//FRUSTUM CULLING
+										if(ffCam.leavesFrustum(leafArrays[0][idx])){
+											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+											/* leaf cube */
+											glUniform1i(ChoiceLocation, DEBUG_BOX);
+											display_lvl1(cubeVAO, ms, MVPLocation, n->pos, halfLeafSize);
+											
+											/* Computed triangles */
+											glUniform1i(ChoiceLocation, DEBUG_TRI);
+											display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
 										}
-										break;
+									}else{
+										//FRUSTUM CULLING
+										if(ffCam.leavesFrustum(leafArrays[0][idx])){
+												display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+											if(displayVegetation){
+												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
+											}
+										}
 									}
 								}else{
 									if(displayDebug){
 										if(ffCam.leavesFrustum(leafArrays[0][idx])){ // wrong frustum - comment this line to display every leaf with TrackBallCam
 											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
-											glUniform1i(ChoiceLocation, DEBUG);
+											/* leaf cube */
+											glUniform1i(ChoiceLocation, DEBUG_BOX);
 											display_lvl1(cubeVAO, ms, MVPLocation, n->pos, halfLeafSize);
-											if(displayVegetation){
-												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
-											}
-											break;
+											
+											/* Computed triangles */
+											glUniform1i(ChoiceLocation, DEBUG_TRI);
+											display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
 										} // comment too
 									}else{
 										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
 										if(displayVegetation){
 											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
 										}
-										break;
 									}
 								}
+								break;
 							}
 						}
 					}
@@ -639,9 +602,52 @@ int main(int argc, char** argv){
 							break;
 							
 						case SDLK_f:
-							if(currentCam == TRACK_BALL){
-								displayDebug = !displayDebug;
+							//change shaders
+							if(displayDebug){
+								displayDebug = false;
+								program = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
+	
+							}else{
+								displayDebug = true;
+								program = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/debug.gs.glsl");
 							}
+							
+							if(!program){
+								glDeleteBuffers(1, &cubeVBO);
+								glDeleteBuffers(nbVao, l_VBOs);
+								glDeleteBuffers(1, &groundVBO);
+								glDeleteVertexArrays(1, &cubeVAO);
+								glDeleteVertexArrays(nbVao, l_VAOs);
+								glDeleteVertexArrays(1, &groundVAO);
+								delete[] l_VAOs;
+								delete[] l_VBOs;
+								delete[] loadedLeaf;
+								for(uint16_t lvl=0;lvl<nbLevel;++lvl){
+									delete[] leafArrays[lvl];
+								}
+								delete[] nbLeaves;
+								delete[] chunkOffset;
+								return (EXIT_FAILURE);
+							}
+							glUseProgram(program);
+							
+							//recatch the uniform
+							/* Matrices */
+							MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
+							ViewMatrixLocation = glGetUniformLocation(program, "uViewMatrix");
+							/* Light */
+							LightSunVectLocation = glGetUniformLocation(program, "uLightSunVect");
+							LightMoonVectLocation = glGetUniformLocation(program, "uLightMoonVect");
+							TimeLocation = glGetUniformLocation(program, "uTime");
+							DayLocation = glGetUniformLocation(program, "uDay");
+							NightLocation = glGetUniformLocation(program, "uNight");
+							/* Shaders modes */
+							ModeLocation = glGetUniformLocation(program, "uMode");
+							ChoiceLocation = glGetUniformLocation(program, "uChoice");
+							/* Controlers  */
+							FogLocation = glGetUniformLocation(program, "uFog");
+							
+							sendStaticUniform(program, maxCoeffArray, thresholdDistance);
 							break;
 							
 						case SDLK_F1:
