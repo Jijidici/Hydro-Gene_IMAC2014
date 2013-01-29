@@ -105,15 +105,14 @@ void main() {
 		dCoeffSun *= 0.7;
 		dCoeffMoon *= 0.1;
 
+		/* clouds shadowmap */
+		float cloudsColor = texture(uCloudsShadows, gTexCoords+uTime).r;
+
+		dColorSun *= (1. - cloudsColor)*coefDay;
+
 		vec3 aColor = vec3(0.05f, 0.05f, 0.05f);
 		vec3 color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon);
 		
-		//~ vec3 cloudsColor = texture(uCloudsShadows, gTexCoords).rgb;
-		//~ if(	cloudsColor.r < 0.5 &&
-			//~ cloudsColor.g < 0.5 &&
-			//~ cloudsColor.b < 0.5){
-			//~ dColor = vec3(0.,0.,0.);
-		//~ }
 		
 		float ratio;
 		if(uChoice == BENDING){
@@ -188,6 +187,7 @@ void main() {
 				}
 				texel += vec4(0.1f*abs(uTime)*min(coefDay, 0.3),0.f,0.05f*(1.-abs(uTime))*min(coefNight, 0.3),0.f);
 				fFragColor = texel;
+				fFragColor *= (1. - cloudsColor)*coefDay;
 			}else discard;
 		}	
 	}

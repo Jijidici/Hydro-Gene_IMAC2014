@@ -77,7 +77,7 @@ void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint3
 	BindTexture(textures[2], GL_TEXTURE2);
 	BindTexture(textures[3], GL_TEXTURE3);
 	BindTexture(textures[4], GL_TEXTURE4);
-	//~ BindTexture(textures[5], GL_TEXTURE5);
+	BindTexture(textures[5], GL_TEXTURE5);
 		glBindVertexArray(meshVAO);
 			glDrawArrays(GL_TRIANGLES, 0, nbVertices);
 		glBindVertexArray(0);
@@ -86,7 +86,7 @@ void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint3
 	BindTexture(0, GL_TEXTURE2);
 	BindTexture(0, GL_TEXTURE3);
 	BindTexture(0, GL_TEXTURE4);
-	//~ BindTexture(0, GL_TEXTURE5);
+	BindTexture(0, GL_TEXTURE5);
 }
 
 void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLint ChoiceLocation, GLuint* textures){
