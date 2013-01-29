@@ -37,6 +37,8 @@
 #define SURFACE 6
 
 #define VEGET 7
+#define DEBUG 8
+
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
 static const size_t WINDOW_WIDTH = 1060, WINDOW_HEIGHT = 600;
@@ -160,12 +162,13 @@ int main(int argc, char** argv){
 	texture_veget[4] = CreateTexture("textures/snow_tree.png");
 
 	/* terrain textures */
-	GLuint texture_terrain[5];
+	GLuint texture_terrain[6];
 	texture_terrain[0] = CreateTexture("textures/grass.jpg");
 	texture_terrain[1] = CreateTexture("textures/water.png");
 	texture_terrain[2] = CreateTexture("textures/stone.jpg");
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
+	texture_terrain[5] = CreateTexture("textures/clouds2.jpg");
 	
 	
 	/* Leaves VBOs & VAOs creation */
@@ -298,6 +301,7 @@ int main(int argc, char** argv){
 	GLint StoneTexLocation = glGetUniformLocation(program, "uStoneTex");
 	GLint SnowTexLocation = glGetUniformLocation(program, "uSnowTex");
 	GLint SandTexLocation = glGetUniformLocation(program, "uSandTex");
+	GLint CloudsTexLocation = glGetUniformLocation(program, "uCloudsShadows");
 
 	GLint RockTexLocation = glGetUniformLocation(program, "uRockTex");
 	GLint PlantTexLocation = glGetUniformLocation(program, "uPlantTex");
@@ -334,8 +338,9 @@ int main(int argc, char** argv){
 	glUniform1i(StoneTexLocation, 2);
 	glUniform1i(SnowTexLocation, 3);
 	glUniform1i(SandTexLocation, 4);
-	glUniform1i(SkyTexLocation, 5);
+	glUniform1i(CloudsTexLocation, 5);
 	glUniform1i(NightTexLocation, 6);
+	glUniform1i(SkyTexLocation, 7);
 
 	glUniform1i(RockTexLocation, 0);
 	glUniform1i(PlantTexLocation, 1);
@@ -407,7 +412,7 @@ int main(int argc, char** argv){
 	bool displayFog = true;
 	float thresholdDistance = 0.1f;
 	
-	bool TBFrustum = false;
+	bool displayDebug = false;
 	float camSpeed = 0.01;
 
 	glUniform1i(DistanceVegetLocation, thresholdDistance);
@@ -516,9 +521,11 @@ int main(int argc, char** argv){
 										break;
 									}
 								}else{
-									if(TBFrustum){
+									if(displayDebug){
 										if(ffCam.leavesFrustum(leafArrays[0][idx])){ // wrong frustum - comment this line to display every leaf with TrackBallCam
 											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+											glUniform1i(ChoiceLocation, DEBUG);
+											display_lvl1(cubeVAO, ms, MVPLocation, n->pos, halfLeafSize);
 											if(displayVegetation){
 												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
 											}
@@ -562,7 +569,7 @@ int main(int argc, char** argv){
 			}
 			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
 			//~ glUniform1i(SkyTexLocation,0);
-			BindTexture(texture_sky, GL_TEXTURE5);
+			BindTexture(texture_sky, GL_TEXTURE7);
 			BindTexture(texture_night, GL_TEXTURE6);
 				glBindVertexArray(cubeVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -629,7 +636,7 @@ int main(int argc, char** argv){
 							
 						case SDLK_f:
 							if(currentCam == TRACK_BALL){
-								TBFrustum = !TBFrustum;
+								displayDebug = !displayDebug;
 							}
 							break;
 							
