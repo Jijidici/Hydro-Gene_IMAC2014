@@ -169,7 +169,7 @@ int main(int argc, char** argv){
 	texture_terrain[2] = CreateTexture("textures/stone.jpg");
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
-	texture_terrain[5] = CreateTexture("textures/clouds2.jpg");
+	texture_terrain[5] = CreateTexture("textures/cloud3.png");
 	
 	
 	/* Leaves VBOs & VAOs creation */

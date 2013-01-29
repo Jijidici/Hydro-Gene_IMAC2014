@@ -65,7 +65,9 @@ void main() {
 		vec3 dColor;
 		vec3 color;
 		/* clouds shadowmap */
-		float cloudsColor = texture(uCloudsShadows, gTexCoords+uTime).r;		
+		vec2 shadowCloudTexcoord = gTexCoords;
+		shadowCloudTexcoord.x += uTime;
+		float cloudsColor = texture(uCloudsShadows, shadowCloudTexcoord).r;		
 		
 		/* compute ratios */		
 		float ratioDrain;
