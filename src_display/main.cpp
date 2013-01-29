@@ -284,6 +284,9 @@ int main(int argc, char** argv){
 	
 	MatrixStack ms;
 	ms.set(P);
+	
+	//distance for changing of LOD
+	float thresholdDistance = 0.1f;
 
 	// Recuperation des variables uniformes
 	/* Light */
@@ -292,58 +295,13 @@ int main(int argc, char** argv){
 	GLint TimeLocation = glGetUniformLocation(program, "uTime");
 	GLint DayLocation = glGetUniformLocation(program, "uDay");
 	GLint NightLocation = glGetUniformLocation(program, "uNight");
-	/* Textures */
-	GLint SkyTexLocation = glGetUniformLocation(program, "uSkyTex");
-	GLint NightTexLocation = glGetUniformLocation(program, "uNightTex");
-	GLint GrassTexLocation = glGetUniformLocation(program, "uGrassTex");
-	GLint WaterTexLocation = glGetUniformLocation(program, "uWaterTex");
-	GLint StoneTexLocation = glGetUniformLocation(program, "uStoneTex");
-	GLint SnowTexLocation = glGetUniformLocation(program, "uSnowTex");
-	GLint SandTexLocation = glGetUniformLocation(program, "uSandTex");
-
-	GLint RockTexLocation = glGetUniformLocation(program, "uRockTex");
-	GLint PlantTexLocation = glGetUniformLocation(program, "uPlantTex");
-	GLint TreeTexLocation = glGetUniformLocation(program, "uTreeTex");
-	GLint PineTreeTexLocation = glGetUniformLocation(program, "uPineTreeTex");
-	GLint SnowTreeTexLocation = glGetUniformLocation(program, "uSnowTreeTex");
-
 	/* Shaders modes */
 	GLint ModeLocation = glGetUniformLocation(program, "uMode");
 	GLint ChoiceLocation = glGetUniformLocation(program, "uChoice");
-	/* Max properties */
-	GLint MaxBendingLocation = glGetUniformLocation(program, "uMaxBending");
-	GLint MaxDrainLocation = glGetUniformLocation(program, "uMaxDrain");
-	GLint MaxGradientLocation = glGetUniformLocation(program, "uMaxGradient");
-	GLint MaxSurfaceLocation = glGetUniformLocation(program, "uMaxSurface");
-	GLint MaxAltitudeLocation = glGetUniformLocation(program, "uMaxAltitude");
-
-	/* Vegetation */
-	GLint VegetSizeLocation = glGetUniformLocation(program, "uVegetSizeCoef");
-	GLint DistanceVegetLocation = glGetUniformLocation(program, "uDistance");
-	
 	/* Controlers  */
 	GLint FogLocation = glGetUniformLocation(program, "uFog");
 	
-	glUniform1f(MaxBendingLocation, maxCoeffArray[0]);	
-	glUniform1f(MaxDrainLocation, maxCoeffArray[1]);
-	glUniform1f(MaxGradientLocation, maxCoeffArray[2]);
-	glUniform1f(MaxSurfaceLocation, maxCoeffArray[3]);
-	glUniform1f(MaxAltitudeLocation, maxCoeffArray[4]);
-	
-	// Send terrain textures
-	glUniform1i(GrassTexLocation, 0);
-	glUniform1i(WaterTexLocation, 1);
-	glUniform1i(StoneTexLocation, 2);
-	glUniform1i(SnowTexLocation, 3);
-	glUniform1i(SandTexLocation, 4);
-	glUniform1i(SkyTexLocation, 5);
-	glUniform1i(NightTexLocation, 6);
-
-	glUniform1i(RockTexLocation, 0);
-	glUniform1i(PlantTexLocation, 1);
-	glUniform1i(TreeTexLocation, 2);
-	glUniform1i(PineTreeTexLocation, 3);
-	glUniform1i(SnowTreeTexLocation, 4);
+	sendStaticUniform(program, maxCoeffArray, thresholdDistance);
 	
 	// Creation Light
 	float coefLight = 0.;
@@ -357,12 +315,6 @@ int main(int argc, char** argv){
 	float tempDayStep = 0.;
 	float coefLightStep = 0.00218166156f;
 	bool timePause = false;
-	
-	// send vegetation size coefficient
-	std::cout << "test : " << maxCoeffArray[6] << std::endl;
-	
-	float vegetSizeCoef = maxCoeffArray[6];
-	glUniform1f(VegetSizeLocation, vegetSizeCoef);
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -407,12 +359,9 @@ int main(int argc, char** argv){
 	bool displayGradient = false;
 	bool displayVegetation = true;
 	bool displayFog = true;
-	float thresholdDistance = 0.1f;
 	
 	bool displayDebug = false;
 	float camSpeed = 0.01;
-
-	glUniform1i(DistanceVegetLocation, thresholdDistance);
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */

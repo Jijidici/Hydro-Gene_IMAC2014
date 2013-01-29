@@ -120,11 +120,11 @@ void main() {
 				fFragColor = texel;
 			}else discard;
 		}
+		else if(uChoice == DEBUG){
+			fFragColor = vec4(1.f, 0.f, 0.f, 1.f);
+		}
 		else{
-			if(uChoice == DEBUG){
-				color = vec3(1.f, 0.f, 0.f);
-			}
-			else if(uChoice == BENDING){
+			if(uChoice == BENDING){
 				float ratio = gBending/uMaxBending;
 				dColor = vec3(1.f - ratio, ratio, 1.f - ratio);
 			}
