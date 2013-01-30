@@ -369,6 +369,9 @@ int main(int argc, char** argv){
 	/* timelaps animation */
 	bool timelaps = false;
 	float timelapsPosOffset = 0.;
+	
+	/* rotation animation */
+	bool rotationAnim = false;
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -706,12 +709,31 @@ int main(int argc, char** argv){
 							thresholdDistance -= 0.01f;
 							break;
 							
+						case SDLK_p:
+							if(currentCam == FREE_FLY){
+								ffCam.printInfos();
+							}
+							break;
+							
 						case SDLK_t:
 							if(currentCam == FREE_FLY){
-								timelaps = true;
-								timelapsPosOffset = 0.;
-								ffCam.setCameraPosition(glm::vec3(0.,0.1,0.));
-								ffCam.resetView(0., 3.1416);
+								if(timelaps == false){
+									timelaps = true;
+									timelapsPosOffset = 0.;
+									ffCam.resetView(-0.0418879, 7.99012);
+									ffCam.setCameraPosition(glm::vec3(-0.425563,0.09999,-0.230102), 0.);
+								}else{
+									timelaps = false;
+								}
+							}
+							if(currentCam == TRACK_BALL){
+								if(timelaps == false){
+									rotationAnim = true;
+									timelapsPosOffset = 0.;
+									tbCam.setCamPos(30., 15., 0.7);
+								}else{
+									timelaps = false;
+								}
 							}
 							break;
 						
@@ -905,9 +927,17 @@ int main(int argc, char** argv){
 		
 		/* timelaps animation */
 		if(timelaps){			
-			ffCam.setCameraPosition(glm::vec3(0.+timelapsPosOffset/10.,0.1-timelapsPosOffset/40.,0.));
-			ffCam.resetView(0., 3.1416);
+			ffCam.resetView(-0.198968, 4.23068);
+			ffCam.setCameraPosition(glm::vec3(0.315615,0.266901-timelapsPosOffset/40.,0.224783), -timelapsPosOffset/20.);
 			
+			timelapsPosOffset+= 1./2880.;
+			if(timelapsPosOffset >= 1.){
+				timelaps = false;
+			}
+		}
+		
+		if(rotationAnim){
+			tbCam.setCamPos(30., 15.+timelapsPosOffset*500., 0.7);
 			timelapsPosOffset+= 1./2880.;
 			if(timelapsPosOffset >= 1.){
 				timelaps = false;

@@ -194,7 +194,7 @@ void main() {
 				float fogZ = (gl_FragCoord.z+1.)/gl_FragCoord.w;
 				float fogCoef = exp2(-fogDensity * fogDensity * fogZ * fogZ * log2);
 				fogCoef = clamp(fogCoef, 0., 1.);
-				vec3 fogColor = vec3(0.5*((coefDay+1)/2.)+0.1);
+				vec3 fogColor = vec3(0.3);
 				color = mix(fogColor, color, fogCoef);
 			}
 			fFragColor = vec4(color, 1.f);	

@@ -33,4 +33,10 @@ glm::mat4 TrackBallCamera::getViewMatrix() const{
 	return V.top();
 }
 
+void TrackBallCamera::setCamPos(float xDeg, float yDeg, float distance){
+	m_fAngleY = yDeg;
+	m_fAngleX = xDeg;
+	m_fDistance = distance;
+}
+
 }
