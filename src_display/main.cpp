@@ -42,7 +42,7 @@
 
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
-static const size_t WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
+static const size_t WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
 
 static const size_t GRID_3D_SIZE = 2;
@@ -288,7 +288,7 @@ int main(int argc, char** argv){
 	ms.set(P);
 	
 	//distance for changing of LOD
-	float thresholdDistance = 0.1f;
+	float thresholdDistance = 0.5f;
 
 	// Recuperation des variables uniformes
 	/* Light */
@@ -727,12 +727,12 @@ int main(int argc, char** argv){
 								}
 							}
 							if(currentCam == TRACK_BALL){
-								if(timelaps == false){
+								if(rotationAnim == false){
 									rotationAnim = true;
 									timelapsPosOffset = 0.;
 									tbCam.setCamPos(30., 15., 0.7);
 								}else{
-									timelaps = false;
+									rotationAnim = false;
 								}
 							}
 							break;
@@ -940,7 +940,7 @@ int main(int argc, char** argv){
 			tbCam.setCamPos(30., 15.+timelapsPosOffset*500., 0.7);
 			timelapsPosOffset+= 1./2880.;
 			if(timelapsPosOffset >= 1.){
-				timelaps = false;
+				rotationAnim = false;
 			}
 		}
 		
