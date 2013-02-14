@@ -172,17 +172,22 @@ int main(int argc, char** argv){
 	texture_terrain[5] = CreateTexture("textures/cloud3.png");
 	
 	
-	/* Leaves VBOs & VAOs creation */
+	/* Leaves VBOs & VAOs creation for computed triangles*/
 	GLuint* l_VBOs = new GLuint[nbVao];
 	glGenBuffers(nbVao, l_VBOs);
 	
 	GLuint* l_VAOs = new GLuint[nbVao];
 	glGenVertexArrays(nbVao, l_VAOs);
 	
+	std::cout<<nbLeaves[0]<<std::endl;
+	for(uint32_t idx=0;idx<nbLeaves[0];++idx){
+		std::cout<<leafArrays[0][idx].id<<std::endl;
+	}
+	
 	uint16_t currentLevel=0;
 	uint16_t levelFloor = nbLeaves[0];
 	uint16_t offset_idx = 0;
-	for(uint32_t idx=0;idx<nbVao;++idx){
+	for(uint32_t idx=0;idx<nbVao;++idx){	
 		//check the level
 		if(idx >= levelFloor){
 			currentLevel++;
@@ -328,9 +333,8 @@ int main(int argc, char** argv){
 	std::vector<Chunk> memory;
 	
 	/* init memory */
-	size_t currentMemCache = initMemory(memory, leafArrays[0], loadedLeaf, nbLeaves[0], nbSub_lvl2,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
-	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
-	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
+	size_t freeMemory = MAX_MEMORY_SIZE;
+	std::cout<<"//-> Free memory in cache : "<<freeMemory<<std::endl;
 
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
@@ -461,7 +465,7 @@ int main(int argc, char** argv){
 					if(lvl == 0 && d < thresholdDistance){
 						if(!loadedLeaf[idx]){
 							Chunk voidChunk = freeInMemory(memory, loadedLeaf);
-							loadInMemory(memory, leafArrays[0][idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
+							loadInMemory(memory, leafArrays[0][idx], d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
 							loadedLeaf[idx] = true;
 							std::sort(memory.begin(), memory.end(), memory.front());
 						}
@@ -538,7 +542,6 @@ int main(int argc, char** argv){
 				ms.scale(glm::vec3(100.f, 100.f, 100.f));
 			}
 			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-			//~ glUniform1i(SkyTexLocation,0);
 			BindTexture(texture_sky, GL_TEXTURE7);
 			BindTexture(texture_night, GL_TEXTURE6);
 				glBindVertexArray(cubeVAO);
