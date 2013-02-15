@@ -75,7 +75,7 @@ size_t loadInMemory(std::vector<Chunk>& memory, bool* loadedLeaf, Leaf l, double
 	memory.push_back(newChunk);
 	
 	std::cout<<"//-> Leaf "<<l.id<<" loaded."<<std::endl;
-	
+	loadedLeaf[l.id] = true;
 	freeMemory -= leafBytesSize;
 	return freeMemory;
 }

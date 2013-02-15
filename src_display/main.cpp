@@ -452,18 +452,19 @@ int main(int argc, char** argv){
 					
 					//special case of lvl 0
 					if(lvl == 0 && d < thresholdDistance){
-						if(!loadedLeaf[idx]){
-							//loadInMemory(memory, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
-							//loadedLeaf[idx] = true;
-							//std::sort(memory.begin(), memory.end(), memory.front());
-						}
-						for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
-							if(idx == n->idxLeaf){
-								if(currentCam == FREE_FLY){
-									if(displayDebug){
-										//FRUSTUM CULLING
-										if(ffCam.leavesFrustum(leafArrays[0][idx])){
-											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+						if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
+							/* FRUSTUM CULLING */
+							if(ffCam.leavesFrustum(leafArrays[0][idx])){
+								/* LOADING */
+								if(!loadedLeaf[idx]){
+									loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
+									std::sort(memory.begin(), memory.end(), memory.front());
+								}
+								/* DISPLAYING */
+								for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+									if(idx == n->idxLeaf){
+										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										if(displayDebug){
 											/* leaf cube */
 											glUniform1i(ChoiceLocation, DEBUG_BOX);
 											display_lvl1(cubeVAO, ms, MVPLocation, n->pos, halfLeafSize);
@@ -471,38 +472,46 @@ int main(int argc, char** argv){
 											/* Computed triangles */
 											glUniform1i(ChoiceLocation, DEBUG_TRI);
 											display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-										}
-									}else{
-										//FRUSTUM CULLING
-										if(ffCam.leavesFrustum(leafArrays[0][idx])){
-												display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+										}else{
 											if(displayVegetation){
 												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
 											}
 										}
 									}
-								}else{
+								}
+								
+							}
+						}else if(currentCam == TRACK_BALL){ /////////////////////////////TRACKBALL
+							/* LOADING */
+							if(!loadedLeaf[idx]){
+								loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
+								std::sort(memory.begin(), memory.end(), memory.front());
+							}
+							/* DISPLAYING */
+							for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+								if(idx == n->idxLeaf){
 									if(displayDebug){
-										if(ffCam.leavesFrustum(leafArrays[0][idx])){ // wrong frustum - comment this line to display every leaf with TrackBallCam
-											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
-											/* leaf cube */
-											glUniform1i(ChoiceLocation, DEBUG_BOX);
-											display_lvl1(cubeVAO, ms, MVPLocation, n->pos, halfLeafSize);
-											
-											/* Computed triangles */
-											glUniform1i(ChoiceLocation, DEBUG_TRI);
-											display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-										} // comment too
+										if(ffCam.leavesFrustum(leafArrays[0][idx])){
+											/* real triangles */
+											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										}
+										/* leaf cube */
+										glUniform1i(ChoiceLocation, DEBUG_BOX);
+										display_lvl1(cubeVAO, ms, MVPLocation, n->pos, halfLeafSize);
+										/* Computed triangles */
+										glUniform1i(ChoiceLocation, DEBUG_TRI);
+										display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
 									}else{
-										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+										/* real triangles */
+										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 										if(displayVegetation){
 											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
 										}
-									}
+									}								
+									break;
 								}
-								break;
 							}
-						}
+						} //END camera
 					}
 
 					//DISPLAY OF THE COEFFICIENTS
