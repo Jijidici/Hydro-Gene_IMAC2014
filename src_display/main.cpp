@@ -325,17 +325,6 @@ int main(int argc, char** argv){
 	size_t freeMemory = MAX_MEMORY_SIZE;
 	std::cout<<"//-> Free memory in cache : "<<freeMemory<<std::endl;
 	
-	/* MEMORY TEST */
-	std::cout<<"//-> memory vector size : "<<memory.size()<<std::endl;
-	loadInMemory(memory, leafArrays[0][2], 2., nbSub_lvl2, freeMemory);
-	loadInMemory(memory, leafArrays[0][485], 1., nbSub_lvl2, freeMemory);
-	std::cout<<"//-> memory vector size : "<<memory.size()<<std::endl;
-	std::sort(memory.begin(), memory.end(), memory.front());
-	std::cout<<freeInMemory(memory, loadedLeaf)<<std::endl;
-	std::cout<<freeInMemory(memory, loadedLeaf)<<std::endl;
-	std::cout<<"//-> memory vector size : "<<memory.size()<<std::endl;
-	/* MEMORY TEST */
-	
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
 	//~ //glEnable(GL_CULL_FACE); /* not so cool */

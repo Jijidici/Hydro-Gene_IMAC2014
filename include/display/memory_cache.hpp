@@ -15,7 +15,7 @@
 static const size_t MAX_MEMORY_SIZE = 20000;
 static const size_t CONFIGCHUNK_OFFSET = 2;
 
-void loadInMemory(std::vector<Chunk>& memory, Leaf l, double distance, uint16_t nbSub_lvl2, size_t freeMemory);
+size_t loadInMemory(std::vector<Chunk>& memory, bool* loadedLeaf, Leaf l, double distance, uint16_t nbSub_lvl2, size_t freeMemory);
 
 size_t freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf);
 

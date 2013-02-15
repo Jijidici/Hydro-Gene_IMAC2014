@@ -9,7 +9,7 @@
 #include "data_types.hpp"
 #include "geom_types.hpp"
 
-void loadInMemory(std::vector<Chunk>& memory, Leaf l, double distance, uint16_t nbSub_lvl2, size_t freeMemory){
+size_t loadInMemory(std::vector<Chunk>& memory, bool* loadedLeaf, Leaf l, double distance, uint16_t nbSub_lvl2, size_t freeMemory){
 	drn_t cache;
 	uint32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
 	if(test_cache <0){ throw std::runtime_error("unable to open data file"); }
@@ -18,8 +18,9 @@ void loadInMemory(std::vector<Chunk>& memory, Leaf l, double distance, uint16_t 
 	uint32_t lengthVoxelArray = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
 	uint32_t leafBytesSize = lengthVoxelArray*VOXELDATA_BYTES_SIZE + l.nbVertices_lvl2*3*sizeof(double);
 	std::cout<<"//-> LeafBytesSize : "<<leafBytesSize<<std::endl;
-	
-	/**** FREE MEMORY ****/
+	while(leafBytesSize > freeMemory && memory.size()>0){
+		freeMemory += freeInMemory(memory, loadedLeaf);
+	}
 	
 	/* load the voxel data */
 	VoxelData* voxArray = NULL;
@@ -74,6 +75,9 @@ void loadInMemory(std::vector<Chunk>& memory, Leaf l, double distance, uint16_t 
 	memory.push_back(newChunk);
 	
 	std::cout<<"//-> Leaf "<<l.id<<" loaded."<<std::endl;
+	
+	freeMemory -= leafBytesSize;
+	return freeMemory;
 }
 
 size_t freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
