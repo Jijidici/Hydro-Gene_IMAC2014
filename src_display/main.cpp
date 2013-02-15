@@ -79,11 +79,6 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Nb Subdivision lvl 2 : "<<nbSub_lvl2<<std::endl;
 	std::cout<<"//-> Nb possible levels : "<<nbLevel<<std::endl;
 	
-	uint32_t lengthTabVoxel = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
-	
-	size_t chunkBytesSize = lengthTabVoxel*VOXELDATA_BYTES_SIZE;
-	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
-	
 	/* Getting the maximum hydro properties coefficients */
 	float * maxCoeffArray = new float[7];
 	test_cache = drn_read_chunk(&cache, 1, maxCoeffArray);
@@ -109,14 +104,14 @@ int main(int argc, char** argv){
 		nbVao+=nbLeaves[lvl];
 	}
 	
+	std::cout<<"//-> NB VAO & VBO : "<<nbVao<<std::endl;
+	
 	/* Array which know if a leaf grid is loaded or not */
 	bool* loadedLeaf = new bool[nbLeaves[0]];
 	for(uint16_t idx=0;idx<nbLeaves[0];++idx){
 		loadedLeaf[idx] = false;
 	}
-	
-	std::cout<<"//-> NB VAO & VBO : "<<nbVao<<std::endl;
-	
+		
 	/* ************************************************************* */
 	/* *************INITIALISATION OPENGL/SDL*********************** */
 	/* ************************************************************* */
@@ -144,7 +139,6 @@ int main(int argc, char** argv){
 	/* Differents cube size */
 	double leafSize = GRID_3D_SIZE/(double)nbSub_lvl1;
 	double halfLeafSize = leafSize*0.5;
-	double cubeSize = leafSize/(double)nbSub_lvl2;
 	
 	/* ******************************** */
 	/* 		Creation des VBO, VAO 		*/
@@ -178,11 +172,6 @@ int main(int argc, char** argv){
 	
 	GLuint* l_VAOs = new GLuint[nbVao];
 	glGenVertexArrays(nbVao, l_VAOs);
-	
-	std::cout<<nbLeaves[0]<<std::endl;
-	for(uint32_t idx=0;idx<nbLeaves[0];++idx){
-		std::cout<<leafArrays[0][idx].id<<std::endl;
-	}
 	
 	uint16_t currentLevel=0;
 	uint16_t levelFloor = nbLeaves[0];
@@ -335,7 +324,18 @@ int main(int argc, char** argv){
 	/* init memory */
 	size_t freeMemory = MAX_MEMORY_SIZE;
 	std::cout<<"//-> Free memory in cache : "<<freeMemory<<std::endl;
-
+	
+	/* MEMORY TEST */
+	std::cout<<"//-> memory vector size : "<<memory.size()<<std::endl;
+	loadInMemory(memory, leafArrays[0][2], 2., nbSub_lvl2, freeMemory);
+	loadInMemory(memory, leafArrays[0][485], 1., nbSub_lvl2, freeMemory);
+	std::cout<<"//-> memory vector size : "<<memory.size()<<std::endl;
+	std::sort(memory.begin(), memory.end(), memory.front());
+	std::cout<<freeInMemory(memory, loadedLeaf)<<std::endl;
+	std::cout<<freeInMemory(memory, loadedLeaf)<<std::endl;
+	std::cout<<"//-> memory vector size : "<<memory.size()<<std::endl;
+	/* MEMORY TEST */
+	
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
 	//~ //glEnable(GL_CULL_FACE); /* not so cool */
@@ -464,10 +464,9 @@ int main(int argc, char** argv){
 					//special case of lvl 0
 					if(lvl == 0 && d < thresholdDistance){
 						if(!loadedLeaf[idx]){
-							Chunk voidChunk = freeInMemory(memory, loadedLeaf);
-							loadInMemory(memory, leafArrays[0][idx], d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
-							loadedLeaf[idx] = true;
-							std::sort(memory.begin(), memory.end(), memory.front());
+							//loadInMemory(memory, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
+							//loadedLeaf[idx] = true;
+							//std::sort(memory.begin(), memory.end(), memory.front());
 						}
 						for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 							if(idx == n->idxLeaf){
@@ -975,9 +974,7 @@ int main(int argc, char** argv){
 	//free cache memory
 	uint16_t nbLoadedLeaves = memory.size();
 	for(uint16_t idx=0;idx<nbLoadedLeaves;++idx){
-		Chunk tmpChunk = freeInMemory(memory, loadedLeaf);
-		glDeleteVertexArrays(1, &(tmpChunk.vao));
-		glDeleteBuffers(1, &(tmpChunk.vbo));
+		freeInMemory(memory, loadedLeaf);
 	}
 	
 	glDeleteBuffers(nbVao, l_VBOs);
