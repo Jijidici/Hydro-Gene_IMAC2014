@@ -25,6 +25,8 @@
 #include "display/cube_model.hpp"
 
 #include "drn/drn_reader.h"
+#include "imgui/imgui.h"
+#include "imgui/imguiRenderGL.h"
 
 #define FRAME_RATE 60
 #define SKYBOX 0
@@ -361,7 +363,7 @@ int main(int argc, char** argv){
 	bool displaySurface = false;
 	bool displayGradient = false;
 	bool displayVegetation = true;
-	bool displayFog = true;
+	bool displayFog = false;
 	
 	bool displayDebug = false;
 	float camSpeed = 0.01;
@@ -372,6 +374,28 @@ int main(int argc, char** argv){
 	
 	/* rotation animation */
 	bool rotationAnim = false;
+
+
+	/* ------------- MEGA TEST --------------- */
+	GLenum err = glewInit();
+    if (GLEW_OK != err)
+    {
+          /* Problem: glewInit failed, something is seriously wrong. */
+          fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+          exit( EXIT_FAILURE );
+    }
+
+	bool ihm = true;
+
+	if (!imguiRenderGLInit("DroidSans.ttf"))
+	{
+		fprintf(stderr, "Could not init GUI renderer.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	//~ glEnable(GL_BLEND);
+	//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
+	//~ glBlendFunc(GL_ONEd, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
 
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
@@ -389,6 +413,12 @@ int main(int argc, char** argv){
 
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		glUseProgram(program);
+		
+		glDisable(GL_BLEND);
+		//~ glBlendFunc(GL_ONE, GL_ONE);
+		glEnable(GL_DEPTH_TEST);
 		
 		glUniform1i(ModeLocation, TRIANGLES);
 		glUniform1f(TimeLocation, time);
@@ -548,15 +578,119 @@ int main(int argc, char** argv){
 			BindTexture(0, GL_TEXTURE5);
 		ms.pop();
 
+		/* ------ IHM imgui ------ */
+		if(ihm == true){
+			int width = WINDOW_WIDTH;
+			int height = WINDOW_HEIGHT;
+
+			//~ glClearColor(0.8f, 0.8f, 0.8f, 1.f);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
+			glDisable(GL_DEPTH_TEST);
+	
+			
+			int mousex = 0;
+			int mousey = 0;
+			bool checked1 = false;
+			bool checked2 = false;
+			bool checked3 = true;
+			bool checked4 = false;
+			float value1 = 50.f;
+			float value2 = 30.f;
+			int scrollarea1 = 0;
+			int scrollarea2 = 0;
+			
+			int toggle = 0;
+			
+			SDL_GetMouseState(&mousex, &mousey);
+			
+			mousey = height - mousey;
+			
+			imguiBeginFrame(mousex, mousey, 0, 0);
+			
+			imguiBeginScrollArea("Scroll area", 10, 10, width / 5, height - 20, &scrollarea1);
+			imguiSeparatorLine();
+			imguiSeparator();
+
+			imguiButton("Button");
+			imguiButton("Disabled button", false);
+			imguiItem("Item");
+			imguiItem("Disabled item", false);
+			toggle = imguiCheck("Checkbox", checked1);
+			if (toggle)
+				checked1 = !checked1;
+			toggle = imguiCheck("Disabled checkbox", checked2, false);
+			if (toggle)
+				checked2 = !checked2;
+			toggle = imguiCollapse("Collapse", "subtext", checked3);
+			if (checked3)
+			{
+				imguiIndent();
+				imguiLabel("Collapsible element");
+				imguiUnindent();
+			}
+			if (toggle)
+				checked3 = !checked3;
+			toggle = imguiCollapse("Disabled collapse", "subtext", checked4, false);
+			if (toggle)
+				checked4 = !checked4;
+			imguiLabel("Label");
+			imguiValue("Value");
+			imguiSlider("Slider", &value1, 0.f, 100.f, 1.f);
+			imguiSlider("Disabled slider", &value2, 0.f, 100.f, 1.f, false);
+			imguiIndent();
+			imguiLabel("Indented");
+			imguiUnindent();
+			imguiLabel("Unindented");
+
+			imguiEndScrollArea();
+
+			imguiBeginScrollArea("Scroll area", 20 + width / 5, 500, width / 5, height - 510, &scrollarea2);
+			imguiSeparatorLine();
+			imguiSeparator();
+			for (int i = 0; i < 100; ++i)
+				imguiLabel("A wall of text");
+				
+			imguiEndScrollArea();
+			imguiEndFrame();
+			
+			//~ imguiDrawText(30 + width / 5 * 2, height - 20, IMGUI_ALIGN_LEFT, "Free text",  imguiRGBA(32,192, 32,192));
+			//~ imguiDrawText(30 + width / 5 * 2 + 100, height - 40, IMGUI_ALIGN_RIGHT, "Free text",  imguiRGBA(32, 32, 192, 192));
+			//~ imguiDrawText(30 + width / 5 * 2 + 50, height - 60, IMGUI_ALIGN_CENTER, "Free text",  imguiRGBA(192, 32, 32,192));
+//~ 
+			//~ imguiDrawLine(30 + width / 5 * 2, height - 80, 30 + width / 5 * 2 + 100, height - 60, 1.f, imguiRGBA(32,192, 32,192));
+			//~ imguiDrawLine(30 + width / 5 * 2, height - 100, 30 + width / 5 * 2 + 100, height - 80, 2.f, imguiRGBA(32, 32, 192, 192));
+			//~ imguiDrawLine(30 + width / 5 * 2, height - 120, 30 + width / 5 * 2 + 100, height - 100, 3.f, imguiRGBA(192, 32, 32,192));
+//~ 
+			//~ imguiDrawRoundedRect(30 + width / 5 * 2, height - 240, 100, 100, 5.f, imguiRGBA(32,192, 32,192));
+			//~ imguiDrawRoundedRect(30 + width / 5 * 2, height - 350, 100, 100, 10.f, imguiRGBA(32, 32, 192, 192));
+			//~ imguiDrawRoundedRect(30 + width / 5 * 2, height - 470, 100, 100, 20.f, imguiRGBA(192, 32, 32,192));
+			//~ 
+			//~ imguiDrawRect(30 + width / 5 * 2, height - 590, 100, 100, imguiRGBA(32, 192, 32, 192));
+			//~ imguiDrawRect(30 + width / 5 * 2, height - 710, 100, 100, imguiRGBA(32, 32, 192, 192));
+			//~ imguiDrawRect(30 + width / 5 * 2, height - 830, 100, 100, imguiRGBA(192, 32, 32,192));
+			
+			imguiRenderGLDraw(WINDOW_WIDTH, WINDOW_HEIGHT);
+			
+		} // end if(ihm)
+			
+		
 		// Mise à jour de l'affichage
 		SDL_GL_SwapBuffers();
-		if(currentCam == FREE_FLY){
-			SDL_WM_GrabInput(SDL_GRAB_ON);
-			SDL_ShowCursor(SDL_DISABLE);
-		}else if(currentCam == TRACK_BALL){
+			
+		if(ihm){
 			SDL_WM_GrabInput(SDL_GRAB_OFF);
 			SDL_ShowCursor(SDL_ENABLE);
+		}else{
+			if(currentCam == FREE_FLY){
+				SDL_WM_GrabInput(SDL_GRAB_ON);
+				SDL_ShowCursor(SDL_DISABLE);
+			}else if(currentCam == TRACK_BALL){
+				SDL_WM_GrabInput(SDL_GRAB_OFF);
+				SDL_ShowCursor(SDL_ENABLE);
+			}
 		}
+		
 		// Boucle de gestion des évenements
 		SDL_Event e;
 		while(SDL_PollEvent(&e)) {
@@ -569,6 +703,7 @@ int main(int argc, char** argv){
 					switch(e.key.keysym.sym){
 						case SDLK_ESCAPE:
 							done=true;
+							if(ihm) imguiRenderGLDestroy();
 							break;
 
 						//Relative to the cameras
@@ -734,6 +869,16 @@ int main(int argc, char** argv){
 								}else{
 									rotationAnim = false;
 								}
+							}
+							break;
+							
+						case SDLK_i:
+							if(ihm){
+								ihm = !ihm;
+								
+								//~ imguiRenderGLDestroy();
+							}else{
+								ihm = !ihm;
 							}
 							break;
 						
@@ -968,6 +1113,9 @@ int main(int argc, char** argv){
 	glDeleteVertexArrays(1, &cubeVAO);
 	glDeleteVertexArrays(1, &groundVAO);
 	glDeleteTextures(1, &texture_sky);
+	
+	//~ // imgui
+	imguiRenderGLDestroy();
 	
 	//free cache memory
 	uint16_t nbLoadedLeaves = memory.size();
