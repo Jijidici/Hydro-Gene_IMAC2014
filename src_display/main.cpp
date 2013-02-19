@@ -365,8 +365,8 @@ int main(int argc, char** argv){
           exit( EXIT_FAILURE );
     }
 
-	//~ bool ihm = true;
-	bool ihm = false;
+	bool ihm = true;
+	//~ bool ihm = false;
 	
 	int mousex = 0;
 	int mousey = 0;
