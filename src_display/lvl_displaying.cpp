@@ -17,59 +17,78 @@
 #define SURFACE 6
 #define VEGET 7
 
-void sendStaticUniform(GLuint program, float* maxCoeffArray, float thresholdDistance){
-	/* Textures */
-	GLint SkyTexLocation = glGetUniformLocation(program, "uSkyTex");
-	GLint NightTexLocation = glGetUniformLocation(program, "uNightTex");
-	GLint GrassTexLocation = glGetUniformLocation(program, "uGrassTex");
-	GLint WaterTexLocation = glGetUniformLocation(program, "uWaterTex");
-	GLint StoneTexLocation = glGetUniformLocation(program, "uStoneTex");
-	GLint SnowTexLocation = glGetUniformLocation(program, "uSnowTex");
-	GLint SandTexLocation = glGetUniformLocation(program, "uSandTex");
-	GLint CloudsTexLocation = glGetUniformLocation(program, "uCloudsShadows");
+void getLocations(GLint* locations, GLuint program){
+	/* Matrices */
+	locations[MVP] = glGetUniformLocation(program, "uMVPMatrix");
+	locations[VIEWMATRIX] = glGetUniformLocation(program, "uViewMatrix");
 	
-	GLint RockTexLocation = glGetUniformLocation(program, "uRockTex");
-	GLint PlantTexLocation = glGetUniformLocation(program, "uPlantTex");
-	GLint TreeTexLocation = glGetUniformLocation(program, "uTreeTex");
-	GLint PineTreeTexLocation = glGetUniformLocation(program, "uPineTreeTex");
-	GLint SnowTreeTexLocation = glGetUniformLocation(program, "uSnowTreeTex");
+	/* Light */
+	locations[LIGHTSUN] = glGetUniformLocation(program, "uLightSunVect");
+	locations[LIGHTMOON] = glGetUniformLocation(program, "uLightMoonVect");
+	locations[TIME] = glGetUniformLocation(program, "uTime");
+	locations[DAY] = glGetUniformLocation(program, "uDay");
+	locations[NIGHT] = glGetUniformLocation(program, "uNight");
+
+	/* Shaders modes */
+	locations[MODE] = glGetUniformLocation(program, "uMode");
+	locations[CHOICE] = glGetUniformLocation(program, "uChoice");
+	
+	/* Controlers  */
+	locations[FOG] = glGetUniformLocation(program, "uFog");
+	/* Textures */
+	locations[SKYTEX] = glGetUniformLocation(program, "uSkyTex");
+	locations[NIGHTTEX] = glGetUniformLocation(program, "uNightTex");
+	locations[GRASSTEX] = glGetUniformLocation(program, "uGrassTex");
+	locations[WATERTEX] = glGetUniformLocation(program, "uWaterTex");
+	locations[STONETEX] = glGetUniformLocation(program, "uStoneTex");
+	locations[SNOWTEX] = glGetUniformLocation(program, "uSnowTex");
+	locations[SANDTEX] = glGetUniformLocation(program, "uSandTex");
+	locations[CLOUDTEX] = glGetUniformLocation(program, "uCloudsShadows");
+	
+	locations[ROCKTEX] = glGetUniformLocation(program, "uRockTex");
+	locations[PLANTTEX] = glGetUniformLocation(program, "uPlantTex");
+	locations[TREETEX] = glGetUniformLocation(program, "uTreeTex");
+	locations[PINETREETEX] = glGetUniformLocation(program, "uPineTreeTex");
+	locations[SNOWTREETEX] = glGetUniformLocation(program, "uSnowTreeTex");
 	
 	/* Max properties */
-	GLint MaxBendingLocation = glGetUniformLocation(program, "uMaxBending");
-	GLint MaxDrainLocation = glGetUniformLocation(program, "uMaxDrain");
-	GLint MaxGradientLocation = glGetUniformLocation(program, "uMaxGradient");
-	GLint MaxSurfaceLocation = glGetUniformLocation(program, "uMaxSurface");
-	GLint MaxAltitudeLocation = glGetUniformLocation(program, "uMaxAltitude");
+	locations[MAXBENDING] = glGetUniformLocation(program, "uMaxBending");
+	locations[MAXDRAIN] = glGetUniformLocation(program, "uMaxDrain");
+	locations[MAXGRADIENT] = glGetUniformLocation(program, "uMaxGradient");
+	locations[MAXSURFACE] = glGetUniformLocation(program, "uMaxSurface");
+	locations[MAXALTITUDE] = glGetUniformLocation(program, "uMaxAltitude");
 	
 	/* Vegetation */
-	GLint VegetSizeLocation = glGetUniformLocation(program, "uVegetSizeCoef");
-	GLint DistanceVegetLocation = glGetUniformLocation(program, "uDistance");
-	
+	locations[VEGETSIZE] = glGetUniformLocation(program, "uVegetSizeCoef");
+	locations[DISTANCE] = glGetUniformLocation(program, "uDistance");
+}
+
+void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistance){
 	/**** SEND ****/
-	glUniform1f(MaxBendingLocation, maxCoeffArray[0]);	
-	glUniform1f(MaxDrainLocation, maxCoeffArray[1]);
-	glUniform1f(MaxGradientLocation, maxCoeffArray[2]);
-	glUniform1f(MaxSurfaceLocation, maxCoeffArray[3]);
-	glUniform1f(MaxAltitudeLocation, maxCoeffArray[4]);
+	glUniform1f(locations[MAXBENDING], maxCoeffArray[0]);	
+	glUniform1f(locations[MAXDRAIN], maxCoeffArray[1]);
+	glUniform1f(locations[MAXGRADIENT], maxCoeffArray[2]);
+	glUniform1f(locations[MAXSURFACE], maxCoeffArray[3]);
+	glUniform1f(locations[MAXALTITUDE], maxCoeffArray[4]);
 	
 	// Send terrain textures
-	glUniform1i(GrassTexLocation, 0);
-	glUniform1i(WaterTexLocation, 1);
-	glUniform1i(StoneTexLocation, 2);
-	glUniform1i(SnowTexLocation, 3);
-	glUniform1i(SandTexLocation, 4);
-	glUniform1i(CloudsTexLocation, 5);
-	glUniform1i(NightTexLocation, 6);
-	glUniform1i(SkyTexLocation, 7);
+	glUniform1i(locations[GRASSTEX], 0);
+	glUniform1i(locations[WATERTEX], 1);
+	glUniform1i(locations[STONETEX], 2);
+	glUniform1i(locations[SNOWTEX], 3);
+	glUniform1i(locations[SANDTEX], 4);
+	glUniform1i(locations[CLOUDTEX], 5);
+	glUniform1i(locations[NIGHTTEX], 6);
+	glUniform1i(locations[SKYTEX], 7);
 	// Send details textures
-	glUniform1i(RockTexLocation, 0);
-	glUniform1i(PlantTexLocation, 1);
-	glUniform1i(TreeTexLocation, 2);
-	glUniform1i(PineTreeTexLocation, 3);
-	glUniform1i(SnowTreeTexLocation, 4);
+	glUniform1i(locations[ROCKTEX], 0);
+	glUniform1i(locations[PLANTTEX], 1);
+	glUniform1i(locations[TREETEX], 2);
+	glUniform1i(locations[PINETREETEX], 3);
+	glUniform1i(locations[SNOWTREETEX], 4);
 	
-	glUniform1f(VegetSizeLocation, maxCoeffArray[6]);
-	glUniform1i(DistanceVegetLocation, thresholdDistance);
+	glUniform1f(locations[VEGETSIZE], maxCoeffArray[6]);
+	glUniform1i(locations[DISTANCE], thresholdDistance);
 }
 
 void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize, FreeFlyCamera& ffCam, CamType camType){

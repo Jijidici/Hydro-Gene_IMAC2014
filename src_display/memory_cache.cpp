@@ -9,109 +9,90 @@
 #include "data_types.hpp"
 #include "geom_types.hpp"
 
-size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint32_t nbLeaves, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize){
-	//if the memcache is to tiny for the chunks
-	if(chunkBytesSize >= MAX_MEMORY_SIZE){
-		throw std::logic_error("the memcache is to little compare with the chunk size");
-	}
-	
+size_t loadInMemory(std::vector<Chunk>& memory, bool* loadedLeaf, Leaf l, double distance, uint16_t nbSub_lvl2, size_t freeMemory){
 	drn_t cache;
 	uint32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
 	if(test_cache <0){ throw std::runtime_error("unable to open data file"); }
 	
-	/* SEND TRIANGLES TO THE GPU */
-	GLuint* vaos = new GLuint[nbLeaves];
-	GLuint* vbos = new GLuint[nbLeaves];
-	
-	for(uint32_t idx=0;idx<nbLeaves;++idx){
-		glGenBuffers(1, &(vbos[idx]));
-		glGenVertexArrays(1, &(vaos[idx]));
-		
-		/* load the triangles and send them to the GPU */
-		Vertex* vertices = NULL;
-		vertices = new Vertex[leafArray[idx].nbVertices_lvl2];
-		test_cache = drn_read_chunk(&cache,  2*leafArray[idx].id+1 + CONFIGCHUNK_OFFSET, vertices);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbos[idx]);
-			glBufferData(GL_ARRAY_BUFFER, leafArray[idx].nbVertices_lvl2*sizeof(Vertex), vertices, GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		delete[] vertices;
-		
-		glBindVertexArray(vaos[idx]);
-			glEnableVertexAttribArray(POSITION_LOCATION);
-			glEnableVertexAttribArray(NORMAL_LOCATION);
-			glEnableVertexAttribArray(BENDING_LOCATION);
-			glEnableVertexAttribArray(DRAIN_LOCATION);
-			glEnableVertexAttribArray(GRADIENT_LOCATION);
-			glEnableVertexAttribArray(SURFACE_LOCATION);
-			glBindBuffer(GL_ARRAY_BUFFER, vbos[idx]);
-				glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
-				glVertexAttribPointer(NORMAL_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3*sizeof(GLdouble)));
-				glVertexAttribPointer(BENDING_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)));
-				glVertexAttribPointer(DRAIN_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+sizeof(GLfloat)));
-				glVertexAttribPointer(GRADIENT_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+2*sizeof(GLfloat)));
-				glVertexAttribPointer(SURFACE_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+3*sizeof(GLfloat)));
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-		
-		std::cout<<"//-> Triangle from leaf "<<idx<<" is loaded"<<std::endl;
+	/* check if we can load the leaf - enough size in the memory */
+	uint32_t lengthVoxelArray = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
+	uint32_t leafBytesSize = lengthVoxelArray*VOXELDATA_BYTES_SIZE + l.nbVertices_lvl2*3*sizeof(double);
+	std::cout<<"//-> LeafBytesSize : "<<leafBytesSize<<std::endl;
+	while(leafBytesSize > freeMemory && memory.size()>0){
+		freeMemory += freeInMemory(memory, loadedLeaf);
 	}
-	
-	/* Load the leaf */
-	size_t currentMemSize = 0;
-	uint32_t currentLeaf = 0;
-	while(currentMemSize + chunkBytesSize < MAX_MEMORY_SIZE && currentLeaf < nbLeaves){		
-		loadInMemory(memory, leafArray[currentLeaf], currentLeaf, computeDistanceLeafCamera(leafArray[currentLeaf], V), nbSub_lvl2, vaos[leafArray[currentLeaf].id], vbos[leafArray[currentLeaf].id]);
-		loadedLeaf[currentLeaf] = true;
-		currentLeaf++;
-		currentMemSize+= chunkBytesSize; 
-	}
-	
-	//free ressources
-	delete[] vaos;
-	delete[] vbos;
-	
-	test_cache = drn_close(&cache);
-	if(test_cache <0){ throw std::runtime_error("unable to close data file"); }
-	
-	return currentMemSize;
-}
-
-void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double distance, uint16_t nbSub_lvl2, GLuint idxVao, GLuint idxVbo){
-	drn_t cache;
-	uint32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
-	if(test_cache <0){ throw std::runtime_error("unable to open data file"); }
 	
 	/* load the voxel data */
 	VoxelData* voxArray = NULL;
-	voxArray = new VoxelData[nbSub_lvl2*nbSub_lvl2*nbSub_lvl2];
+	voxArray = new VoxelData[lengthVoxelArray];
 	test_cache = drn_read_chunk(&cache, 2*l.id + CONFIGCHUNK_OFFSET, voxArray);
 	if(test_cache <0){ throw std::runtime_error("unable to read data file"); }
 	
-	//add to map
-	Chunk newChunk;
-	newChunk.voxels = voxArray;
-	newChunk.pos = l.pos;
-	newChunk.idxLeaf = l_idx;
-	newChunk.d = distance;
-	newChunk.vao = idxVao;
-	newChunk.vbo = idxVbo;
-	memory.push_back(newChunk);
+	/* load the mesh */
+	Vertex* vertices = new Vertex[l.nbVertices_lvl2];
+	test_cache = drn_read_chunk(&cache, 2*l.id+1 + CONFIGCHUNK_OFFSET, vertices);
+	if(test_cache <0){ throw std::runtime_error("unable to read data file"); }
 	
+	GLuint meshVBO = 0;
+	glGenBuffers(1, &meshVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, meshVBO);
+		glBufferData(GL_ARRAY_BUFFER, l.nbVertices_lvl2*sizeof(Vertex), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	delete[] vertices;
 	test_cache = drn_close(&cache);
 	if(test_cache <0){ throw std::runtime_error("unable to close data file"); }
 	
-	//~ std::cout<<"//-> Leaf chunks "<<l.id*2+2<<" & "<<l.id*2+3<<" loaded."<<std::endl;
+	/* setting the mesh */
+	GLuint meshVAO = 0;
+	glGenVertexArrays(1, &meshVAO);
+	glBindVertexArray(meshVAO);
+		glEnableVertexAttribArray(POSITION_LOCATION);
+		glEnableVertexAttribArray(NORMAL_LOCATION);
+		glEnableVertexAttribArray(BENDING_LOCATION);
+		glEnableVertexAttribArray(DRAIN_LOCATION);
+		glEnableVertexAttribArray(GRADIENT_LOCATION);
+		glEnableVertexAttribArray(SURFACE_LOCATION);
+		glBindBuffer(GL_ARRAY_BUFFER, meshVBO);
+			glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
+			glVertexAttribPointer(NORMAL_LOCATION, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3*sizeof(GLdouble)));
+			glVertexAttribPointer(BENDING_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)));
+			glVertexAttribPointer(DRAIN_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+sizeof(GLfloat)));
+			glVertexAttribPointer(GRADIENT_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+2*sizeof(GLfloat)));
+			glVertexAttribPointer(SURFACE_LOCATION, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(6*sizeof(GLdouble)+3*sizeof(GLfloat)));
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	
+	//add the new chunk to the vector
+	Chunk newChunk;
+	newChunk.voxels = voxArray;
+	newChunk.pos = l.pos;
+	newChunk.idxLeaf = l.id;
+	newChunk.d = distance;
+	newChunk.vao = meshVAO;
+	newChunk.vbo = meshVBO;
+	newChunk.byteSize = leafBytesSize;
+	memory.push_back(newChunk);
+	
+	std::cout<<"//-> Leaf "<<l.id<<" loaded."<<std::endl;
+	loadedLeaf[l.id] = true;
+	freeMemory -= leafBytesSize;
+	return freeMemory;
 }
 
-Chunk freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
+size_t freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
 	Chunk lastElt = memory.back();
-	loadedLeaf[lastElt.idxLeaf] = false;
+	/* delete voxelData */
 	delete[] lastElt.voxels;
 	lastElt.voxels = NULL;
+	/* delete the VAO & VBO */
+	glDeleteBuffers(1, &(lastElt.vbo));
+	glDeleteVertexArrays(1, &(lastElt.vao));
+	loadedLeaf[lastElt.idxLeaf] = false;
+	std::cout<<"//-> Leaf "<<lastElt.idxLeaf<<" freed."<<std::endl;
 	memory.pop_back();
 	
-	return lastElt;
+	return lastElt.byteSize;
 }
 
 double computeDistanceLeafCamera(Leaf l, glm::mat4& view){

@@ -12,14 +12,12 @@
 #define GRADIENT_LOCATION 5
 #define SURFACE_LOCATION 6
 
-static const size_t MAX_MEMORY_SIZE = 524288000;
+static const size_t MAX_MEMORY_SIZE = 536870912;
 static const size_t CONFIGCHUNK_OFFSET = 2;
 
-size_t initMemory(std::vector<Chunk>& memory, Leaf* leafArray, bool* loadedLeaf, uint32_t nbLeaves, uint16_t nbSub_lvl2, size_t chunkBytesSize, glm::mat4 V, double halfLeafSize);
+size_t loadInMemory(std::vector<Chunk>& memory, bool* loadedLeaf, Leaf l, double distance, uint16_t nbSub_lvl2, size_t freeMemory);
 
-void loadInMemory(std::vector<Chunk>& memory, Leaf l, uint16_t l_idx, double distance, uint16_t nbSub_lvl2, GLuint idxVao, GLuint idxVbo);
-
-Chunk freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf);
+size_t freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf);
 
 double computeDistanceLeafCamera(Leaf l, glm::mat4& view);
 

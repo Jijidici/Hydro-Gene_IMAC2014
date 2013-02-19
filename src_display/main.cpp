@@ -81,11 +81,6 @@ int main(int argc, char** argv){
 	std::cout<<"//-> Nb Subdivision lvl 2 : "<<nbSub_lvl2<<std::endl;
 	std::cout<<"//-> Nb possible levels : "<<nbLevel<<std::endl;
 	
-	uint32_t lengthTabVoxel = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
-	
-	size_t chunkBytesSize = lengthTabVoxel*VOXELDATA_BYTES_SIZE;
-	std::cout<<"//-> Chunk bytes size : "<<chunkBytesSize<<std::endl;
-	
 	/* Getting the maximum hydro properties coefficients */
 	float * maxCoeffArray = new float[7];
 	test_cache = drn_read_chunk(&cache, 1, maxCoeffArray);
@@ -111,14 +106,14 @@ int main(int argc, char** argv){
 		nbVao+=nbLeaves[lvl];
 	}
 	
+	std::cout<<"//-> NB VAO & VBO : "<<nbVao<<std::endl;
+	
 	/* Array which know if a leaf grid is loaded or not */
 	bool* loadedLeaf = new bool[nbLeaves[0]];
 	for(uint16_t idx=0;idx<nbLeaves[0];++idx){
 		loadedLeaf[idx] = false;
 	}
-	
-	std::cout<<"//-> NB VAO & VBO : "<<nbVao<<std::endl;
-	
+		
 	/* ************************************************************* */
 	/* *************INITIALISATION OPENGL/SDL*********************** */
 	/* ************************************************************* */
@@ -146,7 +141,6 @@ int main(int argc, char** argv){
 	/* Differents cube size */
 	double leafSize = GRID_3D_SIZE/(double)nbSub_lvl1;
 	double halfLeafSize = leafSize*0.5;
-	double cubeSize = leafSize/(double)nbSub_lvl2;
 	
 	/* ******************************** */
 	/* 		Creation des VBO, VAO 		*/
@@ -174,7 +168,7 @@ int main(int argc, char** argv){
 	texture_terrain[5] = CreateTexture("textures/cloud3.png");
 	
 	
-	/* Leaves VBOs & VAOs creation */
+	/* Leaves VBOs & VAOs creation for computed triangles*/
 	GLuint* l_VBOs = new GLuint[nbVao];
 	glGenBuffers(nbVao, l_VBOs);
 	
@@ -184,7 +178,7 @@ int main(int argc, char** argv){
 	uint16_t currentLevel=0;
 	uint16_t levelFloor = nbLeaves[0];
 	uint16_t offset_idx = 0;
-	for(uint32_t idx=0;idx<nbVao;++idx){
+	for(uint32_t idx=0;idx<nbVao;++idx){	
 		//check the level
 		if(idx >= levelFloor){
 			currentLevel++;
@@ -256,9 +250,10 @@ int main(int argc, char** argv){
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	
-	// Creation des Shaders
-	GLuint program = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
-	if(!program){
+	// Creation des programmes de shaders
+	GLuint terrainProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
+	GLuint debugProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/debug.gs.glsl");
+	if(!terrainProgram || !debugProgram){
 		glDeleteBuffers(1, &cubeVBO);
 		glDeleteBuffers(nbVao, l_VBOs);
 		glDeleteBuffers(1, &groundVBO);
@@ -274,13 +269,10 @@ int main(int argc, char** argv){
 		delete[] nbLeaves;
 		delete[] chunkOffset;
 		return (EXIT_FAILURE);
-	}
-	glUseProgram(program);
-
-	// Creation des Matrices
-	GLint MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
-	GLint ViewMatrixLocation = glGetUniformLocation(program, "uViewMatrix");
+	}	
+	glUseProgram(terrainProgram);
 	
+	/* MATRICES CAMERA AND LIGHTS */
 	float verticalFieldOfView = 90.0;
 	float nearDistance = 0.001;
 	float farDistance = 100.;
@@ -291,22 +283,6 @@ int main(int argc, char** argv){
 	
 	//distance for changing of LOD
 	float thresholdDistance = 0.5f;
-
-	// Recuperation des variables uniformes
-	/* Light */
-	GLint LightSunVectLocation = glGetUniformLocation(program, "uLightSunVect");
-	GLint LightMoonVectLocation = glGetUniformLocation(program, "uLightMoonVect");
-	GLint TimeLocation = glGetUniformLocation(program, "uTime");
-	GLint DayLocation = glGetUniformLocation(program, "uDay");
-	GLint NightLocation = glGetUniformLocation(program, "uNight");
-
-	/* Shaders modes */
-	GLint ModeLocation = glGetUniformLocation(program, "uMode");
-	GLint ChoiceLocation = glGetUniformLocation(program, "uChoice");
-	/* Controlers  */
-	GLint FogLocation = glGetUniformLocation(program, "uFog");
-	
-	sendStaticUniform(program, maxCoeffArray, thresholdDistance);
 	
 	// Creation Light
 	float coefLight = 0.;
@@ -325,15 +301,19 @@ int main(int argc, char** argv){
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
 	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4], 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize);
+	
+	/* Uniform Locations */
+	GLint* locations = new GLint[NB_LOCATIONS];
+	getLocations(locations, terrainProgram);	 
+	sendUniforms(locations, maxCoeffArray, thresholdDistance);
 
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
 	
 	/* init memory */
-	size_t currentMemCache = initMemory(memory, leafArrays[0], loadedLeaf, nbLeaves[0], nbSub_lvl2,  chunkBytesSize, tbCam.getViewMatrix(), halfLeafSize);
-	std::cout<<"//-> Chunks loaded : "<<memory.size()<<std::endl;
-	std::cout<<"//-> free memory : "<<MAX_MEMORY_SIZE - currentMemCache<<" bytes"<<std::endl; 
-
+	size_t freeMemory = MAX_MEMORY_SIZE;
+	std::cout<<"//-> Free memory in cache : "<<freeMemory<<std::endl;
+	
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
 	//~ //glEnable(GL_CULL_FACE); /* not so cool */
@@ -413,24 +393,23 @@ int main(int argc, char** argv){
 
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		glUseProgram(program);
-		
+			
 		glDisable(GL_BLEND);
 		//~ glBlendFunc(GL_ONE, GL_ONE);
 		glEnable(GL_DEPTH_TEST);
-		
-		glUniform1i(ModeLocation, TRIANGLES);
-		glUniform1f(TimeLocation, time);
-		glUniform1f(DayLocation, day);
-		glUniform1f(NightLocation, night);
-		glUniform3fv(LightSunVectLocation, 1, glm::value_ptr(lightSun));
-		glUniform3fv(LightMoonVectLocation, 1, glm::value_ptr(lightMoon));
+
+		glUniform1i(locations[MODE], TRIANGLES);
+		glUniform1f(locations[TIME], time);
+		glUniform1f(locations[DAY], day);
+		glUniform1f(locations[NIGHTTEX], night);
+		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
+		glUniform3fv(locations[LIGHTMOON], 1, glm::value_ptr(lightMoon));
+
 		/* Send fog */
 		if(displayFog){
-			glUniform1i(FogLocation, 1);
+			glUniform1i(locations[FOG], 1);
 		}else{
-			glUniform1i(FogLocation, 0);
+			glUniform1i(locations[FOG], 0);
 		}
 		
 		
@@ -443,8 +422,8 @@ int main(int argc, char** argv){
 			}
 			ms.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
 			ms.scale(glm::vec3(100.f, 100.f, 100.f));
-			glUniform1i(ChoiceLocation, NORMAL);
-			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+			glUniform1i(locations[CHOICE], NORMAL);
+			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
 			BindTexture(texture_terrain[0], GL_TEXTURE0);
 			BindTexture(texture_terrain[1], GL_TEXTURE1);
 				glBindVertexArray(groundVAO);
@@ -465,7 +444,7 @@ int main(int argc, char** argv){
 			}
 			ms.mult(V);
 
-			glUniformMatrix4fv(ViewMatrixLocation, 1, GL_FALSE, glm::value_ptr(V));
+			glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));
 
 			uint32_t vao_idx = 0;
 			//For each level
@@ -484,71 +463,79 @@ int main(int argc, char** argv){
 					
 					//display the leaf of this level if it is in the distance fork
 					if(crt_lvlTD <= d && d < nxt_lvlTD){
-						display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+						display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
 					}
 					
 					//special case of lvl 0
 					if(lvl == 0 && d < thresholdDistance){
-						if(!loadedLeaf[idx]){
-							Chunk voidChunk = freeInMemory(memory, loadedLeaf);
-							loadInMemory(memory, leafArrays[0][idx], idx, d, nbSub_lvl2, voidChunk.vao, voidChunk.vbo);
-							loadedLeaf[idx] = true;
-							std::sort(memory.begin(), memory.end(), memory.front());
-						}
-						for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
-							if(idx == n->idxLeaf){
-								if(currentCam == FREE_FLY){
-									if(displayDebug){
-										//FRUSTUM CULLING
-										if(ffCam.leavesFrustum(leafArrays[0][idx])){
-											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+						if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
+							/* FRUSTUM CULLING */
+							if(ffCam.leavesFrustum(leafArrays[0][idx])){
+								/* LOADING */
+								if(!loadedLeaf[idx]){
+									loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
+									std::sort(memory.begin(), memory.end(), memory.front());
+								}
+								/* DISPLAYING */
+								for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+									if(idx == n->idxLeaf){
+										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										if(displayDebug){
 											/* leaf cube */
-											glUniform1i(ChoiceLocation, DEBUG_BOX);
-											display_lvl1(cubeVAO, ms, MVPLocation, n->pos, halfLeafSize);
+											glUniform1i(locations[CHOICE], DEBUG_BOX);
+											display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
 											
 											/* Computed triangles */
-											glUniform1i(ChoiceLocation, DEBUG_TRI);
-											display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-										}
-									}else{
-										//FRUSTUM CULLING
-										if(ffCam.leavesFrustum(leafArrays[0][idx])){
-												display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
+											glUniform1i(locations[CHOICE], DEBUG_TRI);
+											display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+										}else{
 											if(displayVegetation){
-												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
+												display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
 											}
 										}
 									}
-								}else{
-									if(displayDebug){
-										if(ffCam.leavesFrustum(leafArrays[0][idx])){ // wrong frustum - comment this line to display every leaf with TrackBallCam
-											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
-											/* leaf cube */
-											glUniform1i(ChoiceLocation, DEBUG_BOX);
-											display_lvl1(cubeVAO, ms, MVPLocation, n->pos, halfLeafSize);
-											
-											/* Computed triangles */
-											glUniform1i(ChoiceLocation, DEBUG_TRI);
-											display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-										} // comment too
-									}else{
-										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);
-										if(displayVegetation){
-											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
-										}
-									}
 								}
-								break;
+								
 							}
-						}
+						}else if(currentCam == TRACK_BALL){ /////////////////////////////TRACKBALL
+							/* LOADING */
+							if(!loadedLeaf[idx]){
+								loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
+								std::sort(memory.begin(), memory.end(), memory.front());
+							}
+							/* DISPLAYING */
+							for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+								if(idx == n->idxLeaf){
+									if(displayDebug){
+										if(ffCam.leavesFrustum(leafArrays[0][idx])){
+											/* real triangles */
+											display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										}
+										/* leaf cube */
+										glUniform1i(locations[CHOICE], DEBUG_BOX);
+										display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
+										/* Computed triangles */
+										glUniform1i(locations[CHOICE], DEBUG_TRI);
+										display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+									}else{
+										/* real triangles */
+										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										if(displayVegetation){
+											display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
+										}
+									}								
+									break;
+								}
+							}
+						} //END camera
 					}
 
 					//DISPLAY OF THE COEFFICIENTS
-					if(displayNormal) glUniform1i(ChoiceLocation, NORMAL);
-					else if(displayDrain) glUniform1i(ChoiceLocation, DRAIN);
-					else if(displayBending) glUniform1i(ChoiceLocation, BENDING);
-					else if(displayGradient) glUniform1i(ChoiceLocation, GRADIENT);
-					else if(displaySurface) glUniform1i(ChoiceLocation, SURFACE);
+					if(displayNormal) glUniform1i(locations[CHOICE], NORMAL);
+					else if(displayDrain) glUniform1i(locations[CHOICE], DRAIN);
+					else if(displayBending) glUniform1i(locations[CHOICE], BENDING);
+					else if(displayGradient) glUniform1i(locations[CHOICE], GRADIENT);
+					else if(displaySurface) glUniform1i(locations[CHOICE], SURFACE);
 					
 					//set the vao idx
 					++vao_idx;
@@ -557,7 +544,7 @@ int main(int argc, char** argv){
 		ms.pop();
 
 		//Skybox
-		glUniform1i(ModeLocation, SKYBOX);
+		glUniform1i(locations[MODE], SKYBOX);
 		ms.push();
 			if(currentCam == FREE_FLY){
 				ms.mult(ffCam.getViewMatrix());
@@ -567,8 +554,7 @@ int main(int argc, char** argv){
 				ms.mult(tbCam.getViewMatrix());
 				ms.scale(glm::vec3(100.f, 100.f, 100.f));
 			}
-			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
-			//~ glUniform1i(SkyTexLocation,0);
+			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
 			BindTexture(texture_sky, GL_TEXTURE7);
 			BindTexture(texture_night, GL_TEXTURE6);
 				glBindVertexArray(cubeVAO);
@@ -742,50 +728,16 @@ int main(int argc, char** argv){
 						case SDLK_f:
 							//change shaders
 							if(displayDebug){
+								glUseProgram(terrainProgram);
+								getLocations(locations, terrainProgram);
+								sendUniforms(locations, maxCoeffArray, thresholdDistance);
 								displayDebug = false;
-								program = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
-	
 							}else{
+								glUseProgram(debugProgram);
+								getLocations(locations, debugProgram);
+								sendUniforms(locations, maxCoeffArray, thresholdDistance);
 								displayDebug = true;
-								program = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/debug.gs.glsl");
 							}
-							
-							if(!program){
-								glDeleteBuffers(1, &cubeVBO);
-								glDeleteBuffers(nbVao, l_VBOs);
-								glDeleteBuffers(1, &groundVBO);
-								glDeleteVertexArrays(1, &cubeVAO);
-								glDeleteVertexArrays(nbVao, l_VAOs);
-								glDeleteVertexArrays(1, &groundVAO);
-								delete[] l_VAOs;
-								delete[] l_VBOs;
-								delete[] loadedLeaf;
-								for(uint16_t lvl=0;lvl<nbLevel;++lvl){
-									delete[] leafArrays[lvl];
-								}
-								delete[] nbLeaves;
-								delete[] chunkOffset;
-								return (EXIT_FAILURE);
-							}
-							glUseProgram(program);
-							
-							//recatch the uniform
-							/* Matrices */
-							MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
-							ViewMatrixLocation = glGetUniformLocation(program, "uViewMatrix");
-							/* Light */
-							LightSunVectLocation = glGetUniformLocation(program, "uLightSunVect");
-							LightMoonVectLocation = glGetUniformLocation(program, "uLightMoonVect");
-							TimeLocation = glGetUniformLocation(program, "uTime");
-							DayLocation = glGetUniformLocation(program, "uDay");
-							NightLocation = glGetUniformLocation(program, "uNight");
-							/* Shaders modes */
-							ModeLocation = glGetUniformLocation(program, "uMode");
-							ChoiceLocation = glGetUniformLocation(program, "uChoice");
-							/* Controlers  */
-							FogLocation = glGetUniformLocation(program, "uFog");
-							
-							sendStaticUniform(program, maxCoeffArray, thresholdDistance);
 							break;
 							
 						case SDLK_F1:
@@ -1120,9 +1072,7 @@ int main(int argc, char** argv){
 	//free cache memory
 	uint16_t nbLoadedLeaves = memory.size();
 	for(uint16_t idx=0;idx<nbLoadedLeaves;++idx){
-		Chunk tmpChunk = freeInMemory(memory, loadedLeaf);
-		glDeleteVertexArrays(1, &(tmpChunk.vao));
-		glDeleteBuffers(1, &(tmpChunk.vbo));
+		freeInMemory(memory, loadedLeaf);
 	}
 	
 	glDeleteBuffers(nbVao, l_VBOs);
@@ -1136,6 +1086,7 @@ int main(int argc, char** argv){
 	delete[] maxCoeffArray;
 	delete[] nbLeaves;
 	delete[] chunkOffset;
+	delete[] locations;
 
 	return (EXIT_SUCCESS);
 }
