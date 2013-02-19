@@ -11,7 +11,43 @@
 
 using namespace hydrogene;
 
-void sendStaticUniform(GLuint program, float* maxCoeffArray, float thresholdDistance);
+/* ENUM */
+static const size_t NB_LOCATIONS = 30;
+
+enum Locations{
+	MVP,
+	VIEWMATRIX,
+	LIGHTSUN,
+	LIGHTMOON,
+	TIME,
+	DAY,
+	NIGHT,
+	MODE,
+	CHOICE,
+	FOG,
+	SKYTEX,
+	NIGHTTEX,
+	GRASSTEX,
+	WATERTEX,
+	STONETEX,
+	SNOWTEX,
+	SANDTEX,
+	CLOUDTEX,
+	ROCKTEX,
+	PLANTTEX,
+	TREETEX,
+	PINETREETEX,
+	SNOWTREETEX,
+	MAXBENDING,
+	MAXDRAIN,
+	MAXGRADIENT,
+	MAXSURFACE,
+	MAXALTITUDE,
+	VEGETSIZE,
+	DISTANCE	
+};
+
+void sendUniforms(float* maxCoeffArray, float thresholdDistance);
 
 void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize, FreeFlyCamera& ffCam, CamType camType);
 

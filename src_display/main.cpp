@@ -248,7 +248,7 @@ int main(int argc, char** argv){
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	
-	// Creation des Shaders
+	// Creation des programmes de shaders
 	GLuint program = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
 	if(!program){
 		glDeleteBuffers(1, &cubeVBO);
@@ -268,11 +268,8 @@ int main(int argc, char** argv){
 		return (EXIT_FAILURE);
 	}
 	glUseProgram(program);
-
-	// Creation des Matrices
-	GLint MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
-	GLint ViewMatrixLocation = glGetUniformLocation(program, "uViewMatrix");
 	
+	/* MATRICES CAMERA AND LIGHTS */
 	float verticalFieldOfView = 90.0;
 	float nearDistance = 0.001;
 	float farDistance = 100.;
@@ -283,22 +280,6 @@ int main(int argc, char** argv){
 	
 	//distance for changing of LOD
 	float thresholdDistance = 0.5f;
-
-	// Recuperation des variables uniformes
-	/* Light */
-	GLint LightSunVectLocation = glGetUniformLocation(program, "uLightSunVect");
-	GLint LightMoonVectLocation = glGetUniformLocation(program, "uLightMoonVect");
-	GLint TimeLocation = glGetUniformLocation(program, "uTime");
-	GLint DayLocation = glGetUniformLocation(program, "uDay");
-	GLint NightLocation = glGetUniformLocation(program, "uNight");
-
-	/* Shaders modes */
-	GLint ModeLocation = glGetUniformLocation(program, "uMode");
-	GLint ChoiceLocation = glGetUniformLocation(program, "uChoice");
-	/* Controlers  */
-	GLint FogLocation = glGetUniformLocation(program, "uFog");
-	
-	sendStaticUniform(program, maxCoeffArray, thresholdDistance);
 	
 	// Creation Light
 	float coefLight = 0.;
@@ -317,6 +298,56 @@ int main(int argc, char** argv){
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
 	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4], 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize);
+	
+	/* BEGIN LOCATIONS */
+	GLint* locations = new GLint[NB_LOCATIONS];
+	
+	/* Matrices */
+	locations[MVP] = glGetUniformLocation(program, "uMVPMatrix");
+	locations[VIEWMATRIX] = glGetUniformLocation(program, "uViewMatrix");
+	
+	/* Light */
+	locations[LIGHTSUN] = glGetUniformLocation(program, "uLightSunVect");
+	locations[LIGHTMOON] = glGetUniformLocation(program, "uLightMoonVect");
+	locations[TIME] = glGetUniformLocation(program, "uTime");
+	locations[DAY] = glGetUniformLocation(program, "uDay");
+	locations[NIGHT] = glGetUniformLocation(program, "uNight");
+
+	/* Shaders modes */
+	locations[MODE] = glGetUniformLocation(program, "uMode");
+	locations[CHOICE] = glGetUniformLocation(program, "uChoice");
+	
+	/* Controlers  */
+	locations[FOG] = glGetUniformLocation(program, "uFog");
+	/* Textures */
+	locations[SKYTEX] = glGetUniformLocation(program, "uSkyTex");
+	locations[NIGHTTEX] = glGetUniformLocation(program, "uNightTex");
+	locations[GRASSTEX] = glGetUniformLocation(program, "uGrassTex");
+	locations[WATERTEX] = glGetUniformLocation(program, "uWaterTex");
+	locations[STONETEX] = glGetUniformLocation(program, "uStoneTex");
+	locations[SNOWTEX] = glGetUniformLocation(program, "uSnowTex");
+	locations[SANDTEX] = glGetUniformLocation(program, "uSandTex");
+	locations[CLOUDTEX] = glGetUniformLocation(program, "uCloudsShadows");
+	
+	locations[ROCKTEX] = glGetUniformLocation(program, "uRockTex");
+	locations[PLANTTEX] = glGetUniformLocation(program, "uPlantTex");
+	locations[TREETEX] = glGetUniformLocation(program, "uTreeTex");
+	locations[PINETREETEX] = glGetUniformLocation(program, "uPineTreeTex");
+	locations[SNOWTREETEX] = glGetUniformLocation(program, "uSnowTreeTex");
+	
+	/* Max properties */
+	locations[MAXBENDING] = glGetUniformLocation(program, "uMaxBending");
+	locations[MAXDRAIN] = glGetUniformLocation(program, "uMaxDrain");
+	locations[MAXGRADIENT] = glGetUniformLocation(program, "uMaxGradient");
+	locations[MAXSURFACE] = glGetUniformLocation(program, "uMaxSurface");
+	locations[MAXALTITUDE] = glGetUniformLocation(program, "uMaxAltitude");
+	
+	/* Vegetation */
+	locations[VEGETSIZE] = glGetUniformLocation(program, "uVegetSizeCoef");
+	locations[DISTANCE] = glGetUniformLocation(program, "uDistance");
+	/* END LOCATIONS */
+	 
+	sendUniforms(maxCoeffArray, thresholdDistance);
 
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
@@ -383,17 +414,17 @@ int main(int argc, char** argv){
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		glUniform1i(ModeLocation, TRIANGLES);
-		glUniform1f(TimeLocation, time);
-		glUniform1f(DayLocation, day);
-		glUniform1f(NightLocation, night);
-		glUniform3fv(LightSunVectLocation, 1, glm::value_ptr(lightSun));
-		glUniform3fv(LightMoonVectLocation, 1, glm::value_ptr(lightMoon));
+		glUniform1i(locations[MODE], TRIANGLES);
+		glUniform1f(locations[TIME], time);
+		glUniform1f(locations[DAY], day);
+		glUniform1f(locations[NIGHTTEX], night);
+		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
+		glUniform3fv(locations[LIGHTMOON], 1, glm::value_ptr(lightMoon));
 		/* Send fog */
 		if(displayFog){
-			glUniform1i(FogLocation, 1);
+			glUniform1i(locations[FOG], 1);
 		}else{
-			glUniform1i(FogLocation, 0);
+			glUniform1i(locations[FOG], 0);
 		}
 		
 		
@@ -406,8 +437,8 @@ int main(int argc, char** argv){
 			}
 			ms.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
 			ms.scale(glm::vec3(100.f, 100.f, 100.f));
-			glUniform1i(ChoiceLocation, NORMAL);
-			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+			glUniform1i(locations[CHOICE], NORMAL);
+			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
 			BindTexture(texture_terrain[0], GL_TEXTURE0);
 			BindTexture(texture_terrain[1], GL_TEXTURE1);
 				glBindVertexArray(groundVAO);
@@ -428,7 +459,7 @@ int main(int argc, char** argv){
 			}
 			ms.mult(V);
 
-			glUniformMatrix4fv(ViewMatrixLocation, 1, GL_FALSE, glm::value_ptr(V));
+			glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));
 
 			uint32_t vao_idx = 0;
 			//For each level
@@ -447,7 +478,7 @@ int main(int argc, char** argv){
 					
 					//display the leaf of this level if it is in the distance fork
 					if(crt_lvlTD <= d && d < nxt_lvlTD){
-						display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+						display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
 					}
 					
 					//special case of lvl 0
@@ -463,18 +494,18 @@ int main(int argc, char** argv){
 								/* DISPLAYING */
 								for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 									if(idx == n->idxLeaf){
-										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 										if(displayDebug){
 											/* leaf cube */
-											glUniform1i(ChoiceLocation, DEBUG_BOX);
-											display_lvl1(cubeVAO, ms, MVPLocation, n->pos, halfLeafSize);
+											glUniform1i(locations[CHOICE], DEBUG_BOX);
+											display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
 											
 											/* Computed triangles */
-											glUniform1i(ChoiceLocation, DEBUG_TRI);
-											display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+											glUniform1i(locations[CHOICE], DEBUG_TRI);
+											display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
 										}else{
 											if(displayVegetation){
-												display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
+												display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
 											}
 										}
 									}
@@ -493,19 +524,19 @@ int main(int argc, char** argv){
 									if(displayDebug){
 										if(ffCam.leavesFrustum(leafArrays[0][idx])){
 											/* real triangles */
-											display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+											display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 										}
 										/* leaf cube */
-										glUniform1i(ChoiceLocation, DEBUG_BOX);
-										display_lvl1(cubeVAO, ms, MVPLocation, n->pos, halfLeafSize);
+										glUniform1i(locations[CHOICE], DEBUG_BOX);
+										display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
 										/* Computed triangles */
-										glUniform1i(ChoiceLocation, DEBUG_TRI);
-										display_triangle(l_VAOs[vao_idx], ms, MVPLocation, leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+										glUniform1i(locations[CHOICE], DEBUG_TRI);
+										display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
 									}else{
 										/* real triangles */
-										display_triangle(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 										if(displayVegetation){
-											display_vegetation(n->vao, ms, MVPLocation, leafArrays[0][idx].nbVertices_lvl2/3, ChoiceLocation, texture_veget);
+											display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
 										}
 									}								
 									break;
@@ -515,11 +546,11 @@ int main(int argc, char** argv){
 					}
 
 					//DISPLAY OF THE COEFFICIENTS
-					if(displayNormal) glUniform1i(ChoiceLocation, NORMAL);
-					else if(displayDrain) glUniform1i(ChoiceLocation, DRAIN);
-					else if(displayBending) glUniform1i(ChoiceLocation, BENDING);
-					else if(displayGradient) glUniform1i(ChoiceLocation, GRADIENT);
-					else if(displaySurface) glUniform1i(ChoiceLocation, SURFACE);
+					if(displayNormal) glUniform1i(locations[CHOICE], NORMAL);
+					else if(displayDrain) glUniform1i(locations[CHOICE], DRAIN);
+					else if(displayBending) glUniform1i(locations[CHOICE], BENDING);
+					else if(displayGradient) glUniform1i(locations[CHOICE], GRADIENT);
+					else if(displaySurface) glUniform1i(locations[CHOICE], SURFACE);
 					
 					//set the vao idx
 					++vao_idx;
@@ -528,7 +559,7 @@ int main(int argc, char** argv){
 		ms.pop();
 
 		//Skybox
-		glUniform1i(ModeLocation, SKYBOX);
+		glUniform1i(locations[MODE], SKYBOX);
 		ms.push();
 			if(currentCam == FREE_FLY){
 				ms.mult(ffCam.getViewMatrix());
@@ -538,7 +569,7 @@ int main(int argc, char** argv){
 				ms.mult(tbCam.getViewMatrix());
 				ms.scale(glm::vec3(100.f, 100.f, 100.f));
 			}
-			glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, glm::value_ptr(ms.top()));
+			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
 			BindTexture(texture_sky, GL_TEXTURE7);
 			BindTexture(texture_night, GL_TEXTURE6);
 				glBindVertexArray(cubeVAO);
@@ -608,49 +639,10 @@ int main(int argc, char** argv){
 							//change shaders
 							if(displayDebug){
 								displayDebug = false;
-								program = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
 	
 							}else{
 								displayDebug = true;
-								program = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/debug.gs.glsl");
 							}
-							
-							if(!program){
-								glDeleteBuffers(1, &cubeVBO);
-								glDeleteBuffers(nbVao, l_VBOs);
-								glDeleteBuffers(1, &groundVBO);
-								glDeleteVertexArrays(1, &cubeVAO);
-								glDeleteVertexArrays(nbVao, l_VAOs);
-								glDeleteVertexArrays(1, &groundVAO);
-								delete[] l_VAOs;
-								delete[] l_VBOs;
-								delete[] loadedLeaf;
-								for(uint16_t lvl=0;lvl<nbLevel;++lvl){
-									delete[] leafArrays[lvl];
-								}
-								delete[] nbLeaves;
-								delete[] chunkOffset;
-								return (EXIT_FAILURE);
-							}
-							glUseProgram(program);
-							
-							//recatch the uniform
-							/* Matrices */
-							MVPLocation = glGetUniformLocation(program, "uMVPMatrix");
-							ViewMatrixLocation = glGetUniformLocation(program, "uViewMatrix");
-							/* Light */
-							LightSunVectLocation = glGetUniformLocation(program, "uLightSunVect");
-							LightMoonVectLocation = glGetUniformLocation(program, "uLightMoonVect");
-							TimeLocation = glGetUniformLocation(program, "uTime");
-							DayLocation = glGetUniformLocation(program, "uDay");
-							NightLocation = glGetUniformLocation(program, "uNight");
-							/* Shaders modes */
-							ModeLocation = glGetUniformLocation(program, "uMode");
-							ChoiceLocation = glGetUniformLocation(program, "uChoice");
-							/* Controlers  */
-							FogLocation = glGetUniformLocation(program, "uFog");
-							
-							sendStaticUniform(program, maxCoeffArray, thresholdDistance);
 							break;
 							
 						case SDLK_F1:
@@ -986,6 +978,7 @@ int main(int argc, char** argv){
 	delete[] maxCoeffArray;
 	delete[] nbLeaves;
 	delete[] chunkOffset;
+	delete[] locations;
 
 	return (EXIT_SUCCESS);
 }
