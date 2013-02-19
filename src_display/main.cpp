@@ -348,7 +348,7 @@ int main(int argc, char** argv){
 	locations[DISTANCE] = glGetUniformLocation(terrainProgram, "uDistance");
 	/* END LOCATIONS */
 	 
-	sendUniforms(maxCoeffArray, thresholdDistance);
+	sendUniforms(locations, maxCoeffArray, thresholdDistance);
 
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
@@ -639,9 +639,12 @@ int main(int argc, char** argv){
 						case SDLK_f:
 							//change shaders
 							if(displayDebug){
+								glUseProgram(terrainProgram);
+								sendUniforms(locations, maxCoeffArray, thresholdDistance);
 								displayDebug = false;
-	
 							}else{
+								glUseProgram(debugProgram);
+								sendUniforms(locations, maxCoeffArray, thresholdDistance);
 								displayDebug = true;
 							}
 							break;
