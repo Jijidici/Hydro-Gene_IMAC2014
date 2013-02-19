@@ -47,6 +47,8 @@ enum Locations{
 	DISTANCE	
 };
 
+void getLocations(GLint* locations, GLuint program);
+
 void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistance);
 
 void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize, FreeFlyCamera& ffCam, CamType camType);

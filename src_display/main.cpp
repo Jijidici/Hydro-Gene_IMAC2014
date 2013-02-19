@@ -300,54 +300,9 @@ int main(int argc, char** argv){
 	hydrogene::TrackBallCamera tbCam;
 	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4], 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize);
 	
-	/* BEGIN LOCATIONS */
+	/* Uniform Locations */
 	GLint* locations = new GLint[NB_LOCATIONS];
-	
-	/* Matrices */
-	locations[MVP] = glGetUniformLocation(terrainProgram, "uMVPMatrix");
-	locations[VIEWMATRIX] = glGetUniformLocation(terrainProgram, "uViewMatrix");
-	
-	/* Light */
-	locations[LIGHTSUN] = glGetUniformLocation(terrainProgram, "uLightSunVect");
-	locations[LIGHTMOON] = glGetUniformLocation(terrainProgram, "uLightMoonVect");
-	locations[TIME] = glGetUniformLocation(terrainProgram, "uTime");
-	locations[DAY] = glGetUniformLocation(terrainProgram, "uDay");
-	locations[NIGHT] = glGetUniformLocation(terrainProgram, "uNight");
-
-	/* Shaders modes */
-	locations[MODE] = glGetUniformLocation(terrainProgram, "uMode");
-	locations[CHOICE] = glGetUniformLocation(terrainProgram, "uChoice");
-	
-	/* Controlers  */
-	locations[FOG] = glGetUniformLocation(terrainProgram, "uFog");
-	/* Textures */
-	locations[SKYTEX] = glGetUniformLocation(terrainProgram, "uSkyTex");
-	locations[NIGHTTEX] = glGetUniformLocation(terrainProgram, "uNightTex");
-	locations[GRASSTEX] = glGetUniformLocation(terrainProgram, "uGrassTex");
-	locations[WATERTEX] = glGetUniformLocation(terrainProgram, "uWaterTex");
-	locations[STONETEX] = glGetUniformLocation(terrainProgram, "uStoneTex");
-	locations[SNOWTEX] = glGetUniformLocation(terrainProgram, "uSnowTex");
-	locations[SANDTEX] = glGetUniformLocation(terrainProgram, "uSandTex");
-	locations[CLOUDTEX] = glGetUniformLocation(terrainProgram, "uCloudsShadows");
-	
-	locations[ROCKTEX] = glGetUniformLocation(terrainProgram, "uRockTex");
-	locations[PLANTTEX] = glGetUniformLocation(terrainProgram, "uPlantTex");
-	locations[TREETEX] = glGetUniformLocation(terrainProgram, "uTreeTex");
-	locations[PINETREETEX] = glGetUniformLocation(terrainProgram, "uPineTreeTex");
-	locations[SNOWTREETEX] = glGetUniformLocation(terrainProgram, "uSnowTreeTex");
-	
-	/* Max properties */
-	locations[MAXBENDING] = glGetUniformLocation(terrainProgram, "uMaxBending");
-	locations[MAXDRAIN] = glGetUniformLocation(terrainProgram, "uMaxDrain");
-	locations[MAXGRADIENT] = glGetUniformLocation(terrainProgram, "uMaxGradient");
-	locations[MAXSURFACE] = glGetUniformLocation(terrainProgram, "uMaxSurface");
-	locations[MAXALTITUDE] = glGetUniformLocation(terrainProgram, "uMaxAltitude");
-	
-	/* Vegetation */
-	locations[VEGETSIZE] = glGetUniformLocation(terrainProgram, "uVegetSizeCoef");
-	locations[DISTANCE] = glGetUniformLocation(terrainProgram, "uDistance");
-	/* END LOCATIONS */
-	 
+	getLocations(locations, terrainProgram);	 
 	sendUniforms(locations, maxCoeffArray, thresholdDistance);
 
 	/* Memory cache - vector of voxelarray */
@@ -640,10 +595,12 @@ int main(int argc, char** argv){
 							//change shaders
 							if(displayDebug){
 								glUseProgram(terrainProgram);
+								getLocations(locations, terrainProgram);
 								sendUniforms(locations, maxCoeffArray, thresholdDistance);
 								displayDebug = false;
 							}else{
 								glUseProgram(debugProgram);
+								getLocations(locations, debugProgram);
 								sendUniforms(locations, maxCoeffArray, thresholdDistance);
 								displayDebug = true;
 							}
