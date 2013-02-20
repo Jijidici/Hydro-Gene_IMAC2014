@@ -366,6 +366,7 @@ int main(int argc, char** argv){
     }
 
 	bool ihm = true;
+	bool alpha = false;
 	//~ bool ihm = false;
 	
 	int mousex = 0;
@@ -407,13 +408,16 @@ int main(int argc, char** argv){
 
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
-		glDisable(GL_BLEND);
-		//~ glBlendFunc(GL_ONE, GL_ONE);
-		glEnable(GL_DEPTH_TEST);
 		
 		
 		if(!ihm){
+			//~ glViewport(0, 0, WINDOW_WIDTH - 200, WINDOW_HEIGHT);
+				
+			glDisable(GL_BLEND);
+			//~ glBlendFunc(GL_ONE, GL_ONE);
+			glEnable(GL_DEPTH_TEST);
+			
+			
 			glUseProgram(terrainProgram);
 			
 			glUniform1i(locations[MODE], TRIANGLES);
@@ -581,19 +585,21 @@ int main(int argc, char** argv){
 				BindTexture(0, GL_TEXTURE6);
 				BindTexture(0, GL_TEXTURE7); // ----------------------------------------------------- CHECK : was 5, why ??
 			ms.pop();
-		} // end if(!ihm)
+		} //end if(!ihm)
 
-		/* ------ IHM imgui ------ */
-		if(ihm == true){
-			//~ int width = WINDOW_WIDTH;
-			//~ int height = WINDOW_HEIGHT;
-
+		if(ihm){
+			/* ------ IHM imgui ------ */
 			//~ glClearColor(0.8f, 0.8f, 0.8f, 1.f);
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
-			glDisable(GL_DEPTH_TEST);
 			
-			//~ glViewport(100, 100, WINDOW_WIDTH, WINDOW_HEIGHT);
+			//~ glViewport(WINDOW_WIDTH - 200, 0, 200, WINDOW_HEIGHT);
+			
+			glEnable(GL_BLEND);
+				if(alpha){
+					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
+				}else{
+					glBlendFunc(GL_ONE, GL_ONE); // ***** probleme ICI *****
+				}
+			glDisable(GL_DEPTH_TEST);
 			
 			SDL_GetMouseState(&mousex, &mousey);
 			
@@ -649,7 +655,6 @@ int main(int argc, char** argv){
 			
 			imguiRenderGLDraw(WINDOW_WIDTH, WINDOW_HEIGHT);
 		} // end if(ihm)
-			
 		
 		// Mise à jour de l'affichage
 		SDL_GL_SwapBuffers();
@@ -823,6 +828,9 @@ int main(int argc, char** argv){
 								ihm = !ihm;
 							}
 							break;
+							
+						case SDLK_a:
+							alpha = !alpha;
 						
 						case SDLK_v:
 							if(displayVegetation){
