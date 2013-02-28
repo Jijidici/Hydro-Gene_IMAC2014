@@ -25,8 +25,8 @@
 #include "display/cube_model.hpp"
 
 #include "drn/drn_reader.h"
-#include "imgui/imgui.h"
-#include "imgui/imguiRenderGL.h"
+#include "my_imgui/imgui.h"
+#include "my_imgui/imguiRenderGL.h"
 
 #define FRAME_RATE 60
 #define SKYBOX 0
@@ -382,11 +382,20 @@ int main(int argc, char** argv){
 	
 	int toggle = 0;
 
+
+	//~ GLdouble src_alpha = 0.;
+	//~ GLdouble dst_alpha = 0.;
+
 	if (!imguiRenderGLInit("DroidSans.ttf"))
 	{
 		fprintf(stderr, "Could not init GUI renderer.\n");
 		exit(EXIT_FAILURE);
 	}
+	
+	//~ glGetDoublev(GL_BLEND_SRC_ALPHA, &src_alpha);
+	//~ glGetDoublev(GL_BLEND_DST_ALPHA, &dst_alpha);
+	
+	//~ std::cout << "src alpha : " << src_alpha << ", src dst : " << dst_alpha << std::endl;
 	
 	//~ glEnable(GL_BLEND);
 	//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
@@ -593,13 +602,26 @@ int main(int argc, char** argv){
 			
 			//~ glViewport(WINDOW_WIDTH - 200, 0, 200, WINDOW_HEIGHT);
 			
+			//~ if (!imguiRenderGLInit("DroidSans.ttf"))
+			//~ {
+				//~ fprintf(stderr, "Could not init GUI renderer.\n");
+				//~ exit(EXIT_FAILURE);
+			//~ }
+			
 			glEnable(GL_BLEND);
-				if(alpha){
-					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
-				}else{
-					glBlendFunc(GL_ONE, GL_ONE); // ***** probleme ICI *****
-				}
 			glDisable(GL_DEPTH_TEST);
+			if(alpha){
+				//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_COLOR); // mieux ?
+				//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA); // ***** probleme ICI *****
+				//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
+				//~ std::cout << GL_SRC_ALPHA << std::endl;
+			}else{
+				glBlendFunc(GL_ONE, GL_ONE); // ***** probleme ICI *****
+				//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_COLOR); // ***** probleme ICI *****
+				//~ std::cout << GL_SRC_ALPHA << std::endl;
+			}
+			//~ glDisable(GL_DEPTH_TEST);
 			
 			SDL_GetMouseState(&mousex, &mousey);
 			
