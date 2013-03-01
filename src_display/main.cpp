@@ -594,13 +594,15 @@ int main(int argc, char** argv){
 
 		if(ihm){
 			/* ------ IHM imgui ------ */
+			glActiveTexture(GL_TEXTURE0);
 			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
 			glDisable(GL_DEPTH_TEST);
-			if(alpha){
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
-			}else{
-				glBlendFunc(GL_ONE, GL_ONE); // ***** probleme ICI *****
-			}
+			//~ if(alpha){
+				//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
+			//~ }else{
+				//~ glBlendFunc(GL_ONE, GL_ONE); // ***** probleme ICI *****
+			//~ }
 			
 			SDL_GetMouseState(&mousex, &mousey);
 			
@@ -621,7 +623,7 @@ int main(int argc, char** argv){
 			imguiRenderGLDraw(WINDOW_WIDTH, WINDOW_HEIGHT);
 			
 			glDisable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE);
+			//~ glBlendFunc(GL_ONE, GL_ONE);
 			glEnable(GL_DEPTH_TEST);
 		} // end if(ihm)
 		

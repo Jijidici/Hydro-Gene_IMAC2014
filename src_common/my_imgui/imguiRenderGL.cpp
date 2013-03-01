@@ -614,7 +614,7 @@ void imguiRenderGLDraw(int width, int height)
         glViewport(0, 0, width, height);
         glUseProgram(g_program);
         glUniform2f(g_programViewportLocation, (float) width, (float) height);
-        glUniform1i(g_programTextureLocation, 0); // -------------------------------------------- PROBLEM HERE ? ------------- //
+        glUniform1i(g_programTextureLocation, 0);
 
 
         glDisable(GL_SCISSOR_TEST);
