@@ -386,7 +386,7 @@ int main(int argc, char** argv){
 	//~ GLdouble src_alpha = 0.;
 	//~ GLdouble dst_alpha = 0.;
 
-	if (!imguiRenderGLInit("DroidSans.ttf"))
+	if (!imguiRenderGLInit("include/my_imgui/DroidSans.ttf"))
 	{
 		fprintf(stderr, "Could not init GUI renderer.\n");
 		exit(EXIT_FAILURE);
@@ -419,20 +419,16 @@ int main(int argc, char** argv){
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		
-		if(!ihm){
+		if(true){
 			//~ glViewport(0, 0, WINDOW_WIDTH - 200, WINDOW_HEIGHT);
-				
-			glDisable(GL_BLEND);
-			//~ glBlendFunc(GL_ONE, GL_ONE);
-			glEnable(GL_DEPTH_TEST);
-			
 			
 			glUseProgram(terrainProgram);
+			sendUniforms(locations, maxCoeffArray, thresholdDistance);
 			
 			glUniform1i(locations[MODE], TRIANGLES);
 			glUniform1f(locations[TIME], time);
 			glUniform1f(locations[DAY], day);
-			glUniform1f(locations[NIGHTTEX], night);
+			glUniform1f(locations[NIGHT], night);
 			glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
 			glUniform3fv(locations[LIGHTMOON], 1, glm::value_ptr(lightMoon));
 
@@ -592,36 +588,19 @@ int main(int argc, char** argv){
 						glDrawArrays(GL_TRIANGLES, 0, 36);
 					glBindVertexArray(0);
 				BindTexture(0, GL_TEXTURE6);
-				BindTexture(0, GL_TEXTURE7); // ----------------------------------------------------- CHECK : was 5, why ??
+				BindTexture(0, GL_TEXTURE7);
 			ms.pop();
 		} //end if(!ihm)
 
 		if(ihm){
 			/* ------ IHM imgui ------ */
-			//~ glClearColor(0.8f, 0.8f, 0.8f, 1.f);
-			
-			//~ glViewport(WINDOW_WIDTH - 200, 0, 200, WINDOW_HEIGHT);
-			
-			//~ if (!imguiRenderGLInit("DroidSans.ttf"))
-			//~ {
-				//~ fprintf(stderr, "Could not init GUI renderer.\n");
-				//~ exit(EXIT_FAILURE);
-			//~ }
-			
 			glEnable(GL_BLEND);
 			glDisable(GL_DEPTH_TEST);
 			if(alpha){
-				//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_COLOR); // mieux ?
-				//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA); // ***** probleme ICI *****
-				//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
-				//~ std::cout << GL_SRC_ALPHA << std::endl;
 			}else{
 				glBlendFunc(GL_ONE, GL_ONE); // ***** probleme ICI *****
-				//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_COLOR); // ***** probleme ICI *****
-				//~ std::cout << GL_SRC_ALPHA << std::endl;
 			}
-			//~ glDisable(GL_DEPTH_TEST);
 			
 			SDL_GetMouseState(&mousex, &mousey);
 			
@@ -629,53 +608,21 @@ int main(int argc, char** argv){
 			
 			imguiBeginFrame(mousex, mousey, is_lClicPressed, 0);
 			
-			imguiBeginScrollArea("Scroll area 1", 10, 10, WINDOW_WIDTH / 5, WINDOW_HEIGHT - 20, &scrollarea1);
-			imguiSeparatorLine();
-			imguiSeparator();
-
-			imguiButton("Button");
-			imguiButton("Disabled button", false);
-			imguiItem("Item");
-			imguiItem("Disabled item", false);
-			toggle = imguiCheck("Checkbox", checked1);
-			if (toggle)
-				checked1 = !checked1;
-			toggle = imguiCheck("Disabled checkbox", checked2, false);
-			if (toggle)
-				checked2 = !checked2;
-			toggle = imguiCollapse("Collapse", "subtext", checked3);
-			if (checked3)
-			{
-				imguiIndent();
-				imguiLabel("Collapsible element");
-				imguiUnindent();
-			}
-			if (toggle)
-				checked3 = !checked3;
-			toggle = imguiCollapse("Disabled collapse", "subtext", checked4, false);
-			if (toggle)
-				checked4 = !checked4;
-			imguiLabel("Label");
-			imguiValue("Value");
-			imguiSlider("Slider", &value1, 0.f, 100.f, 1.f);
-			imguiSlider("Disabled slider", &value2, 0.f, 100.f, 1.f, false);
-			imguiIndent();
-			imguiLabel("Indented");
-			imguiUnindent();
-			imguiLabel("Unindented");
-
+			imguiBeginScrollArea("Scroll area", 10, 10, WINDOW_WIDTH / 5, WINDOW_HEIGHT - 20, &scrollarea1);
+			//~ imguiSeparatorLine();
+			//~ imguiSeparator();
+			
 			imguiEndScrollArea();
-
-			imguiBeginScrollArea("Scroll area 2", 20 + WINDOW_WIDTH / 5, 500, WINDOW_WIDTH / 5, WINDOW_HEIGHT - 510, &scrollarea2);
-			imguiSeparatorLine();
-			imguiSeparator();
-			for (int i = 0; i < 100; ++i)
-				imguiLabel("A wall of text");
-				
-			imguiEndScrollArea();
+			
 			imguiEndFrame();
 			
+			imguiDrawText(30 + WINDOW_WIDTH / 5 * 2, WINDOW_HEIGHT - 20, IMGUI_ALIGN_LEFT, "Free text",  imguiRGBA(32,192, 32,192));
+			
 			imguiRenderGLDraw(WINDOW_WIDTH, WINDOW_HEIGHT);
+			
+			glDisable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE);
+			glEnable(GL_DEPTH_TEST);
 		} // end if(ihm)
 		
 		// Mise à jour de l'affichage
@@ -746,12 +693,10 @@ int main(int argc, char** argv){
 							//change shaders
 							if(displayDebug){
 								glUseProgram(terrainProgram);
-								getLocations(locations, terrainProgram);
 								sendUniforms(locations, maxCoeffArray, thresholdDistance);
 								displayDebug = false;
 							}else{
 								glUseProgram(debugProgram);
-								getLocations(locations, debugProgram);
 								sendUniforms(locations, maxCoeffArray, thresholdDistance);
 								displayDebug = true;
 							}
@@ -844,7 +789,7 @@ int main(int argc, char** argv){
 						case SDLK_i:
 							if(ihm){
 								ihm = !ihm;
-								sendUniforms(locations, maxCoeffArray, thresholdDistance);
+								//~ sendUniforms(locations, maxCoeffArray, thresholdDistance);
 								//~ imguiRenderGLDestroy();
 							}else{
 								ihm = !ihm;
