@@ -637,7 +637,7 @@ int main(int argc, char** argv){
 			if (toggle)	displayFog = !displayFog;
 			
 			imguiSeparator();
-			imguiLabel("Details view distance");
+			imguiLabel("Level of details distance");
 			imguiSlider("threshold", &thresholdDistance, 0.f, 10.f, 0.001f);
 			
 			imguiEndScrollArea();
@@ -1009,20 +1009,22 @@ int main(int argc, char** argv){
 					break;
 				
 				case SDL_MOUSEMOTION:
-					if(currentCam == TRACK_BALL){
-						if(is_lClicPressed){
-							tbC_tmpAngleX = 0.25*((int)e.motion.x - (int)tbC_savedClicX);
-							tbC_tmpAngleY = 0.25*((int)e.motion.y - (int)tbC_savedClicY);
-							tbCam.rotateLeft(tbC_angleX + tbC_tmpAngleX);
-							tbCam.rotateUp(tbC_angleY + tbC_tmpAngleY);
+					if(!ihm){
+						if(currentCam == TRACK_BALL){
+							if(is_lClicPressed){
+								tbC_tmpAngleX = 0.25*((int)e.motion.x - (int)tbC_savedClicX);
+								tbC_tmpAngleY = 0.25*((int)e.motion.y - (int)tbC_savedClicY);
+								tbCam.rotateLeft(tbC_angleX + tbC_tmpAngleX);
+								tbCam.rotateUp(tbC_angleY + tbC_tmpAngleY);
+							}
+						}else if(currentCam == FREE_FLY){
+							new_positionX = e.motion.x;
+							new_positionY = e.motion.y;
+							ffC_angleY = 0.6f*(WINDOW_HEIGHT/2. - e.motion.y);
+							if(ffC_angleY >= 90) ffC_angleY = 90;
+							if(ffC_angleY <= -90) ffC_angleY = -90;
+							ffCam.rotateUp(ffC_angleY);
 						}
-					}else if(currentCam == FREE_FLY){
-						new_positionX = e.motion.x;
-						new_positionY = e.motion.y;
-						ffC_angleY = 0.6f*(WINDOW_HEIGHT/2. - e.motion.y);
-						if(ffC_angleY >= 90) ffC_angleY = 90;
-						if(ffC_angleY <= -90) ffC_angleY = -90;
-	          ffCam.rotateUp(ffC_angleY);
 					}
 					break;
 				
@@ -1032,24 +1034,25 @@ int main(int argc, char** argv){
 		}
 		
 		//IDLE
-		if(is_lKeyPressed){ ffCam.moveLeft(camSpeed); }
-		if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
-		if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
-		if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
-
-		if(currentCam == FREE_FLY){
-			if(new_positionX >= WINDOW_WIDTH-1){
-				SDL_WarpMouse(0, new_positionY);
-				old_positionX = 0-(old_positionX - new_positionX);
-				new_positionX = 0;
-			}else if(new_positionX <= 0){
-				SDL_WarpMouse(WINDOW_WIDTH, new_positionY);
-				old_positionX = WINDOW_WIDTH+(old_positionX - new_positionX);
-				new_positionX = WINDOW_WIDTH;
-			}
-			ffCam.rotateLeft((old_positionX - new_positionX)*0.6);
-		}
+		if(!ihm){
+			if(is_lKeyPressed){ ffCam.moveLeft(camSpeed); }
+			if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
+			if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
+			if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
 		
+			if(currentCam == FREE_FLY){
+				if(new_positionX >= WINDOW_WIDTH-1){
+					SDL_WarpMouse(0, new_positionY);
+					old_positionX = 0-(old_positionX - new_positionX);
+					new_positionX = 0;
+				}else if(new_positionX <= 0){
+					SDL_WarpMouse(WINDOW_WIDTH, new_positionY);
+					old_positionX = WINDOW_WIDTH+(old_positionX - new_positionX);
+					new_positionX = WINDOW_WIDTH;
+				}
+				ffCam.rotateLeft((old_positionX - new_positionX)*0.6);
+			}
+		}
 		//Manage the sun
 		coefLight -= coefLightStep;
 		lightSun.x = glm::cos(coefLight);
