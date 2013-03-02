@@ -368,8 +368,8 @@ int main(int argc, char** argv){
     }
 
 	bool ihm = true;
-	bool alpha = false;
-	//~ bool ihm = false;
+	
+	int timeUIHeight = 150;
 	
 	int mousex = 0;
 	int mousey = 0;
@@ -618,7 +618,8 @@ int main(int argc, char** argv){
 			
 			imguiBeginFrame(mousex, mousey, is_lClicPressed, 0);
 			
-			imguiBeginScrollArea("Time", 10, 10, WINDOW_WIDTH / 4, WINDOW_HEIGHT - 20, &scrollarea1);
+			/* Time UI */
+			imguiBeginScrollArea("Time", 10, WINDOW_HEIGHT - (timeUIHeight + 10), WINDOW_WIDTH / 4, timeUIHeight, &scrollarea1); // scrollarea1 unused
 			imguiSeparatorLine();
 			imguiSeparator();
 			
@@ -634,6 +635,21 @@ int main(int argc, char** argv){
 			}
 			
 			imguiEndScrollArea();
+			/* end Time UI */
+			
+			/* Details UI */
+			imguiBeginScrollArea("Details", 10, WINDOW_HEIGHT - (timeUIHeight + 10 + 150 + 10), WINDOW_WIDTH / 4, 150, &scrollarea2);
+			imguiSeparatorLine();
+			imguiSeparator();
+			
+			toggle = imguiCheck("Vegetation & details (v)", displayVegetation);
+			if (toggle)	displayVegetation = !displayVegetation;
+			
+			toggle = imguiCheck("Fog (g)", displayFog);
+			if (toggle)	displayFog = !displayFog;
+			
+			imguiEndScrollArea();
+			/* end Details UI */
 			
 			imguiEndFrame();
 			
@@ -814,9 +830,6 @@ int main(int argc, char** argv){
 								ihm = !ihm;
 							}
 							break;
-							
-						case SDLK_a:
-							alpha = !alpha;
 						
 						case SDLK_v:
 							if(displayVegetation){
