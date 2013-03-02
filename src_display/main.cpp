@@ -611,11 +611,6 @@ int main(int argc, char** argv){
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
 			glDisable(GL_DEPTH_TEST);
-			//~ if(alpha){
-				//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
-			//~ }else{
-				//~ glBlendFunc(GL_ONE, GL_ONE); // ***** probleme ICI *****
-			//~ }
 			
 			SDL_GetMouseState(&mousex, &mousey);
 			
@@ -623,21 +618,24 @@ int main(int argc, char** argv){
 			
 			imguiBeginFrame(mousex, mousey, is_lClicPressed, 0);
 			
-			imguiBeginScrollArea("Time", 10, 10, WINDOW_WIDTH / 5, WINDOW_HEIGHT - 20, &scrollarea1);
+			imguiBeginScrollArea("Time", 10, 10, WINDOW_WIDTH / 4, WINDOW_HEIGHT - 20, &scrollarea1);
 			imguiSeparatorLine();
 			imguiSeparator();
 			
 			imguiLabel("Time Scroller");
 			
 			float timeMod = bigTime / 4.;
-			imguiSlider("time progression", &timeMod, 0.f, 100.f, 0.5f);
+			imguiSlider("time progression", &timeMod, 0.f, 100.f, 0.1f);
 			bigTime = timeMod * 4.;
+			
+			imguiSeparator();
+			if(imguiButton("Time Pause (Spacebar)")){
+				timePause = timePauseTrigger(timePause, &coefLightStep, &timeStep);
+			}
 			
 			imguiEndScrollArea();
 			
 			imguiEndFrame();
-			
-			//~ imguiDrawText(30 + WINDOW_WIDTH / 5 * 2, WINDOW_HEIGHT - 20, IMGUI_ALIGN_LEFT, "Free text",  imguiRGBA(32,192, 32,192));
 			
 			imguiRenderGLDraw(WINDOW_WIDTH, WINDOW_HEIGHT);
 			
@@ -868,18 +866,7 @@ int main(int argc, char** argv){
 							break;
 							
 						case SDLK_SPACE:
-							if(!timePause){
-								coefLightStep = 0.;
-								//~ tempDayStep = dayStep;
-								//~ dayStep = 0.;
-								timeStep = 0.;
-								timePause = true;
-							}else{
-								timeStep = 100./720.;
-								//~ dayStep = tempDayStep;
-								coefLightStep = 0.00218166156f;
-								timePause = false;
-							}
+							timePause = timePauseTrigger(timePause, &coefLightStep, &timeStep);
 							break;
 
 						default:
