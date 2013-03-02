@@ -372,24 +372,26 @@ int main(int argc, char** argv){
 	int timeUIHeight = 150;
 	int detailsUIHeight = 170;
 	int camUIHeight = 200;
+	int viewUIHeight = 250;
 	
 	int mousex = 0;
 	int mousey = 0;
-	bool checked1 = false;
-	bool checked2 = false;
-	bool checked3 = true;
-	bool checked4 = false;
-	float value1 = 50.f;
-	float value2 = 30.f;
 	int timeUIscrollArea = 0;
 	int detailsUIscrollArea = 0;
 	int camUIscrollArea = 0;
+	int viewUIscrollArea = 0;
 	
 	int toggle = 0;
 
-
-	//~ GLdouble src_alpha = 0.;
-	//~ GLdouble dst_alpha = 0.;
+	bool bendItem = false;
+	bool drainItem = false;
+	bool gradientItem = false;
+	bool surfaceItem = false;
+	
+	if(arguments[BENDING]) bendItem = true;
+	if(arguments[DRAIN]) drainItem = true;
+	if(arguments[GRADIENT]) gradientItem = true;
+	if(arguments[SURFACE]) surfaceItem = true;
 
 	if (!imguiRenderGLInit("include/my_imgui/DroidSans.ttf"))
 	{
@@ -397,15 +399,6 @@ int main(int argc, char** argv){
 		exit(EXIT_FAILURE);
 	}
 	
-	//~ glGetDoublev(GL_BLEND_SRC_ALPHA, &src_alpha);
-	//~ glGetDoublev(GL_BLEND_DST_ALPHA, &dst_alpha);
-	
-	//~ std::cout << "src alpha : " << src_alpha << ", src dst : " << dst_alpha << std::endl;
-	
-	//~ glEnable(GL_BLEND);
-	//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
-	//~ glBlendFunc(GL_ONEd, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
-
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
 	/* ************************************************************* */
@@ -614,7 +607,7 @@ int main(int argc, char** argv){
 			imguiBeginFrame(mousex, mousey, is_lClicPressed, 0);
 			
 			/* Time UI */
-			imguiBeginScrollArea("Time", 10, WINDOW_HEIGHT - (timeUIHeight + 10), WINDOW_WIDTH / 4, timeUIHeight, &timeUIscrollArea);
+			imguiBeginScrollArea("Time", 10, WINDOW_HEIGHT - (timeUIHeight+10), WINDOW_WIDTH / 4, timeUIHeight, &timeUIscrollArea);
 			imguiSeparatorLine();
 			imguiSeparator();
 			
@@ -633,7 +626,7 @@ int main(int argc, char** argv){
 			/* end Time UI */
 			
 			/* Details UI */
-			imguiBeginScrollArea("Details", 10, WINDOW_HEIGHT - (timeUIHeight + 10 + detailsUIHeight + 10), WINDOW_WIDTH / 4, detailsUIHeight, &detailsUIscrollArea);
+			imguiBeginScrollArea("Details", 10, WINDOW_HEIGHT - (timeUIHeight+10 + detailsUIHeight+10), WINDOW_WIDTH / 4, detailsUIHeight, &detailsUIscrollArea);
 			imguiSeparatorLine();
 			imguiSeparator();
 			
@@ -664,10 +657,72 @@ int main(int argc, char** argv){
 			imguiLabel("Camera type");
 			if(imguiItem("TrackBall")) currentCam = TRACK_BALL;
 			if(imguiItem("FreeFly")) currentCam = FREE_FLY;
-			//~ toggle = imguiCheck("TrackBall camera", );
 			
 			imguiEndScrollArea();
 			/* end Cam UI */
+			
+			/* View UI */
+			imguiBeginScrollArea("View", WINDOW_WIDTH - (10 + WINDOW_WIDTH / 4), WINDOW_HEIGHT - (viewUIHeight+10), WINDOW_WIDTH / 4, viewUIHeight, &viewUIscrollArea);
+			imguiSeparator();
+			imguiSeparatorLine();
+			
+			imguiLabel("Data view type");
+			if(imguiItem("Normal view")){
+				displayNormal = true;
+				displayDrain = false;
+				displayBending = false;
+				displaySurface = false;
+				displayGradient = false;
+			}
+			
+			if(imguiItem("Bend view", bendItem)){
+				displayNormal = false;
+				displayDrain = false;
+				displayBending = true;
+				displaySurface = false;
+				displayGradient = false;	
+			}
+			
+			if(imguiItem("Drain view", drainItem)){
+				displayNormal = false;
+				displayDrain = true;
+				displayBending = false;
+				displaySurface = false;
+				displayGradient = false;
+			}
+			
+			if(imguiItem("Gradient view", gradientItem)){
+				displayNormal = false;
+				displayDrain = false;
+				displayBending = false;
+				displaySurface = false;
+				displayGradient = true;
+			}
+			
+			if(imguiItem("Surface view", surfaceItem)){
+				displayNormal = false;
+				displayDrain = false;
+				displayBending = false;
+				displaySurface = true;
+				displayGradient = false;
+			}
+			
+			imguiSeparator();
+			toggle = imguiCheck("Debug Mode (f)", displayDebug);
+			if(toggle){
+				if(displayDebug){
+					glUseProgram(terrainProgram);
+					sendUniforms(locations, maxCoeffArray, thresholdDistance);
+					displayDebug = false;
+				}else{
+					glUseProgram(debugProgram);
+					sendUniforms(locations, maxCoeffArray, thresholdDistance);
+					displayDebug = true;
+				}
+			}
+			
+			imguiEndScrollArea();
+			/* end View UI */
 			
 			imguiEndFrame();
 			
