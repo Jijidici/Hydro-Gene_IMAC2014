@@ -288,12 +288,14 @@ int main(int argc, char** argv){
 	float coefLight = 0.;
 	glm::vec3 lightSun(glm::cos(coefLight),glm::sin(coefLight),0.f);
 	glm::vec3 lightMoon(0.f,glm::sin(coefLight-2.5),glm::cos(coefLight-2.5));
-	float time = -1.;
+	float time = -100.;
 	float day = 0.;
+	float dayFlag = 1.;
 	float night = 0.;
-	float timeStep = 1./720.;
-	float dayStep = 1./720.;
-	float tempDayStep = 0.;
+	float timeStep = 100./720.;
+	
+	float bigTime = 0.;
+	
 	float coefLightStep = 0.00218166156f;
 	bool timePause = false;
 	
@@ -413,6 +415,17 @@ int main(int argc, char** argv){
 		Uint32 ellapsedTime = 0;
 		start = SDL_GetTicks();
 
+		
+		if(bigTime < 200){
+			time = bigTime - 100.;
+			dayFlag = 1.;
+		}else{
+			time = bigTime - 300.;
+			dayFlag = -1.;
+		}
+		day = (100. - fabsf(time))*dayFlag;
+		night = -day;
+
 		//PRE_IDLE
 
 		// Nettoyage de la fenêtre
@@ -426,9 +439,9 @@ int main(int argc, char** argv){
 			sendUniforms(locations, maxCoeffArray, thresholdDistance);
 			
 			glUniform1i(locations[MODE], TRIANGLES);
-			glUniform1f(locations[TIME], time);
-			glUniform1f(locations[DAY], day);
-			glUniform1f(locations[NIGHT], night);
+			glUniform1f(locations[TIME], time/100.);
+			glUniform1f(locations[DAY], day/100.);
+			glUniform1f(locations[NIGHT], night/100.);
 			glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
 			glUniform3fv(locations[LIGHTMOON], 1, glm::value_ptr(lightMoon));
 
@@ -610,15 +623,21 @@ int main(int argc, char** argv){
 			
 			imguiBeginFrame(mousex, mousey, is_lClicPressed, 0);
 			
-			imguiBeginScrollArea("Scroll area", 10, 10, WINDOW_WIDTH / 5, WINDOW_HEIGHT - 20, &scrollarea1);
-			//~ imguiSeparatorLine();
-			//~ imguiSeparator();
+			imguiBeginScrollArea("Time", 10, 10, WINDOW_WIDTH / 5, WINDOW_HEIGHT - 20, &scrollarea1);
+			imguiSeparatorLine();
+			imguiSeparator();
+			
+			imguiLabel("Time Scroller");
+			
+			float timeMod = bigTime / 4.;
+			imguiSlider("time progression", &timeMod, 0.f, 100.f, 0.5f);
+			bigTime = timeMod * 4.;
 			
 			imguiEndScrollArea();
 			
 			imguiEndFrame();
 			
-			imguiDrawText(30 + WINDOW_WIDTH / 5 * 2, WINDOW_HEIGHT - 20, IMGUI_ALIGN_LEFT, "Free text",  imguiRGBA(32,192, 32,192));
+			//~ imguiDrawText(30 + WINDOW_WIDTH / 5 * 2, WINDOW_HEIGHT - 20, IMGUI_ALIGN_LEFT, "Free text",  imguiRGBA(32,192, 32,192));
 			
 			imguiRenderGLDraw(WINDOW_WIDTH, WINDOW_HEIGHT);
 			
@@ -851,13 +870,13 @@ int main(int argc, char** argv){
 						case SDLK_SPACE:
 							if(!timePause){
 								coefLightStep = 0.;
-								tempDayStep = dayStep;
-								dayStep = 0.;
+								//~ tempDayStep = dayStep;
+								//~ dayStep = 0.;
 								timeStep = 0.;
 								timePause = true;
 							}else{
-								timeStep = 1./720.;
-								dayStep = tempDayStep;
+								timeStep = 100./720.;
+								//~ dayStep = tempDayStep;
 								coefLightStep = 0.00218166156f;
 								timePause = false;
 							}
@@ -985,13 +1004,16 @@ int main(int argc, char** argv){
 		
 		if(coefLight < -4.71238898){ coefLight = 1.57079633; }
 		
-		time += timeStep;
-		day += dayStep;
-		night -= dayStep;
+		//~ time += timeStep;
+		bigTime += timeStep;
+		//~ day += dayStep;
+		//~ night -= dayStep;
 		
-		if(time > 1){time = -time;}
-		if(day > 1){dayStep = -dayStep;}
-		if(day < -1){dayStep = -dayStep;}
+		//~ if(time > 100){time = -time; dayFlag = -dayFlag;}
+		if(bigTime > 400){bigTime = 0.;}
+		//~ if(bigTime == 200){dayFlag = -dayFlag;}
+		//~ if(day > 100){dayStep = -dayStep;}
+		//~ if(day < -100){dayStep = -dayStep;}
 		
 		//~ std::cout << "time : " << time << std::endl;
 		//~ std::cout << "day : " << 0.5 - fabs(day) << std::endl;
