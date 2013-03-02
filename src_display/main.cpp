@@ -380,6 +380,7 @@ int main(int argc, char** argv){
 	int detailsUIscrollArea = 0;
 	int camUIscrollArea = 0;
 	int viewUIscrollArea = 0;
+	int closeScrollArea = 0;
 	
 	int toggle = 0;
 
@@ -723,6 +724,20 @@ int main(int argc, char** argv){
 			
 			imguiEndScrollArea();
 			/* end View UI */
+			
+			/* INFO */
+			imguiBeginScrollArea("Press i to close UI", (WINDOW_WIDTH-130) / 2, WINDOW_HEIGHT - 45, 130, 35, &closeScrollArea);
+			imguiEndScrollArea();
+			/* end INFO */
+			
+			/* close UI */
+			imguiBeginScrollArea("Quit program ?", WINDOW_WIDTH - (110 + 10), 10, 110, 60, &closeScrollArea);
+			if(imguiButton("Quit")){
+				done = true;
+			}
+			
+			imguiEndScrollArea();
+			/* end close UI */
 			
 			imguiEndFrame();
 			
