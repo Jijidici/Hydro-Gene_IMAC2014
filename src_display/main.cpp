@@ -370,6 +370,8 @@ int main(int argc, char** argv){
 	bool ihm = true;
 	
 	int timeUIHeight = 150;
+	int detailsUIHeight = 170;
+	int camUIHeight = 200;
 	
 	int mousex = 0;
 	int mousey = 0;
@@ -379,8 +381,9 @@ int main(int argc, char** argv){
 	bool checked4 = false;
 	float value1 = 50.f;
 	float value2 = 30.f;
-	int scrollarea1 = 0;
-	int scrollarea2 = 0;
+	int timeUIscrollArea = 0;
+	int detailsUIscrollArea = 0;
+	int camUIscrollArea = 0;
 	
 	int toggle = 0;
 
@@ -415,7 +418,7 @@ int main(int argc, char** argv){
 		Uint32 ellapsedTime = 0;
 		start = SDL_GetTicks();
 
-		
+		/* time settings */
 		if(bigTime < 200){
 			time = bigTime - 100.;
 			dayFlag = 1.;
@@ -426,118 +429,86 @@ int main(int argc, char** argv){
 		day = (100. - fabsf(time))*dayFlag;
 		night = -day;
 
-		//PRE_IDLE
-
+		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
+		glUseProgram(terrainProgram);
+		sendUniforms(locations, maxCoeffArray, thresholdDistance);
 		
-		if(true){
-			//~ glViewport(0, 0, WINDOW_WIDTH - 200, WINDOW_HEIGHT);
-			
-			glUseProgram(terrainProgram);
-			sendUniforms(locations, maxCoeffArray, thresholdDistance);
-			
-			glUniform1i(locations[MODE], TRIANGLES);
-			glUniform1f(locations[TIME], time/100.);
-			glUniform1f(locations[DAY], day/100.);
-			glUniform1f(locations[NIGHT], night/100.);
-			glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
-			glUniform3fv(locations[LIGHTMOON], 1, glm::value_ptr(lightMoon));
+		glUniform1i(locations[MODE], TRIANGLES);
+		glUniform1f(locations[TIME], time/100.);
+		glUniform1f(locations[DAY], day/100.);
+		glUniform1f(locations[NIGHT], night/100.);
+		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
+		glUniform3fv(locations[LIGHTMOON], 1, glm::value_ptr(lightMoon));
 
-			/* Send fog */
-			if(displayFog){
-				glUniform1i(locations[FOG], 1);
-			}else{
-				glUniform1i(locations[FOG], 0);
+		/* Send fog */
+		if(displayFog){
+			glUniform1i(locations[FOG], 1);
+		}else{
+			glUniform1i(locations[FOG], 0);
+		}
+		
+		
+		//Ground
+		ms.push();
+			if(currentCam == FREE_FLY){
+				ms.mult(ffCam.getViewMatrix());
+			}else if(currentCam == TRACK_BALL){
+				ms.mult(tbCam.getViewMatrix());
 			}
-			
-			
-			//Ground
-			ms.push();
-				if(currentCam == FREE_FLY){
-					ms.mult(ffCam.getViewMatrix());
-				}else if(currentCam == TRACK_BALL){
-					ms.mult(tbCam.getViewMatrix());
-				}
-				ms.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
-				ms.scale(glm::vec3(100.f, 100.f, 100.f));
-				glUniform1i(locations[CHOICE], NORMAL);
-				glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-				BindTexture(texture_terrain[0], GL_TEXTURE0);
-				BindTexture(texture_terrain[1], GL_TEXTURE1);
-					glBindVertexArray(groundVAO);
-						glDrawArrays(GL_TRIANGLES, 0, 6);
-					glBindVertexArray(0);
-				BindTexture(0, GL_TEXTURE0);
-				BindTexture(0, GL_TEXTURE1);
-			ms.pop();
-			
-			//Terrain
-			ms.push();
-				// Choose the camera
-				glm::mat4 V;
-				if(currentCam == TRACK_BALL){
-					V = tbCam.getViewMatrix();
-				}else if(currentCam == FREE_FLY){
-					V = ffCam.getViewMatrix();
-				}
-				ms.mult(V);
+			ms.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
+			ms.scale(glm::vec3(100.f, 100.f, 100.f));
+			glUniform1i(locations[CHOICE], NORMAL);
+			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
+			BindTexture(texture_terrain[0], GL_TEXTURE0);
+			BindTexture(texture_terrain[1], GL_TEXTURE1);
+				glBindVertexArray(groundVAO);
+					glDrawArrays(GL_TRIANGLES, 0, 6);
+				glBindVertexArray(0);
+			BindTexture(0, GL_TEXTURE0);
+			BindTexture(0, GL_TEXTURE1);
+		ms.pop();
+		
+		//Terrain
+		ms.push();
+			// Choose the camera
+			glm::mat4 V;
+			if(currentCam == TRACK_BALL){
+				V = tbCam.getViewMatrix();
+			}else if(currentCam == FREE_FLY){
+				V = ffCam.getViewMatrix();
+			}
+			ms.mult(V);
 
-				glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));
+			glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));
 
-				uint32_t vao_idx = 0;
-				//For each level
-				for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
-					//For each leaf
-					for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
-						double d = computeDistanceLeafCamera(leafArrays[lvl][idx], V);
-						double crt_lvlTD = thresholdDistance*(lvl+1);
-						double nxt_lvlTD = 0;
-						/* special case of uppest level */
-						if(lvl == nbLevel-1){
-							nxt_lvlTD = 1000;
-						}else{
-							nxt_lvlTD = crt_lvlTD+thresholdDistance;
-						}
-						
-						//display the leaf of this level if it is in the distance fork
-						if(crt_lvlTD <= d && d < nxt_lvlTD){
-							display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-						}
-						
-						//special case of lvl 0
-						if(lvl == 0 && d < thresholdDistance){
-							if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
-								/* FRUSTUM CULLING */
-								if(ffCam.leavesFrustum(leafArrays[0][idx])){
-									/* LOADING */
-									if(!loadedLeaf[idx]){
-										loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
-										std::sort(memory.begin(), memory.end(), memory.front());
-									}
-									/* DISPLAYING */
-									for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
-										if(idx == n->idxLeaf){
-											display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
-											if(displayDebug){
-												/* leaf cube */
-												glUniform1i(locations[CHOICE], DEBUG_BOX);
-												display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
-												
-												/* Computed triangles */
-												glUniform1i(locations[CHOICE], DEBUG_TRI);
-												display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-											}else{
-												if(displayVegetation){
-													display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
-												}
-											}
-										}
-									}
-									
-								}
-							}else if(currentCam == TRACK_BALL){ /////////////////////////////TRACKBALL
+			uint32_t vao_idx = 0;
+			//For each level
+			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
+				//For each leaf
+				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
+					double d = computeDistanceLeafCamera(leafArrays[lvl][idx], V);
+					double crt_lvlTD = thresholdDistance*(lvl+1);
+					double nxt_lvlTD = 0;
+					/* special case of uppest level */
+					if(lvl == nbLevel-1){
+						nxt_lvlTD = 1000;
+					}else{
+						nxt_lvlTD = crt_lvlTD+thresholdDistance;
+					}
+					
+					//display the leaf of this level if it is in the distance fork
+					if(crt_lvlTD <= d && d < nxt_lvlTD){
+						display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+					}
+					
+					//special case of lvl 0
+					if(lvl == 0 && d < thresholdDistance){
+						if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
+							/* FRUSTUM CULLING */
+							if(ffCam.leavesFrustum(leafArrays[0][idx])){
 								/* LOADING */
 								if(!loadedLeaf[idx]){
 									loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
@@ -546,80 +517,104 @@ int main(int argc, char** argv){
 								/* DISPLAYING */
 								for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 									if(idx == n->idxLeaf){
+										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 										if(displayDebug){
-											if(ffCam.leavesFrustum(leafArrays[0][idx])){
-												/* real triangles */
-												display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
-											}
 											/* leaf cube */
 											glUniform1i(locations[CHOICE], DEBUG_BOX);
 											display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
+											
 											/* Computed triangles */
 											glUniform1i(locations[CHOICE], DEBUG_TRI);
 											display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
 										}else{
-											/* real triangles */
-											display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 											if(displayVegetation){
 												display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
 											}
-										}								
-										break;
+										}
 									}
 								}
-							} //END camera
-						}
-
-						//DISPLAY OF THE COEFFICIENTS
-						if(displayNormal) glUniform1i(locations[CHOICE], NORMAL);
-						else if(displayDrain) glUniform1i(locations[CHOICE], DRAIN);
-						else if(displayBending) glUniform1i(locations[CHOICE], BENDING);
-						else if(displayGradient) glUniform1i(locations[CHOICE], GRADIENT);
-						else if(displaySurface) glUniform1i(locations[CHOICE], SURFACE);
-						
-						//set the vao idx
-						++vao_idx;
+								
+							}
+						}else if(currentCam == TRACK_BALL){ /////////////////////////////TRACKBALL
+							/* LOADING */
+							if(!loadedLeaf[idx]){
+								loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
+								std::sort(memory.begin(), memory.end(), memory.front());
+							}
+							/* DISPLAYING */
+							for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+								if(idx == n->idxLeaf){
+									if(displayDebug){
+										if(ffCam.leavesFrustum(leafArrays[0][idx])){
+											/* real triangles */
+											display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										}
+										/* leaf cube */
+										glUniform1i(locations[CHOICE], DEBUG_BOX);
+										display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
+										/* Computed triangles */
+										glUniform1i(locations[CHOICE], DEBUG_TRI);
+										display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+									}else{
+										/* real triangles */
+										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										if(displayVegetation){
+											display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
+										}
+									}								
+									break;
+								}
+							}
+						} //END camera
 					}
-				}
-			ms.pop();
 
-			//Skybox
-			glUniform1i(locations[MODE], SKYBOX);
-			ms.push();
-				if(currentCam == FREE_FLY){
-					ms.mult(ffCam.getViewMatrix());
-					ms.translate(ffCam.getCameraPosition());
-					ms.scale(glm::vec3(2.f, 2.f, 2.f));
-				}else if(currentCam == TRACK_BALL){
-					ms.mult(tbCam.getViewMatrix());
-					ms.scale(glm::vec3(100.f, 100.f, 100.f));
+					//DISPLAY OF THE COEFFICIENTS
+					if(displayNormal) glUniform1i(locations[CHOICE], NORMAL);
+					else if(displayDrain) glUniform1i(locations[CHOICE], DRAIN);
+					else if(displayBending) glUniform1i(locations[CHOICE], BENDING);
+					else if(displayGradient) glUniform1i(locations[CHOICE], GRADIENT);
+					else if(displaySurface) glUniform1i(locations[CHOICE], SURFACE);
+					
+					//set the vao idx
+					++vao_idx;
 				}
-				glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-				BindTexture(texture_sky, GL_TEXTURE7);
-				BindTexture(texture_night, GL_TEXTURE6);
-					glBindVertexArray(cubeVAO);
-						glDrawArrays(GL_TRIANGLES, 0, 36);
-					glBindVertexArray(0);
-				BindTexture(0, GL_TEXTURE6);
-				BindTexture(0, GL_TEXTURE7);
-			ms.pop();
-		} //end if(!ihm)
+			}
+		ms.pop();
+
+		//Skybox
+		glUniform1i(locations[MODE], SKYBOX);
+		ms.push();
+			if(currentCam == FREE_FLY){
+				ms.mult(ffCam.getViewMatrix());
+				ms.translate(ffCam.getCameraPosition());
+				ms.scale(glm::vec3(2.f, 2.f, 2.f));
+			}else if(currentCam == TRACK_BALL){
+				ms.mult(tbCam.getViewMatrix());
+				ms.scale(glm::vec3(100.f, 100.f, 100.f));
+			}
+			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
+			BindTexture(texture_sky, GL_TEXTURE7);
+			BindTexture(texture_night, GL_TEXTURE6);
+				glBindVertexArray(cubeVAO);
+					glDrawArrays(GL_TRIANGLES, 0, 36);
+				glBindVertexArray(0);
+			BindTexture(0, GL_TEXTURE6);
+			BindTexture(0, GL_TEXTURE7);
+		ms.pop();
 
 		if(ihm){
 			/* ------ IHM imgui ------ */
 			glActiveTexture(GL_TEXTURE0);
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glDisable(GL_DEPTH_TEST);
 			
 			SDL_GetMouseState(&mousex, &mousey);
-			
 			mousey = WINDOW_HEIGHT - mousey;
-			
 			imguiBeginFrame(mousex, mousey, is_lClicPressed, 0);
 			
 			/* Time UI */
-			imguiBeginScrollArea("Time", 10, WINDOW_HEIGHT - (timeUIHeight + 10), WINDOW_WIDTH / 4, timeUIHeight, &scrollarea1); // scrollarea1 unused
+			imguiBeginScrollArea("Time", 10, WINDOW_HEIGHT - (timeUIHeight + 10), WINDOW_WIDTH / 4, timeUIHeight, &timeUIscrollArea);
 			imguiSeparatorLine();
 			imguiSeparator();
 			
@@ -638,7 +633,7 @@ int main(int argc, char** argv){
 			/* end Time UI */
 			
 			/* Details UI */
-			imguiBeginScrollArea("Details", 10, WINDOW_HEIGHT - (timeUIHeight + 10 + 150 + 10), WINDOW_WIDTH / 4, 150, &scrollarea2);
+			imguiBeginScrollArea("Details", 10, WINDOW_HEIGHT - (timeUIHeight + 10 + detailsUIHeight + 10), WINDOW_WIDTH / 4, detailsUIHeight, &detailsUIscrollArea);
 			imguiSeparatorLine();
 			imguiSeparator();
 			
@@ -648,15 +643,37 @@ int main(int argc, char** argv){
 			toggle = imguiCheck("Fog (g)", displayFog);
 			if (toggle)	displayFog = !displayFog;
 			
+			imguiSeparator();
+			imguiLabel("Details view distance");
+			imguiSlider("threshold", &thresholdDistance, 0.f, 10.f, 0.001f);
+			
 			imguiEndScrollArea();
 			/* end Details UI */
+			
+			/* Cam UI */
+			imguiBeginScrollArea("Camera", 10, WINDOW_HEIGHT - (timeUIHeight+10 + detailsUIHeight+10 + camUIHeight+10), WINDOW_WIDTH / 4, camUIHeight, &camUIscrollArea);
+			imguiSeparatorLine();
+			imguiSeparator();
+			
+			float modCamSpeed = camSpeed * 100;
+			imguiLabel("Camera speed (Mouse wheel)");
+			imguiSlider("speed", &modCamSpeed, 0.001f, 10.f, 0.01f);
+			camSpeed = modCamSpeed / 100.;
+			
+			imguiSeparator();
+			imguiLabel("Camera type");
+			if(imguiItem("TrackBall")) currentCam = TRACK_BALL;
+			if(imguiItem("FreeFly")) currentCam = FREE_FLY;
+			//~ toggle = imguiCheck("TrackBall camera", );
+			
+			imguiEndScrollArea();
+			/* end Cam UI */
 			
 			imguiEndFrame();
 			
 			imguiRenderGLDraw(WINDOW_WIDTH, WINDOW_HEIGHT);
 			
 			glDisable(GL_BLEND);
-			//~ glBlendFunc(GL_ONE, GL_ONE);
 			glEnable(GL_DEPTH_TEST);
 		} // end if(ihm)
 		
@@ -822,29 +839,15 @@ int main(int argc, char** argv){
 							break;
 							
 						case SDLK_i:
-							if(ihm){
-								ihm = !ihm;
-								//~ sendUniforms(locations, maxCoeffArray, thresholdDistance);
-								//~ imguiRenderGLDestroy();
-							}else{
-								ihm = !ihm;
-							}
+							ihm = !ihm;
 							break;
 						
 						case SDLK_v:
-							if(displayVegetation){
-								displayVegetation=false;
-							}else{
-								displayVegetation=true;							
-							}
+							displayVegetation = !displayVegetation;
 							break;
 						
 						case SDLK_g:
-							if(displayFog){
-								displayFog = false;
-							}else{
-								displayFog = true;
-							}
+							displayFog = !displayFog;
 							break;
 						
 						default:
