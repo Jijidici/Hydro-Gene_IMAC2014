@@ -394,7 +394,6 @@ int main(int argc, char** argv){
 	if(arguments[GRADIENT]) gradientItem = true;
 	if(arguments[SURFACE]) surfaceItem = true;
 
-
 	if (!imguiRenderGLInit("include/my_imgui/DroidSans.ttf"))
 	{
 		fprintf(stderr, "Could not init GUI renderer.\n");
@@ -444,20 +443,29 @@ int main(int argc, char** argv){
 		}else{
 			glUniform1i(locations[FOG], 0);
 		}
-		
-			//Ground
-			ms.push();
-				ms.mult(V);
-				ms.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
-				ms.scale(glm::vec3(100.f, 100.f, 100.f));
-				glUniform1i(locations[CHOICE], NORMAL);
-				glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-				BindTexture(texture_terrain[1], GL_TEXTURE1);
-					glBindVertexArray(groundVAO);
-						glDrawArrays(GL_TRIANGLES, 0, 6);
-					glBindVertexArray(0);
-				BindTexture(0, GL_TEXTURE1);
-			ms.pop();
+
+		// Choose the camera
+		glm::mat4 V;
+		if(currentCam == TRACK_BALL){
+			V = tbCam.getViewMatrix();
+		}else if(currentCam == FREE_FLY){
+			V = ffCam.getViewMatrix();
+		}
+		glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));			
+
+		//Ground
+		ms.push();
+			ms.mult(V);
+			ms.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
+			ms.scale(glm::vec3(100.f, 100.f, 100.f));
+			glUniform1i(locations[CHOICE], NORMAL);
+			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
+			BindTexture(texture_terrain[1], GL_TEXTURE1);
+				glBindVertexArray(groundVAO);
+					glDrawArrays(GL_TRIANGLES, 0, 6);
+				glBindVertexArray(0);
+			BindTexture(0, GL_TEXTURE1);
+		ms.pop();
 			
 			//Terrain
 			ms.push();
@@ -514,63 +522,6 @@ int main(int argc, char** argv){
 									}
 									
 								}
-							}else if(currentCam == TRACK_BALL){ /////////////////////////////TRACKBALL
-
-			ms.mult(V);
-
-			glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));
-
-			uint32_t vao_idx = 0;
-			//For each level
-			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
-				//For each leaf
-				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
-					double d = computeDistanceLeafCamera(leafArrays[lvl][idx], V);
-					double crt_lvlTD = thresholdDistance*(lvl+1);
-					double nxt_lvlTD = 0;
-					/* special case of uppest level */
-					if(lvl == nbLevel-1){
-						nxt_lvlTD = 1000;
-					}else{
-						nxt_lvlTD = crt_lvlTD+thresholdDistance;
-					}
-					
-					//display the leaf of this level if it is in the distance fork
-					if(crt_lvlTD <= d && d < nxt_lvlTD){
-						display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-					}
-					
-					//special case of lvl 0
-					if(lvl == 0 && d < thresholdDistance){
-						if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
-							/* FRUSTUM CULLING */
-							if(ffCam.leavesFrustum(leafArrays[0][idx])){
-								/* LOADING */
-								if(!loadedLeaf[idx]){
-									loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
-									std::sort(memory.begin(), memory.end(), memory.front());
-								}
-								/* DISPLAYING */
-								for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
-									if(idx == n->idxLeaf){
-										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
-										if(displayDebug){
-											/* leaf cube */
-											glUniform1i(locations[CHOICE], DEBUG_BOX);
-											display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
-											
-											/* Computed triangles */
-											glUniform1i(locations[CHOICE], DEBUG_TRI);
-											display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-										}else{
-											if(displayVegetation){
-												display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
-											}
-										}
-									}
-								}
-								
-							}
 						}else if(currentCam == TRACK_BALL){ /////////////////////////////TRACKBALL
 							/* LOADING */
 							if(!loadedLeaf[idx]){
