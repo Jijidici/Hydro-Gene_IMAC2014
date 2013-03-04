@@ -161,7 +161,7 @@ int main(int argc, char** argv){
 	/* terrain textures */
 	GLuint texture_terrain[6];
 	texture_terrain[0] = CreateTexture("textures/grass.jpg");
-	texture_terrain[1] = CreateTexture("textures/water.png");
+	texture_terrain[1] = CreateTexture("textures/heightmap.jpg");
 	texture_terrain[2] = CreateTexture("textures/stone.jpg");
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
@@ -382,7 +382,7 @@ int main(int argc, char** argv){
 	
 	int toggle = 0;
 
-	if (!imguiRenderGLInit("DroidSans.ttf"))
+	if (!imguiRenderGLInit("include/imgui/DroidSans.ttf"))
 	{
 		fprintf(stderr, "Could not init GUI renderer.\n");
 		exit(EXIT_FAILURE);
@@ -434,39 +434,32 @@ int main(int argc, char** argv){
 				glUniform1i(locations[FOG], 0);
 			}
 			
-			
+			// Choose the camera
+			glm::mat4 V;
+			if(currentCam == TRACK_BALL){
+				V = tbCam.getViewMatrix();
+			}else if(currentCam == FREE_FLY){
+				V = ffCam.getViewMatrix();
+			}
+			glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));			
+
 			//Ground
 			ms.push();
-				if(currentCam == FREE_FLY){
-					ms.mult(ffCam.getViewMatrix());
-				}else if(currentCam == TRACK_BALL){
-					ms.mult(tbCam.getViewMatrix());
-				}
+				ms.mult(V);
 				ms.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
 				ms.scale(glm::vec3(100.f, 100.f, 100.f));
 				glUniform1i(locations[CHOICE], NORMAL);
 				glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-				BindTexture(texture_terrain[0], GL_TEXTURE0);
 				BindTexture(texture_terrain[1], GL_TEXTURE1);
 					glBindVertexArray(groundVAO);
 						glDrawArrays(GL_TRIANGLES, 0, 6);
 					glBindVertexArray(0);
-				BindTexture(0, GL_TEXTURE0);
 				BindTexture(0, GL_TEXTURE1);
 			ms.pop();
 			
 			//Terrain
 			ms.push();
-				// Choose the camera
-				glm::mat4 V;
-				if(currentCam == TRACK_BALL){
-					V = tbCam.getViewMatrix();
-				}else if(currentCam == FREE_FLY){
-					V = ffCam.getViewMatrix();
-				}
 				ms.mult(V);
-
-				glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));
 
 				uint32_t vao_idx = 0;
 				//For each level

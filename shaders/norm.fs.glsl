@@ -24,6 +24,7 @@ in float gAltitude;
 
 uniform vec3 uLightSunVect = vec3(0.,0.,0.);
 uniform vec3 uLightMoonVect = vec3(0.,0.,0.);
+uniform mat4 uViewMatrix = mat4(1.f);
 
 uniform sampler2D uSkyTex;
 uniform sampler2D uNightTex;
@@ -51,6 +52,8 @@ uniform float uMaxGradient = 0;
 uniform float uMaxSurface = 0;
 uniform float uMaxAltitude = 0;
 
+uniform mat4 uMVPMatrix = mat4(1.f);
+
 out vec4 fFragColor;
 
 void main() {
@@ -63,6 +66,7 @@ void main() {
 		
 		vec3 aColor = vec3(0.05);
 		vec3 dColor;
+		float coefWater = 0.f;
 		vec3 color;
 		/* clouds shadowmap */
 		vec2 shadowCloudTexcoord = gTexCoords;
@@ -170,22 +174,48 @@ void main() {
 				restingCoef -= coefSand;
 				
 				float coefGrass = restingCoef;
-				
-				dColor = coefWater*texture(uWaterTex, gTexCoords).rgb;
+	
+				dColor = coefWater*vec3(0.06f,0.55f,0.89f);
 				dColor += coefStone*texture(uStoneTex, gTexCoords).rgb;
 				dColor += coefSnow*texture(uSnowTex, gTexCoords).rgb;
 				dColor += coefSand*texture(uSandTex, gTexCoords).rgb;
 				dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
-			}
 			
-			vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
-			dColorSun *= (1. - cloudsColor)*coefDay;
-			vec3 dColorMoon = dColor + vec3(0.f,0.f,0.25f);
-			float dCoeffSun = max(0, dot(normalize(gNormal), -normalize(uLightSunVect)));
-			float dCoeffMoon = max(0, dot(normalize(gNormal), -normalize(uLightMoonVect)));
-			dCoeffSun *= 0.7;
-			dCoeffMoon *= 0.1;
-			color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon);
+				vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
+				dColorSun *= (1. - cloudsColor)*coefDay;
+				vec3 dColorMoon = dColor + vec3(0.f,0.f,0.25f);
+				float dCoeffSun = max(0, dot(normalize(gNormal), -normalize(uLightSunVect)));
+				float dCoeffMoon = max(0, dot(normalize(gNormal), -normalize(uLightMoonVect)));
+				dCoeffSun *= 0.7;
+				dCoeffMoon *= 0.1;
+
+				/* Draw water */
+				if(coefWater>0.5f){
+
+					vec2 HMCoord = gTexCoords*200 + uTime;
+					vec2 waveCoord = gTexCoords*200 - uTime;
+					vec4 newNormal = uMVPMatrix * vec4(gNormal.x, 0.05*texture(uWaterTex, HMCoord).r, gNormal.z, 1.0f);
+					vec4 newPos = uMVPMatrix * vec4(gPos.x, 0.05*texture(uWaterTex, waveCoord).r, gPos.z, 1.0f);
+
+					vec4 cPos = uViewMatrix[3];
+					vec4 pc = normalize(cPos - newPos);
+					vec4 D = normalize(uViewMatrix * vec4(uLightSunVect,1.f));
+					mat4 uNormalMatrix = transpose(inverse(uViewMatrix));
+					vec4 N = normalize(uNormalMatrix * newNormal);
+					vec4 R = reflect(D,N);
+					int sh = 1;
+					float sCoeff = pow(max(0,dot(pc,R)),sh);
+					vec3 sColor = vec3(1.f, 1.f, 0.9f);
+
+					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon + sColor*sCoeff*(1-abs(uTime)));
+					fFragColor = vec4(color, 1.f);
+
+				} else {
+					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon);
+					fFragColor = vec4(color, 1.f);
+				}
+
+			}
 			
 			/* Simulate fog */
 			if(uFog == 1){
@@ -196,8 +226,8 @@ void main() {
 				fogCoef = clamp(fogCoef, 0., 1.);
 				vec3 fogColor = vec3(0.3);
 				color = mix(fogColor, color, fogCoef);
+				fFragColor = vec4(color, 1.f);
 			}
-			fFragColor = vec4(color, 1.f);	
 		}
 	}
 	else if(uMode == SKYBOX){
