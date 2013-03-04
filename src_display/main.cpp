@@ -25,8 +25,8 @@
 #include "display/cube_model.hpp"
 
 #include "drn/drn_reader.h"
-#include "imgui/imgui.h"
-#include "imgui/imguiRenderGL.h"
+#include "my_imgui/imgui.h"
+#include "my_imgui/imguiRenderGL.h"
 
 #define FRAME_RATE 60
 #define SKYBOX 0
@@ -288,12 +288,14 @@ int main(int argc, char** argv){
 	float coefLight = 0.;
 	glm::vec3 lightSun(glm::cos(coefLight),glm::sin(coefLight),0.f);
 	glm::vec3 lightMoon(0.f,glm::sin(coefLight-2.5),glm::cos(coefLight-2.5));
-	float time = -1.;
+	float time = -100.;
 	float day = 0.;
+	float dayFlag = 1.;
 	float night = 0.;
-	float timeStep = 1./720.;
-	float dayStep = 1./720.;
-	float tempDayStep = 0.;
+	float timeStep = 100./720.;
+	
+	float bigTime = 0.;
+	
 	float coefLightStep = 0.00218166156f;
 	bool timePause = false;
 	
@@ -366,32 +368,39 @@ int main(int argc, char** argv){
     }
 
 	bool ihm = true;
-	bool alpha = false;
-	//~ bool ihm = false;
+	
+	int timeUIHeight = 150;
+	int detailsUIHeight = 170;
+	int camUIHeight = 200;
+	int viewUIHeight = 250;
 	
 	int mousex = 0;
 	int mousey = 0;
-	bool checked1 = false;
-	bool checked2 = false;
-	bool checked3 = true;
-	bool checked4 = false;
-	float value1 = 50.f;
-	float value2 = 30.f;
-	int scrollarea1 = 0;
-	int scrollarea2 = 0;
+	int timeUIscrollArea = 0;
+	int detailsUIscrollArea = 0;
+	int camUIscrollArea = 0;
+	int viewUIscrollArea = 0;
+	int closeScrollArea = 0;
 	
 	int toggle = 0;
 
-	if (!imguiRenderGLInit("include/imgui/DroidSans.ttf"))
+	bool bendItem = false;
+	bool drainItem = false;
+	bool gradientItem = false;
+	bool surfaceItem = false;
+	
+	if(arguments[BENDING]) bendItem = true;
+	if(arguments[DRAIN]) drainItem = true;
+	if(arguments[GRADIENT]) gradientItem = true;
+	if(arguments[SURFACE]) surfaceItem = true;
+
+
+	if (!imguiRenderGLInit("include/my_imgui/DroidSans.ttf"))
 	{
 		fprintf(stderr, "Could not init GUI renderer.\n");
 		exit(EXIT_FAILURE);
 	}
 	
-	//~ glEnable(GL_BLEND);
-	//~ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
-	//~ glBlendFunc(GL_ONEd, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
-
 	/* ************************************************************* */
 	/* ********************DISPLAY LOOP***************************** */
 	/* ************************************************************* */
@@ -404,45 +413,38 @@ int main(int argc, char** argv){
 		Uint32 ellapsedTime = 0;
 		start = SDL_GetTicks();
 
-		//PRE_IDLE
+		/* time settings */
+		if(bigTime < 200){
+			time = bigTime - 100.;
+			dayFlag = 1.;
+		}else{
+			time = bigTime - 300.;
+			dayFlag = -1.;
+		}
+		day = (100. - fabsf(time))*dayFlag;
+		night = -day;
 
+		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
+		glUseProgram(terrainProgram);
+		sendUniforms(locations, maxCoeffArray, thresholdDistance);
 		
-		if(!ihm){
-			//~ glViewport(0, 0, WINDOW_WIDTH - 200, WINDOW_HEIGHT);
-				
-			glDisable(GL_BLEND);
-			//~ glBlendFunc(GL_ONE, GL_ONE);
-			glEnable(GL_DEPTH_TEST);
-			
-			
-			glUseProgram(terrainProgram);
-			
-			glUniform1i(locations[MODE], TRIANGLES);
-			glUniform1f(locations[TIME], time);
-			glUniform1f(locations[DAY], day);
-			glUniform1f(locations[NIGHTTEX], night);
-			glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
-			glUniform3fv(locations[LIGHTMOON], 1, glm::value_ptr(lightMoon));
+		glUniform1i(locations[MODE], TRIANGLES);
+		glUniform1f(locations[TIME], time/100.);
+		glUniform1f(locations[DAY], day/100.);
+		glUniform1f(locations[NIGHT], night/100.);
+		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
+		glUniform3fv(locations[LIGHTMOON], 1, glm::value_ptr(lightMoon));
 
-			/* Send fog */
-			if(displayFog){
-				glUniform1i(locations[FOG], 1);
-			}else{
-				glUniform1i(locations[FOG], 0);
-			}
-			
-			// Choose the camera
-			glm::mat4 V;
-			if(currentCam == TRACK_BALL){
-				V = tbCam.getViewMatrix();
-			}else if(currentCam == FREE_FLY){
-				V = ffCam.getViewMatrix();
-			}
-			glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));			
-
+		/* Send fog */
+		if(displayFog){
+			glUniform1i(locations[FOG], 1);
+		}else{
+			glUniform1i(locations[FOG], 0);
+		}
+		
 			//Ground
 			ms.push();
 				ms.mult(V);
@@ -513,6 +515,36 @@ int main(int argc, char** argv){
 									
 								}
 							}else if(currentCam == TRACK_BALL){ /////////////////////////////TRACKBALL
+
+			ms.mult(V);
+
+			glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));
+
+			uint32_t vao_idx = 0;
+			//For each level
+			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
+				//For each leaf
+				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
+					double d = computeDistanceLeafCamera(leafArrays[lvl][idx], V);
+					double crt_lvlTD = thresholdDistance*(lvl+1);
+					double nxt_lvlTD = 0;
+					/* special case of uppest level */
+					if(lvl == nbLevel-1){
+						nxt_lvlTD = 1000;
+					}else{
+						nxt_lvlTD = crt_lvlTD+thresholdDistance;
+					}
+					
+					//display the leaf of this level if it is in the distance fork
+					if(crt_lvlTD <= d && d < nxt_lvlTD){
+						display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+					}
+					
+					//special case of lvl 0
+					if(lvl == 0 && d < thresholdDistance){
+						if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
+							/* FRUSTUM CULLING */
+							if(ffCam.leavesFrustum(leafArrays[0][idx])){
 								/* LOADING */
 								if(!loadedLeaf[idx]){
 									loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
@@ -521,132 +553,240 @@ int main(int argc, char** argv){
 								/* DISPLAYING */
 								for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 									if(idx == n->idxLeaf){
+										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 										if(displayDebug){
-											if(ffCam.leavesFrustum(leafArrays[0][idx])){
-												/* real triangles */
-												display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
-											}
 											/* leaf cube */
 											glUniform1i(locations[CHOICE], DEBUG_BOX);
 											display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
+											
 											/* Computed triangles */
 											glUniform1i(locations[CHOICE], DEBUG_TRI);
 											display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
 										}else{
-											/* real triangles */
-											display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 											if(displayVegetation){
 												display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
 											}
-										}								
-										break;
+										}
 									}
 								}
-							} //END camera
-						}
-
-						//DISPLAY OF THE COEFFICIENTS
-						if(displayNormal) glUniform1i(locations[CHOICE], NORMAL);
-						else if(displayDrain) glUniform1i(locations[CHOICE], DRAIN);
-						else if(displayBending) glUniform1i(locations[CHOICE], BENDING);
-						else if(displayGradient) glUniform1i(locations[CHOICE], GRADIENT);
-						else if(displaySurface) glUniform1i(locations[CHOICE], SURFACE);
-						
-						//set the vao idx
-						++vao_idx;
+								
+							}
+						}else if(currentCam == TRACK_BALL){ /////////////////////////////TRACKBALL
+							/* LOADING */
+							if(!loadedLeaf[idx]){
+								loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
+								std::sort(memory.begin(), memory.end(), memory.front());
+							}
+							/* DISPLAYING */
+							for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+								if(idx == n->idxLeaf){
+									if(displayDebug){
+										if(ffCam.leavesFrustum(leafArrays[0][idx])){
+											/* real triangles */
+											display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										}
+										/* leaf cube */
+										glUniform1i(locations[CHOICE], DEBUG_BOX);
+										display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
+										/* Computed triangles */
+										glUniform1i(locations[CHOICE], DEBUG_TRI);
+										display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+									}else{
+										/* real triangles */
+										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										if(displayVegetation){
+											display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
+										}
+									}								
+									break;
+								}
+							}
+						} //END camera
 					}
-				}
-			ms.pop();
 
-			//Skybox
-			glUniform1i(locations[MODE], SKYBOX);
-			ms.push();
-				if(currentCam == FREE_FLY){
-					ms.mult(ffCam.getViewMatrix());
-					ms.translate(ffCam.getCameraPosition());
-					ms.scale(glm::vec3(2.f, 2.f, 2.f));
-				}else if(currentCam == TRACK_BALL){
-					ms.mult(tbCam.getViewMatrix());
-					ms.scale(glm::vec3(100.f, 100.f, 100.f));
+					//DISPLAY OF THE COEFFICIENTS
+					if(displayNormal) glUniform1i(locations[CHOICE], NORMAL);
+					else if(displayDrain) glUniform1i(locations[CHOICE], DRAIN);
+					else if(displayBending) glUniform1i(locations[CHOICE], BENDING);
+					else if(displayGradient) glUniform1i(locations[CHOICE], GRADIENT);
+					else if(displaySurface) glUniform1i(locations[CHOICE], SURFACE);
+					
+					//set the vao idx
+					++vao_idx;
 				}
-				glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-				BindTexture(texture_sky, GL_TEXTURE7);
-				BindTexture(texture_night, GL_TEXTURE6);
-					glBindVertexArray(cubeVAO);
-						glDrawArrays(GL_TRIANGLES, 0, 36);
-					glBindVertexArray(0);
-				BindTexture(0, GL_TEXTURE6);
-				BindTexture(0, GL_TEXTURE7); // ----------------------------------------------------- CHECK : was 5, why ??
-			ms.pop();
-		} //end if(!ihm)
+			}
+		ms.pop();
+
+		//Skybox
+		glUniform1i(locations[MODE], SKYBOX);
+		ms.push();
+			if(currentCam == FREE_FLY){
+				ms.mult(ffCam.getViewMatrix());
+				ms.translate(ffCam.getCameraPosition());
+				ms.scale(glm::vec3(2.f, 2.f, 2.f));
+			}else if(currentCam == TRACK_BALL){
+				ms.mult(tbCam.getViewMatrix());
+				ms.scale(glm::vec3(100.f, 100.f, 100.f));
+			}
+			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
+			BindTexture(texture_sky, GL_TEXTURE7);
+			BindTexture(texture_night, GL_TEXTURE6);
+				glBindVertexArray(cubeVAO);
+					glDrawArrays(GL_TRIANGLES, 0, 36);
+				glBindVertexArray(0);
+			BindTexture(0, GL_TEXTURE6);
+			BindTexture(0, GL_TEXTURE7);
+		ms.pop();
 
 		if(ihm){
 			/* ------ IHM imgui ------ */
-			//~ glClearColor(0.8f, 0.8f, 0.8f, 1.f);
-			
-			//~ glViewport(WINDOW_WIDTH - 200, 0, 200, WINDOW_HEIGHT);
-			
+			glActiveTexture(GL_TEXTURE0);
 			glEnable(GL_BLEND);
-				if(alpha){
-					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // ***** probleme ICI *****
-				}else{
-					glBlendFunc(GL_ONE, GL_ONE); // ***** probleme ICI *****
-				}
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glDisable(GL_DEPTH_TEST);
 			
 			SDL_GetMouseState(&mousex, &mousey);
-			
 			mousey = WINDOW_HEIGHT - mousey;
-			
 			imguiBeginFrame(mousex, mousey, is_lClicPressed, 0);
 			
-			imguiBeginScrollArea("Scroll area 1", 10, 10, WINDOW_WIDTH / 5, WINDOW_HEIGHT - 20, &scrollarea1);
+			/* Time UI */
+			imguiBeginScrollArea("Time", 10, WINDOW_HEIGHT - (timeUIHeight+10), WINDOW_WIDTH / 4, timeUIHeight, &timeUIscrollArea);
 			imguiSeparatorLine();
 			imguiSeparator();
-
-			imguiButton("Button");
-			imguiButton("Disabled button", false);
-			imguiItem("Item");
-			imguiItem("Disabled item", false);
-			toggle = imguiCheck("Checkbox", checked1);
-			if (toggle)
-				checked1 = !checked1;
-			toggle = imguiCheck("Disabled checkbox", checked2, false);
-			if (toggle)
-				checked2 = !checked2;
-			toggle = imguiCollapse("Collapse", "subtext", checked3);
-			if (checked3)
-			{
-				imguiIndent();
-				imguiLabel("Collapsible element");
-				imguiUnindent();
+			
+			imguiLabel("Time Scroller");
+			
+			float timeMod = bigTime / 4.;
+			imguiSlider("time progression", &timeMod, 0.f, 100.f, 0.1f);
+			bigTime = timeMod * 4.;
+			
+			imguiSeparator();
+			if(imguiButton("Time Pause (Spacebar)")){
+				timePause = timePauseTrigger(timePause, &coefLightStep, &timeStep);
 			}
-			if (toggle)
-				checked3 = !checked3;
-			toggle = imguiCollapse("Disabled collapse", "subtext", checked4, false);
-			if (toggle)
-				checked4 = !checked4;
-			imguiLabel("Label");
-			imguiValue("Value");
-			imguiSlider("Slider", &value1, 0.f, 100.f, 1.f);
-			imguiSlider("Disabled slider", &value2, 0.f, 100.f, 1.f, false);
-			imguiIndent();
-			imguiLabel("Indented");
-			imguiUnindent();
-			imguiLabel("Unindented");
-
+			
 			imguiEndScrollArea();
-
-			imguiBeginScrollArea("Scroll area 2", 20 + WINDOW_WIDTH / 5, 500, WINDOW_WIDTH / 5, WINDOW_HEIGHT - 510, &scrollarea2);
+			/* end Time UI */
+			
+			/* Details UI */
+			imguiBeginScrollArea("Details", 10, WINDOW_HEIGHT - (timeUIHeight+10 + detailsUIHeight+10), WINDOW_WIDTH / 4, detailsUIHeight, &detailsUIscrollArea);
 			imguiSeparatorLine();
 			imguiSeparator();
-			for (int i = 0; i < 100; ++i)
-				imguiLabel("A wall of text");
-				
+			
+			toggle = imguiCheck("Vegetation & details (v)", displayVegetation);
+			if (toggle)	displayVegetation = !displayVegetation;
+			
+			toggle = imguiCheck("Fog (g)", displayFog);
+			if (toggle)	displayFog = !displayFog;
+			
+			imguiSeparator();
+			imguiLabel("Level of details distance");
+			imguiSlider("threshold", &thresholdDistance, 0.f, 10.f, 0.001f);
+			
 			imguiEndScrollArea();
+			/* end Details UI */
+			
+			/* Cam UI */
+			imguiBeginScrollArea("Camera", 10, WINDOW_HEIGHT - (timeUIHeight+10 + detailsUIHeight+10 + camUIHeight+10), WINDOW_WIDTH / 4, camUIHeight, &camUIscrollArea);
+			imguiSeparatorLine();
+			imguiSeparator();
+			
+			float modCamSpeed = camSpeed * 100;
+			imguiLabel("Camera speed (Mouse wheel)");
+			imguiSlider("speed", &modCamSpeed, 0.001f, 10.f, 0.01f);
+			camSpeed = modCamSpeed / 100.;
+			
+			imguiSeparator();
+			imguiLabel("Camera type");
+			if(imguiItem("TrackBall")) currentCam = TRACK_BALL;
+			if(imguiItem("FreeFly")) currentCam = FREE_FLY;
+			
+			imguiEndScrollArea();
+			/* end Cam UI */
+			
+			/* View UI */
+			imguiBeginScrollArea("View", WINDOW_WIDTH - (10 + WINDOW_WIDTH / 4), WINDOW_HEIGHT - (viewUIHeight+10), WINDOW_WIDTH / 4, viewUIHeight, &viewUIscrollArea);
+			imguiSeparator();
+			imguiSeparatorLine();
+			
+			imguiLabel("Data view type");
+			if(imguiItem("Normal view")){
+				displayNormal = true;
+				displayDrain = false;
+				displayBending = false;
+				displaySurface = false;
+				displayGradient = false;
+			}
+			
+			if(imguiItem("Bend view", bendItem)){
+				displayNormal = false;
+				displayDrain = false;
+				displayBending = true;
+				displaySurface = false;
+				displayGradient = false;	
+			}
+			
+			if(imguiItem("Drain view", drainItem)){
+				displayNormal = false;
+				displayDrain = true;
+				displayBending = false;
+				displaySurface = false;
+				displayGradient = false;
+			}
+			
+			if(imguiItem("Gradient view", gradientItem)){
+				displayNormal = false;
+				displayDrain = false;
+				displayBending = false;
+				displaySurface = false;
+				displayGradient = true;
+			}
+			
+			if(imguiItem("Surface view", surfaceItem)){
+				displayNormal = false;
+				displayDrain = false;
+				displayBending = false;
+				displaySurface = true;
+				displayGradient = false;
+			}
+			
+			imguiSeparator();
+			toggle = imguiCheck("Debug Mode (f)", displayDebug);
+			if(toggle){
+				if(displayDebug){
+					glUseProgram(terrainProgram);
+					sendUniforms(locations, maxCoeffArray, thresholdDistance);
+					displayDebug = false;
+				}else{
+					glUseProgram(debugProgram);
+					sendUniforms(locations, maxCoeffArray, thresholdDistance);
+					displayDebug = true;
+				}
+			}
+			
+			imguiEndScrollArea();
+			/* end View UI */
+			
+			/* INFO */
+			imguiBeginScrollArea("Press i to close UI", (WINDOW_WIDTH-130) / 2, WINDOW_HEIGHT - 45, 130, 35, &closeScrollArea);
+			imguiEndScrollArea();
+			/* end INFO */
+			
+			/* close UI */
+			imguiBeginScrollArea("Quit program ?", WINDOW_WIDTH - (110 + 10), 10, 110, 60, &closeScrollArea);
+			if(imguiButton("Quit")){
+				done = true;
+			}
+			
+			imguiEndScrollArea();
+			/* end close UI */
+			
 			imguiEndFrame();
 			
 			imguiRenderGLDraw(WINDOW_WIDTH, WINDOW_HEIGHT);
+			
+			glDisable(GL_BLEND);
+			glEnable(GL_DEPTH_TEST);
 		} // end if(ihm)
 		
 		// Mise à jour de l'affichage
@@ -717,12 +857,10 @@ int main(int argc, char** argv){
 							//change shaders
 							if(displayDebug){
 								glUseProgram(terrainProgram);
-								getLocations(locations, terrainProgram);
 								sendUniforms(locations, maxCoeffArray, thresholdDistance);
 								displayDebug = false;
 							}else{
 								glUseProgram(debugProgram);
-								getLocations(locations, debugProgram);
 								sendUniforms(locations, maxCoeffArray, thresholdDistance);
 								displayDebug = true;
 							}
@@ -813,32 +951,15 @@ int main(int argc, char** argv){
 							break;
 							
 						case SDLK_i:
-							if(ihm){
-								ihm = !ihm;
-								sendUniforms(locations, maxCoeffArray, thresholdDistance);
-								//~ imguiRenderGLDestroy();
-							}else{
-								ihm = !ihm;
-							}
+							ihm = !ihm;
 							break;
-							
-						case SDLK_a:
-							alpha = !alpha;
 						
 						case SDLK_v:
-							if(displayVegetation){
-								displayVegetation=false;
-							}else{
-								displayVegetation=true;							
-							}
+							displayVegetation = !displayVegetation;
 							break;
 						
 						case SDLK_g:
-							if(displayFog){
-								displayFog = false;
-							}else{
-								displayFog = true;
-							}
+							displayFog = !displayFog;
 							break;
 						
 						default:
@@ -873,18 +994,7 @@ int main(int argc, char** argv){
 							break;
 							
 						case SDLK_SPACE:
-							if(!timePause){
-								coefLightStep = 0.;
-								tempDayStep = dayStep;
-								dayStep = 0.;
-								timeStep = 0.;
-								timePause = true;
-							}else{
-								timeStep = 1./720.;
-								dayStep = tempDayStep;
-								coefLightStep = 0.00218166156f;
-								timePause = false;
-							}
+							timePause = timePauseTrigger(timePause, &coefLightStep, &timeStep);
 							break;
 
 						default:
@@ -956,20 +1066,22 @@ int main(int argc, char** argv){
 					break;
 				
 				case SDL_MOUSEMOTION:
-					if(currentCam == TRACK_BALL){
-						if(is_lClicPressed){
-							tbC_tmpAngleX = 0.25*((int)e.motion.x - (int)tbC_savedClicX);
-							tbC_tmpAngleY = 0.25*((int)e.motion.y - (int)tbC_savedClicY);
-							tbCam.rotateLeft(tbC_angleX + tbC_tmpAngleX);
-							tbCam.rotateUp(tbC_angleY + tbC_tmpAngleY);
+					if(!ihm){
+						if(currentCam == TRACK_BALL){
+							if(is_lClicPressed){
+								tbC_tmpAngleX = 0.25*((int)e.motion.x - (int)tbC_savedClicX);
+								tbC_tmpAngleY = 0.25*((int)e.motion.y - (int)tbC_savedClicY);
+								tbCam.rotateLeft(tbC_angleX + tbC_tmpAngleX);
+								tbCam.rotateUp(tbC_angleY + tbC_tmpAngleY);
+							}
+						}else if(currentCam == FREE_FLY){
+							new_positionX = e.motion.x;
+							new_positionY = e.motion.y;
+							ffC_angleY = 0.6f*(WINDOW_HEIGHT/2. - e.motion.y);
+							if(ffC_angleY >= 90) ffC_angleY = 90;
+							if(ffC_angleY <= -90) ffC_angleY = -90;
+							ffCam.rotateUp(ffC_angleY);
 						}
-					}else if(currentCam == FREE_FLY){
-						new_positionX = e.motion.x;
-						new_positionY = e.motion.y;
-						ffC_angleY = 0.6f*(WINDOW_HEIGHT/2. - e.motion.y);
-						if(ffC_angleY >= 90) ffC_angleY = 90;
-						if(ffC_angleY <= -90) ffC_angleY = -90;
-	          ffCam.rotateUp(ffC_angleY);
 					}
 					break;
 				
@@ -979,24 +1091,25 @@ int main(int argc, char** argv){
 		}
 		
 		//IDLE
-		if(is_lKeyPressed){ ffCam.moveLeft(camSpeed); }
-		if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
-		if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
-		if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
-
-		if(currentCam == FREE_FLY){
-			if(new_positionX >= WINDOW_WIDTH-1){
-				SDL_WarpMouse(0, new_positionY);
-				old_positionX = 0-(old_positionX - new_positionX);
-				new_positionX = 0;
-			}else if(new_positionX <= 0){
-				SDL_WarpMouse(WINDOW_WIDTH, new_positionY);
-				old_positionX = WINDOW_WIDTH+(old_positionX - new_positionX);
-				new_positionX = WINDOW_WIDTH;
-			}
-			ffCam.rotateLeft((old_positionX - new_positionX)*0.6);
-		}
+		if(!ihm){
+			if(is_lKeyPressed){ ffCam.moveLeft(camSpeed); }
+			if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
+			if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
+			if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
 		
+			if(currentCam == FREE_FLY){
+				if(new_positionX >= WINDOW_WIDTH-1){
+					SDL_WarpMouse(0, new_positionY);
+					old_positionX = 0-(old_positionX - new_positionX);
+					new_positionX = 0;
+				}else if(new_positionX <= 0){
+					SDL_WarpMouse(WINDOW_WIDTH, new_positionY);
+					old_positionX = WINDOW_WIDTH+(old_positionX - new_positionX);
+					new_positionX = WINDOW_WIDTH;
+				}
+				ffCam.rotateLeft((old_positionX - new_positionX)*0.6);
+			}
+		}
 		//Manage the sun
 		coefLight -= coefLightStep;
 		lightSun.x = glm::cos(coefLight);
@@ -1009,13 +1122,16 @@ int main(int argc, char** argv){
 		
 		if(coefLight < -4.71238898){ coefLight = 1.57079633; }
 		
-		time += timeStep;
-		day += dayStep;
-		night -= dayStep;
+		//~ time += timeStep;
+		bigTime += timeStep;
+		//~ day += dayStep;
+		//~ night -= dayStep;
 		
-		if(time > 1){time = -time;}
-		if(day > 1){dayStep = -dayStep;}
-		if(day < -1){dayStep = -dayStep;}
+		//~ if(time > 100){time = -time; dayFlag = -dayFlag;}
+		if(bigTime > 400){bigTime = 0.;}
+		//~ if(bigTime == 200){dayFlag = -dayFlag;}
+		//~ if(day > 100){dayStep = -dayStep;}
+		//~ if(day < -100){dayStep = -dayStep;}
 		
 		//~ std::cout << "time : " << time << std::endl;
 		//~ std::cout << "day : " << 0.5 - fabs(day) << std::endl;

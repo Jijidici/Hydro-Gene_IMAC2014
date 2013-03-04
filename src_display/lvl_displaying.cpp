@@ -201,3 +201,20 @@ bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, F
 	
 	return true;
 }
+
+/***** Time management *****/
+bool timePauseTrigger(bool timePause, float* coefLightStep, float* timeStep){
+	if(!timePause){
+		*coefLightStep = 0.;
+		//~ tempDayStep = dayStep;
+		//~ dayStep = 0.;
+		*timeStep = 0.;
+		timePause = true;
+	}else{
+		*timeStep = 100./720.;
+		//~ dayStep = tempDayStep;
+		*coefLightStep = 0.00218166156f;
+		timePause = false;
+	}
+	return timePause;
+}

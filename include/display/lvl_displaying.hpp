@@ -61,4 +61,9 @@ void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uin
 
 bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, FreeFlyCamera& ffCam);
 
+
+/******** Time management *********/
+bool timePauseTrigger(bool timePause, float* coefLightStep, float* timeStep);
+
+
 #endif
