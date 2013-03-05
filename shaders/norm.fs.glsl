@@ -207,7 +207,7 @@ void main() {
 					float sCoeff = pow(max(0,dot(pc,R)),sh);
 					vec3 sColor = vec3(1.f, 1.f, 0.9f);
 
-					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon + sColor*sCoeff*(1-abs(uTime)));
+					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon + sColor*sCoeff*coefDay);
 					fFragColor = vec4(color, 1.f);
 
 				} else {
