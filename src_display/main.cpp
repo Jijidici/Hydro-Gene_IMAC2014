@@ -48,6 +48,7 @@ static const size_t WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
 
 static const size_t GRID_3D_SIZE = 2;
+static const size_t TERRAIN_SCALE_PARAM = 150000;
 
 int main(int argc, char** argv){
 
@@ -70,7 +71,6 @@ int main(int argc, char** argv){
 		//5 : gradient
 		//6 : surface
 		//7 : nbLevel
-	
 	test_cache = drn_read_chunk(&cache, 0, arguments);
 
 	uint16_t nbSub_lvl1 = arguments[0];
@@ -83,6 +83,13 @@ int main(int argc, char** argv){
 	
 	/* Getting the maximum hydro properties coefficients */
 	float * maxCoeffArray = new float[7];
+		//0 : max bending
+		//1 : max drain
+		//2 : max gradient
+		//3 : max surface
+		//4 : max altitude
+		//5 : min altitude
+		//6 : total nb faces
 	test_cache = drn_read_chunk(&cache, 1, maxCoeffArray);
 	
 	/* Getting the nb leaves chunk (last chunk) */
@@ -113,6 +120,10 @@ int main(int argc, char** argv){
 	for(uint16_t idx=0;idx<nbLeaves[0];++idx){
 		loadedLeaf[idx] = false;
 	}
+	
+	/* Setting the terrain scale */
+	float terrainScale = maxCoeffArray[6]/TERRAIN_SCALE_PARAM;
+	std::cout<<"//-> Terrain Scale : "<<terrainScale<<std::endl;
 		
 	/* ************************************************************* */
 	/* *************INITIALISATION OPENGL/SDL*********************** */

@@ -283,8 +283,7 @@ int main(int argc, char** argv) {
 		if(tabV[n].pos.z > terrainMaxZ){ terrainMaxZ = tabV[n].pos.z; }
 	}
 	
-	std::cout << "TEST :" << 150000. / nbFace << std::endl;
-	maxCoeffArray[6] = 150000. / nbFace; // vegetSizeCoef
+	maxCoeffArray[6] = nbFace; // nbFaces for terrain scaling
 
 	//FACES
 	Face * tabF = new Face[nbFace];
