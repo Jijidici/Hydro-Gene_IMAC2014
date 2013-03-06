@@ -15,7 +15,7 @@ size_t loadInMemory(std::vector<Chunk>& memory, bool* loadedLeaf, Leaf l, double
 	/* check if we can load the leaf - enough size in the memory */
 	uint32_t lengthVoxelArray = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
 	uint32_t leafBytesSize = lengthVoxelArray*VOXELDATA_BYTES_SIZE + l.nbVertices_lvl2*3*sizeof(double);
-	std::cout<<"//-> LeafBytesSize : "<<leafBytesSize<<std::endl;
+	//~ std::cout<<"//-> LeafBytesSize : "<<leafBytesSize<<std::endl;
 	while(leafBytesSize > freeMemory && memory.size()>0){
 		freeMemory += freeInMemory(memory, loadedLeaf);
 	}
@@ -79,7 +79,7 @@ size_t loadInMemory(std::vector<Chunk>& memory, bool* loadedLeaf, Leaf l, double
 	newChunk.byteSize = leafBytesSize;
 	memory.push_back(newChunk);
 	
-	std::cout<<"//-> Leaf "<<l.id<<" loaded."<<std::endl;
+	//~ std::cout<<"//-> Leaf "<<l.id<<" loaded."<<std::endl;
 	loadedLeaf[l.id] = true;
 	freeMemory -= leafBytesSize;
 	return freeMemory;
@@ -94,7 +94,7 @@ size_t freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
 	glDeleteBuffers(1, &(lastElt.vbo));
 	glDeleteVertexArrays(1, &(lastElt.vao));
 	loadedLeaf[lastElt.idxLeaf] = false;
-	std::cout<<"//-> Leaf "<<lastElt.idxLeaf<<" freed."<<std::endl;
+	//~ std::cout<<"//-> Leaf "<<lastElt.idxLeaf<<" freed."<<std::endl;
 	memory.pop_back();
 	
 	return lastElt.byteSize;
