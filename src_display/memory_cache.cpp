@@ -11,8 +11,6 @@
 
 size_t loadInMemory(std::vector<Chunk>& memory, bool* loadedLeaf, Leaf l, double distance, uint16_t nbSub_lvl2, size_t freeMemory){
 	drn_t cache;
-	uint32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
-	if(test_cache <0){ throw std::runtime_error("unable to open data file"); }
 	
 	/* check if we can load the leaf - enough size in the memory */
 	uint32_t lengthVoxelArray = nbSub_lvl2*nbSub_lvl2*nbSub_lvl2;
@@ -23,23 +21,30 @@ size_t loadInMemory(std::vector<Chunk>& memory, bool* loadedLeaf, Leaf l, double
 	}
 	
 	/* load the voxel data */
+	uint32_t test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_NOLOAD);
+	if(test_cache <0){ throw std::runtime_error("unable to open data file"); }
+	
 	VoxelData* voxArray = NULL;
 	voxArray = new VoxelData[lengthVoxelArray];
 	test_cache = drn_read_chunk(&cache, 2*l.id + CONFIGCHUNK_OFFSET, voxArray);
 	if(test_cache <0){ throw std::runtime_error("unable to read data file"); }
 	
+	test_cache = drn_close(&cache);
+	if(test_cache <0){ throw std::runtime_error("unable to close data file"); }
+	
 	/* load the mesh */
-	Vertex* vertices = new Vertex[l.nbVertices_lvl2];
-	test_cache = drn_read_chunk(&cache, 2*l.id+1 + CONFIGCHUNK_OFFSET, vertices);
-	if(test_cache <0){ throw std::runtime_error("unable to read data file"); }
+	test_cache = drn_open(&cache, "./voxels_data/voxel_intersec_1.data", DRN_READ_MMAP);
+	if(test_cache <0){ throw std::runtime_error("unable to open data file in MMAP mode"); }
+	
+	const void* pMesh = drn_get_chunk(&cache, 2*l.id + 1 + CONFIGCHUNK_OFFSET);
+	if(NULL == pMesh){ throw std::runtime_error("unable to get a chunk pointer"); }
 	
 	GLuint meshVBO = 0;
 	glGenBuffers(1, &meshVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, meshVBO);
-		glBufferData(GL_ARRAY_BUFFER, l.nbVertices_lvl2*sizeof(Vertex), vertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, l.nbVertices_lvl2*sizeof(Vertex), pMesh, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
-	delete[] vertices;
 	test_cache = drn_close(&cache);
 	if(test_cache <0){ throw std::runtime_error("unable to close data file"); }
 	
