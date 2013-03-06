@@ -59,7 +59,6 @@ void getLocations(GLint* locations, GLuint program){
 	locations[MAXALTITUDE] = glGetUniformLocation(program, "uMaxAltitude");
 	
 	/* Vegetation */
-	locations[VEGETSIZE] = glGetUniformLocation(program, "uVegetSizeCoef");
 	locations[DISTANCE] = glGetUniformLocation(program, "uDistance");
 }
 
@@ -87,7 +86,6 @@ void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistanc
 	glUniform1i(locations[PINETREETEX], 3);
 	glUniform1i(locations[SNOWTREETEX], 4);
 	
-	glUniform1f(locations[VEGETSIZE], maxCoeffArray[6]);
 	glUniform1i(locations[DISTANCE], thresholdDistance);
 }
 

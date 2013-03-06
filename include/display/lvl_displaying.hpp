@@ -12,7 +12,7 @@
 using namespace hydrogene;
 
 /* ENUM */
-static const size_t NB_LOCATIONS = 30;
+static const size_t NB_LOCATIONS = 29;
 
 enum Locations{
 	MVP,
@@ -43,7 +43,6 @@ enum Locations{
 	MAXGRADIENT,
 	MAXSURFACE,
 	MAXALTITUDE,
-	VEGETSIZE,
 	DISTANCE	
 };
 
