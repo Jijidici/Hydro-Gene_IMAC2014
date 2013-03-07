@@ -293,7 +293,7 @@ int main(int argc, char** argv){
 	ms.set(P);
 	
 	//distance for changing of LOD
-	float thresholdDistance = 0.5f;
+	float thresholdDistance = 5.f;
 	
 	// Creation Light
 	float coefLight = 0.;
@@ -489,7 +489,12 @@ int main(int argc, char** argv){
 			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
 				//For each leaf
 				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
-					double d = computeDistanceLeafCamera(leafArrays[lvl][idx], V, terrainScale);
+					double d = 0;
+					if(currentCam == FREE_FLY){
+						d = computeDistanceLeafCamera(leafArrays[lvl][idx], ffCam.getCameraPosition(), terrainScale);
+					}else{
+						d = computeDistanceLeafCamera(leafArrays[lvl][idx], tbCam.getCameraPosition(), terrainScale);
+					}
 					double crt_lvlTD = thresholdDistance*(lvl+1);
 					double nxt_lvlTD = 0;
 					/* special case of uppest level */

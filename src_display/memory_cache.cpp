@@ -101,24 +101,41 @@ size_t freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
 	return lastElt.byteSize;
 }
 
-double computeDistanceLeafCamera(Leaf l, glm::mat4& view, float terrainScale){
-	float invertScale = 1.f/terrainScale;
-	glm::mat4 unscaleView = glm::scale(view, glm::vec3(invertScale));
-
-	glm::vec4 l_vertices[8];
-	l_vertices[0] = glm::vec4(l.pos.x, l.pos.y, l.pos.z, 1.f);
-	l_vertices[1] = glm::vec4(l.pos.x+l.size, l.pos.y, l.pos.z, 1.f);
-	l_vertices[2] = glm::vec4(l.pos.x, l.pos.y, l.pos.z+l.size, 1.f);
-	l_vertices[3] = glm::vec4(l.pos.x+l.size, l.pos.y, l.pos.z+l.size, 1.f);
-	l_vertices[4] = glm::vec4(l.pos.x, l.pos.y+l.size, l.pos.z, 1.f);
-	l_vertices[5] = glm::vec4(l.pos.x+l.size, l.pos.y+l.size, l.pos.z, 1.f);
-	l_vertices[6] = glm::vec4(l.pos.x, l.pos.y+l.size, l.pos.z+l.size, 1.f);
-	l_vertices[7] = glm::vec4(l.pos.x+l.size, l.pos.y+l.size, l.pos.z+l.size, 1.f);
+double computeDistanceLeafCamera(Leaf& l, glm::vec3 camPosition, float terrainScale){
+	float scaledHalfLeafSize = (l.size*terrainScale)*0.5f;
 	
-	double distance = glm::length(unscaleView*l_vertices[0]);
-	for(uint16_t idx=1;idx<8;++idx){
-		double tmp_distance = glm::length(unscaleView*l_vertices[idx]);
-		if(tmp_distance<distance){ distance = tmp_distance; }
-	}	
-	return distance-1;
+	/* get the relative position of the camera in comparison of leaf center */
+	glm::vec3 rel_camPosition = camPosition - glm::vec3(l.pos.x*terrainScale, l.pos.y*terrainScale, l.pos.z*terrainScale);
+	
+	/* Declare closest point on leaf cube */
+	glm::vec3 closestPoint(0.f,0.f,0.f);
+	
+	/* Get the closest x coordinate*/
+	if(rel_camPosition.x < -scaledHalfLeafSize){
+		closestPoint.x = -scaledHalfLeafSize;
+	}else if(rel_camPosition.x > scaledHalfLeafSize){
+		closestPoint.x = scaledHalfLeafSize;	
+	}else{
+		closestPoint.x = rel_camPosition.x;	
+	}
+	
+	/* Get the closest y coordinate*/
+	if(rel_camPosition.y < -scaledHalfLeafSize){
+		closestPoint.y = -scaledHalfLeafSize;
+	}else if(rel_camPosition.y > scaledHalfLeafSize){
+		closestPoint.y = scaledHalfLeafSize;	
+	}else{
+		closestPoint.y = rel_camPosition.y;	
+	}
+	
+	/* Get the closest z coordinate*/
+	if(rel_camPosition.z < -scaledHalfLeafSize){
+		closestPoint.z = -scaledHalfLeafSize;
+	}else if(rel_camPosition.z > scaledHalfLeafSize){
+		closestPoint.z = scaledHalfLeafSize;	
+	}else{
+		closestPoint.z = rel_camPosition.z;	
+	}
+	
+	return glm::distance(closestPoint, rel_camPosition);
 }  
