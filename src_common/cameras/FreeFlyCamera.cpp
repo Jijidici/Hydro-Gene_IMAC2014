@@ -41,9 +41,9 @@ namespace hydrogene{
 	}
 
 	void FreeFlyCamera::computeDirectionVectors(){
-		m_FrontVector = glm::vec3(glm::cos(m_fTheta)*glm::sin(m_fPhi), glm::sin(m_fTheta), glm::cos(m_fTheta)*glm::cos(m_fPhi));
-		m_LeftVector = glm::vec3(glm::sin(m_fPhi+(PI/2)), 0.f, glm::cos(m_fPhi+(PI/2)));
-		m_UpVector = glm::cross(m_FrontVector, m_LeftVector);
+		m_FrontVector = glm::normalize(glm::vec3(glm::cos(m_fTheta)*glm::sin(m_fPhi), glm::sin(m_fTheta), glm::cos(m_fTheta)*glm::cos(m_fPhi)));
+		m_LeftVector = glm::normalize(glm::vec3(glm::sin(m_fPhi+(PI/2)), 0.f, glm::cos(m_fPhi+(PI/2))));
+		m_UpVector = glm::normalize(glm::cross(m_FrontVector, m_LeftVector));
 	}
 	
 	void FreeFlyCamera::computeFrustumPlanes(){
@@ -96,20 +96,22 @@ namespace hydrogene{
 		return glm::lookAt(m_Position, m_Position + m_FrontVector, m_UpVector);
 	}
 	
-	bool FreeFlyCamera::leavesFrustum(Leaf& l){
-		if(glm::dot(m_frustumNearPlaneNormal, (m_frustumNearPlanePoint - glm::vec3(l.pos.x, l.pos.y, l.pos.z))) < 0.){
+	bool FreeFlyCamera::leavesFrustum(Leaf& l, float terrainScale){
+		glm::vec3 scaledLeafPos = glm::vec3(l.pos.x * terrainScale, l.pos.y * terrainScale, l.pos.z * terrainScale);
+	
+		if(glm::dot(m_frustumNearPlaneNormal, m_frustumNearPlanePoint - scaledLeafPos) < 0.){
 			return false;
 		}
-		if(glm::dot(m_frustumRightPlaneNormal, (glm::vec3(l.pos.x, l.pos.y, l.pos.z) - m_frustumRightPlanePoint)) < 0.){
+		if(glm::dot(m_frustumRightPlaneNormal, scaledLeafPos - m_frustumRightPlanePoint) < 0.){
 			return false;
 		}
-		if(glm::dot(m_frustumLeftPlaneNormal, (glm::vec3(l.pos.x, l.pos.y, l.pos.z) - m_frustumLeftPlanePoint)) < 0.){
+		if(glm::dot(m_frustumLeftPlaneNormal, scaledLeafPos - m_frustumLeftPlanePoint) < 0.){
 			return false;
 		}
-		if(glm::dot(m_frustumTopPlaneNormal, (glm::vec3(l.pos.x, l.pos.y, l.pos.z) - m_frustumTopPlanePoint)) < 0.){
+		if(glm::dot(m_frustumTopPlaneNormal, scaledLeafPos - m_frustumTopPlanePoint) < 0.){
 			return false;
 		}
-		if(glm::dot(m_frustumBottomPlaneNormal, (glm::vec3(l.pos.x, l.pos.y, l.pos.z) - m_frustumBottomPlanePoint)) < 0.){
+		if(glm::dot(m_frustumBottomPlaneNormal, scaledLeafPos - m_frustumBottomPlanePoint) < 0.){
 			return false;
 		}
 		

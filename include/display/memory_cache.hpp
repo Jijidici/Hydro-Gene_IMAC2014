@@ -19,6 +19,6 @@ size_t loadInMemory(std::vector<Chunk>& memory, bool* loadedLeaf, Leaf l, double
 
 size_t freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf);
 
-double computeDistanceLeafCamera(Leaf l, glm::mat4& view);
+double computeDistanceLeafCamera(Leaf l, glm::mat4& view, float terrainScale);
 
 #endif

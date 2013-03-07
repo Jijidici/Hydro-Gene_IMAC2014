@@ -313,7 +313,7 @@ int main(int argc, char** argv){
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
-	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4], 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize);
+	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4], 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
 	
 	/* Uniform Locations */
 	GLint* locations = new GLint[NB_LOCATIONS];
@@ -489,7 +489,7 @@ int main(int argc, char** argv){
 			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
 				//For each leaf
 				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
-					double d = computeDistanceLeafCamera(leafArrays[lvl][idx], V);
+					double d = computeDistanceLeafCamera(leafArrays[lvl][idx], V, terrainScale);
 					double crt_lvlTD = thresholdDistance*(lvl+1);
 					double nxt_lvlTD = 0;
 					/* special case of uppest level */
@@ -508,7 +508,7 @@ int main(int argc, char** argv){
 					if(lvl == 0 && d < thresholdDistance){
 						if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
 							/* FRUSTUM CULLING */
-							if(ffCam.leavesFrustum(leafArrays[0][idx])){
+							if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
 								/* LOADING */
 								if(!loadedLeaf[idx]){
 									loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
@@ -544,7 +544,7 @@ int main(int argc, char** argv){
 							for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 								if(idx == n->idxLeaf){
 									if(displayDebug){
-										if(ffCam.leavesFrustum(leafArrays[0][idx])){
+										if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
 											/* real triangles */
 											display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 										}

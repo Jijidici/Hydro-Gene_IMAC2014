@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdexcept>
 #include <GL/glew.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include "drn/drn_reader.h"
 #include "data_types.hpp"
 #include "geom_types.hpp"
@@ -100,7 +101,10 @@ size_t freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
 	return lastElt.byteSize;
 }
 
-double computeDistanceLeafCamera(Leaf l, glm::mat4& view){
+double computeDistanceLeafCamera(Leaf l, glm::mat4& view, float terrainScale){
+	float invertScale = 1.f/terrainScale;
+	glm::mat4 unscaleView = glm::scale(view, glm::vec3(invertScale));
+
 	glm::vec4 l_vertices[8];
 	l_vertices[0] = glm::vec4(l.pos.x, l.pos.y, l.pos.z, 1.f);
 	l_vertices[1] = glm::vec4(l.pos.x+l.size, l.pos.y, l.pos.z, 1.f);
@@ -111,9 +115,9 @@ double computeDistanceLeafCamera(Leaf l, glm::mat4& view){
 	l_vertices[6] = glm::vec4(l.pos.x, l.pos.y+l.size, l.pos.z+l.size, 1.f);
 	l_vertices[7] = glm::vec4(l.pos.x+l.size, l.pos.y+l.size, l.pos.z+l.size, 1.f);
 	
-	double distance = glm::length(view*l_vertices[0]);
+	double distance = glm::length(unscaleView*l_vertices[0]);
 	for(uint16_t idx=1;idx<8;++idx){
-		double tmp_distance = glm::length(view*l_vertices[idx]);
+		double tmp_distance = glm::length(unscaleView*l_vertices[idx]);
 		if(tmp_distance<distance){ distance = tmp_distance; }
 	}	
 	return distance-1;
