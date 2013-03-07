@@ -329,8 +329,6 @@ int main(int argc, char** argv){
 	
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
-	//~ //glEnable(GL_CULL_FACE); /* not so cool */
-	//~ //glCullFace(GL_FRONT);
 	glDepthFunc(GL_LEQUAL);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.f);
 	
@@ -511,6 +509,10 @@ int main(int argc, char** argv){
 					
 					//special case of lvl 0
 					if(lvl == 0 && d < thresholdDistance){
+						//Enable BackFace Culling
+						glEnable(GL_CULL_FACE);
+						glCullFace(GL_FRONT);
+					
 						if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
 							/* FRUSTUM CULLING */
 							if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
@@ -570,6 +572,7 @@ int main(int argc, char** argv){
 								}
 							}
 						} //END camera
+						glDisable(GL_CULL_FACE);
 					}
 
 					//DISPLAY OF THE COEFFICIENTS
