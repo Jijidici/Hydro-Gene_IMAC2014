@@ -1025,7 +1025,15 @@ int main(int argc, char** argv){
 							if(currentCam == TRACK_BALL){
 								is_lClicPressed = false;
 								tbC_angleX += tbC_tmpAngleX;
-								tbC_angleY += tbC_tmpAngleY;
+								/* constrain trackball camera */
+								float sum_angleY = tbC_angleY + tbC_tmpAngleY;
+								if(sum_angleY >= 5 && sum_angleY <= 175){
+									tbC_angleY = sum_angleY;
+								}else if(sum_angleY < 5){
+									tbC_angleY = 5;
+								}else{
+									tbC_angleY = 175;
+								}
 							}
 							
 							break;
