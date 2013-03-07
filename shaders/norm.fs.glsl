@@ -16,6 +16,7 @@
 in vec3 gPos;
 in vec3 gNormal;
 in vec2 gTexCoords;
+in vec2 gCloudsTexCoords;
 in float gBending;
 in float gDrain;
 in float gGradient;
@@ -69,7 +70,7 @@ void main() {
 		float coefWater = 0.f;
 		vec3 color;
 		/* clouds shadowmap */
-		vec2 shadowCloudTexcoord = gTexCoords;
+		vec2 shadowCloudTexcoord = gCloudsTexCoords;
 		shadowCloudTexcoord.x += uTime;
 		float cloudsColor = texture(uCloudsShadows, shadowCloudTexcoord).r;		
 		

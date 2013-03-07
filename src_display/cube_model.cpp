@@ -3,6 +3,8 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <stdint.h>
 
 #include <glm/glm.hpp>
@@ -152,7 +154,7 @@ GLuint CreateTexture(const char* path){
 		std::cout << "Unable to load the image : " << path << std::endl;
 		exit(EXIT_FAILURE);
 	}
-
+	
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -177,10 +179,19 @@ GLuint CreateTexture(const char* path){
 		GL_UNSIGNED_BYTE,
 		image->pixels
 	);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+	
+	//~ glTexStorage2D(GL_TEXTURE_2D, 3, GL_RGBA8, image->w, image->h);
+	//~ glTexSubImage2D(GL_TEXTURE_2D, 0,0,0, image->w, image->h, GL_BGRA, GL_UNSIGNED_BYTE, image->pixels);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	//~ glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//~ glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
 	glBindTexture(GL_TEXTURE_2D, 0);
 	SDL_FreeSurface(image);
 
