@@ -122,7 +122,7 @@ int main(int argc, char** argv){
 	}
 	
 	/* Setting the terrain scale */
-	float terrainScale = maxCoeffArray[6]/TERRAIN_SCALE_PARAM;
+	float terrainScale = 5*(maxCoeffArray[6]/TERRAIN_SCALE_PARAM);
 	std::cout<<"//-> Terrain Scale : "<<terrainScale<<std::endl;
 		
 	/* ************************************************************* */
@@ -293,7 +293,7 @@ int main(int argc, char** argv){
 	ms.set(P);
 	
 	//distance for changing of LOD
-	float thresholdDistance = 0.5f;
+	float thresholdDistance = 5.f;
 	
 	// Creation Light
 	float coefLight = 0.;
@@ -313,7 +313,7 @@ int main(int argc, char** argv){
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
-	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4], 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize);
+	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4], 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
 	
 	/* Uniform Locations */
 	GLint* locations = new GLint[NB_LOCATIONS];
@@ -478,61 +478,67 @@ int main(int argc, char** argv){
 			BindTexture(0, GL_TEXTURE1);
 		ms.pop();
 			
-			//Terrain
-			ms.push();
-				ms.mult(V);
+		//Terrain
+		ms.push();
+			ms.mult(V);
+			/* terrain scaling */
+			ms.scale(glm::vec3(terrainScale));
 
-				uint32_t vao_idx = 0;
-				//For each level
-				for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
-					//For each leaf
-					for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
-						double d = computeDistanceLeafCamera(leafArrays[lvl][idx], V);
-						double crt_lvlTD = thresholdDistance*(lvl+1);
-						double nxt_lvlTD = 0;
-						/* special case of uppest level */
-						if(lvl == nbLevel-1){
-							nxt_lvlTD = 1000;
-						}else{
-							nxt_lvlTD = crt_lvlTD+thresholdDistance;
-						}
-						
-						//display the leaf of this level if it is in the distance fork
-						if(crt_lvlTD <= d && d < nxt_lvlTD){
-							display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-						}
-						
-						//special case of lvl 0
-						if(lvl == 0 && d < thresholdDistance){
-							if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
-								/* FRUSTUM CULLING */
-								if(ffCam.leavesFrustum(leafArrays[0][idx])){
-									/* LOADING */
-									if(!loadedLeaf[idx]){
-										loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
-										std::sort(memory.begin(), memory.end(), memory.front());
-									}
-									/* DISPLAYING */
-									for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
-										if(idx == n->idxLeaf){
-											display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
-											if(displayDebug){
-												/* leaf cube */
-												glUniform1i(locations[CHOICE], DEBUG_BOX);
-												display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
-												
-												/* Computed triangles */
-												glUniform1i(locations[CHOICE], DEBUG_TRI);
-												display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-											}else{
-												if(displayVegetation){
-													display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
-												}
+			uint32_t vao_idx = 0;
+			//For each level
+			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
+				//For each leaf
+				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
+					double d = 0;
+					if(currentCam == FREE_FLY){
+						d = computeDistanceLeafCamera(leafArrays[lvl][idx], ffCam.getCameraPosition(), terrainScale);
+					}else{
+						d = computeDistanceLeafCamera(leafArrays[lvl][idx], tbCam.getCameraPosition(), terrainScale);
+					}
+					double crt_lvlTD = thresholdDistance*(lvl+1);
+					double nxt_lvlTD = 0;
+					/* special case of uppest level */
+					if(lvl == nbLevel-1){
+						nxt_lvlTD = 1000;
+					}else{
+						nxt_lvlTD = crt_lvlTD+thresholdDistance;
+					}
+					
+					//display the leaf of this level if it is in the distance fork
+					if(crt_lvlTD <= d && d < nxt_lvlTD){
+						display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+					}
+					
+					//special case of lvl 0
+					if(lvl == 0 && d < thresholdDistance){
+						if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
+							/* FRUSTUM CULLING */
+							if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
+								/* LOADING */
+								if(!loadedLeaf[idx]){
+									loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
+									std::sort(memory.begin(), memory.end(), memory.front());
+								}
+								/* DISPLAYING */
+								for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+									if(idx == n->idxLeaf){
+										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+										if(displayDebug){
+											/* leaf cube */
+											glUniform1i(locations[CHOICE], DEBUG_BOX);
+											display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
+											
+											/* Computed triangles */
+											glUniform1i(locations[CHOICE], DEBUG_TRI);
+											display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+										}else{
+											if(displayVegetation){
+												display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
 											}
 										}
 									}
-									
 								}
+							}
 						}else if(currentCam == TRACK_BALL){ /////////////////////////////TRACKBALL
 							/* LOADING */
 							if(!loadedLeaf[idx]){
@@ -543,7 +549,7 @@ int main(int argc, char** argv){
 							for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 								if(idx == n->idxLeaf){
 									if(displayDebug){
-										if(ffCam.leavesFrustum(leafArrays[0][idx])){
+										if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
 											/* real triangles */
 											display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 										}

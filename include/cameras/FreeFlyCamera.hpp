@@ -45,7 +45,7 @@ class FreeFlyCamera{
 		void moveFront(float const t);
 		void rotateLeft(float degree);
 		void rotateUp(float degree);
-		bool leavesFrustum(Leaf& l);
+		bool leavesFrustum(Leaf& l, float terrainScale);
 		glm::mat4 getViewMatrix() const;
 		glm::vec3 getCameraPosition();
 		void setCameraPosition(glm::vec3 position, float leftOffset);

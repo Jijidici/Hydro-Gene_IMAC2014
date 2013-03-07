@@ -220,7 +220,7 @@ void main() {
 			
 			/* Simulate fog */
 			if(uFog == 1){
-				float fogDensity = 0.5;
+				float fogDensity = 0.05f;
 				const float log2 = 1.442695;
 				float fogZ = (gl_FragCoord.z+1.)/gl_FragCoord.w;
 				float fogCoef = exp2(-fogDensity * fogDensity * fogZ * fogZ * log2);
