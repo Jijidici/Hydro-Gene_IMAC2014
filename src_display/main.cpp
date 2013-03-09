@@ -48,7 +48,7 @@ static const size_t WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
 
 static const size_t GRID_3D_SIZE = 2;
-static const size_t TERRAIN_SCALE_PARAM = 150000;
+static const size_t TERRAIN_SCALE_PARAM = 50000;
 
 int main(int argc, char** argv){
 
@@ -434,7 +434,6 @@ int main(int argc, char** argv){
 		}
 		day = (100. - fabsf(time))*dayFlag;
 		night = -day;
-
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -478,7 +477,23 @@ int main(int argc, char** argv){
 				glBindVertexArray(0);
 			BindTexture(0, GL_TEXTURE1);
 		ms.pop();
-			
+		
+		//Memory test
+		//~ if(memory.size() > 0){
+		//~ ms.push();
+			//~ ms.mult(V);
+			//~ ms.translate(glm::vec3(memory[0].pos.x+halfLeafSize, 2.1f, memory[0].pos.z+halfLeafSize));
+			//~ ms.scale(glm::vec3(leafSize));
+			//~ glUniform1i(locations[CHOICE], NORMAL);
+			//~ glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
+			//~ BindTexture(texture_terrain[0], GL_TEXTURE0);
+				//~ glBindVertexArray(groundVAO);
+					//~ glDrawArrays(GL_TRIANGLES, 0, 6);
+				//~ glBindVertexArray(0);
+			//~ BindTexture(0, GL_TEXTURE0);
+		//~ ms.pop();
+		//~ }
+		
 		//Terrain
 		ms.push();
 			ms.mult(V);
@@ -490,12 +505,13 @@ int main(int argc, char** argv){
 			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
 				//For each leaf
 				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
-					double d = 0;
+					double d = 0.;
 					if(currentCam == FREE_FLY){
 						d = computeDistanceLeafCamera(leafArrays[lvl][idx], ffCam.getCameraPosition(), terrainScale);
 					}else{
 						d = computeDistanceLeafCamera(leafArrays[lvl][idx], tbCam.getCameraPosition(), terrainScale);
 					}
+					
 					double crt_lvlTD = thresholdDistance*(lvl+1);
 					double nxt_lvlTD = 0;
 					/* special case of uppest level */
@@ -610,8 +626,8 @@ int main(int argc, char** argv){
 				glBindVertexArray(0);
 			BindTexture(0, GL_TEXTURE6);
 			BindTexture(0, GL_TEXTURE7);
-		ms.pop();
-
+		ms.pop();		
+		
 		if(ihm){
 			/* ------ IHM imgui ------ */
 			glActiveTexture(GL_TEXTURE0);
@@ -1079,22 +1095,6 @@ int main(int argc, char** argv){
 			if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
 			if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
 			
-			/* set the ffcam height */
-			glm::vec3 camPos = ffCam.getCameraPosition();
-			float unscaleCamPosX = camPos.x/terrainScale;
-			float unscaleCamPosZ = camPos.z/terrainScale;
-			
-			int32_t voxX = (unscaleCamPosX+1.f)*0.5f*total_nbSub;
-			int32_t voxZ = (unscaleCamPosZ+1.f)*0.5f*total_nbSub;
-			if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub){
-				std::cout<<"OUT!"<<std::endl;
-				camPos.y = maxCoeffArray[5] + halfVoxelSize;
-			}else{
-				std::cout<<"in..."<<std::endl;
-				camPos.y = 1.f;
-			}
-			ffCam.setCameraPosition(camPos, 0.f);
-			
 			if(currentCam == FREE_FLY){
 				if(new_positionX >= WINDOW_WIDTH-1){
 					SDL_WarpMouse(0, new_positionY);
@@ -1108,6 +1108,30 @@ int main(int argc, char** argv){
 				ffCam.rotateLeft((old_positionX - new_positionX)*0.6);
 			}
 		}
+		
+		/* set the ffcam height */
+		if(currentCam == FREE_FLY){
+			glm::vec3 camPos = ffCam.getCameraPosition();
+			float unscaleCamPosX = camPos.x/terrainScale;
+			float unscaleCamPosZ = camPos.z/terrainScale;
+			
+			int32_t voxX = (unscaleCamPosX+1.f)*0.5f*total_nbSub;
+			int32_t voxZ = (unscaleCamPosZ+1.f)*0.5f*total_nbSub;
+			if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub){
+				camPos.y = maxCoeffArray[5] + halfVoxelSize;
+			}else{
+				/* get the top current voxel height */
+				for(uint32_t i=0;i<memory.size();++i){
+					if(memory[i].d < 2){
+						std::cout<<memory[i].d<<std::endl;
+					}
+				}
+				camPos.y = 2.f;
+				std::cout<<"/////////////////////////"<<std::endl;
+			}
+			ffCam.setCameraPosition(camPos, 0.f);
+		}
+			
 		//Manage the sun
 		coefLight -= coefLightStep;
 		lightSun.x = glm::cos(coefLight);
@@ -1152,6 +1176,19 @@ int main(int argc, char** argv){
 			if(timelapsPosOffset >= 1.){
 				rotationAnim = false;
 			}
+		}
+		
+		/* Refresh memory position */
+		for(uint32_t i=0;i<memory.size();++i){
+			Leaf tmpLeaf;
+			tmpLeaf.pos = memory[i].pos;
+			tmpLeaf.size = leafSize;
+			if(currentCam == FREE_FLY){
+				memory[i].d = computeDistanceLeafCamera(tmpLeaf, ffCam.getCameraPosition(), terrainScale);
+			}else if(currentCam == TRACK_BALL){
+				memory[i].d = computeDistanceLeafCamera(tmpLeaf, tbCam.getCameraPosition(), terrainScale);
+			}
+			std::sort(memory.begin(), memory.end(), memory.front());
 		}
 		
 		// Gestion compteur
