@@ -75,6 +75,7 @@ int main(int argc, char** argv){
 
 	uint16_t nbSub_lvl1 = arguments[0];
 	uint16_t nbSub_lvl2 = arguments[1];
+	uint16_t total_nbSub = nbSub_lvl1*nbSub_lvl2;
 	uint16_t nbLevel = arguments[7];
 	
 	std::cout<<"//-> Nb Subdivision lvl 1 : "<<nbSub_lvl1<<std::endl;
@@ -152,6 +153,8 @@ int main(int argc, char** argv){
 	/* Differents cube size */
 	double leafSize = GRID_3D_SIZE/(double)nbSub_lvl1;
 	double halfLeafSize = leafSize*0.5;
+	double voxelSize = leafSize/(double) nbSub_lvl2;
+	double halfVoxelSize = voxelSize*0.5;
 	
 	/* ******************************** */
 	/* 		Creation des VBO, VAO 		*/
@@ -1075,7 +1078,23 @@ int main(int argc, char** argv){
 			if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
 			if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
 			if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
-		
+			
+			/* set the ffcam height */
+			glm::vec3 camPos = ffCam.getCameraPosition();
+			float unscaleCamPosX = camPos.x/terrainScale;
+			float unscaleCamPosZ = camPos.z/terrainScale;
+			
+			int32_t voxX = (unscaleCamPosX+1.f)*0.5f*total_nbSub;
+			int32_t voxZ = (unscaleCamPosZ+1.f)*0.5f*total_nbSub;
+			if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub){
+				std::cout<<"OUT!"<<std::endl;
+				camPos.y = maxCoeffArray[5] + halfVoxelSize;
+			}else{
+				std::cout<<"in..."<<std::endl;
+				camPos.y = 1.f;
+			}
+			ffCam.setCameraPosition(camPos, 0.f);
+			
 			if(currentCam == FREE_FLY){
 				if(new_positionX >= WINDOW_WIDTH-1){
 					SDL_WarpMouse(0, new_positionY);
