@@ -536,7 +536,6 @@ int main(int argc, char** argv){
 								/* LOADING */
 								if(!loadedLeaf[idx]){
 									loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
-									std::sort(memory.begin(), memory.end(), memory.front());
 								}
 								/* DISPLAYING */
 								for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
@@ -562,7 +561,6 @@ int main(int argc, char** argv){
 							/* LOADING */
 							if(!loadedLeaf[idx]){
 								loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
-								std::sort(memory.begin(), memory.end(), memory.front());
 							}
 							/* DISPLAYING */
 							for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
@@ -1086,7 +1084,16 @@ int main(int argc, char** argv){
 			}
 		}
 		
-		//IDLE		
+		//IDLE	
+		/* Refresh memory with camera position */
+		for(uint32_t i=0;i<memory.size();++i){
+			Leaf tmpLeaf;
+			tmpLeaf.pos = memory[i].pos;
+			tmpLeaf.size = leafSize;
+			memory[i].d = computeDistanceLeafCamera(tmpLeaf, camPosition, terrainScale);
+			std::sort(memory.begin(), memory.end(), memory.front());
+		}
+			
 		/* set the ffcam height */
 		if(currentCam == FREE_FLY){
 			float unscaleCamPosX = camPosition.x/terrainScale;
@@ -1098,25 +1105,19 @@ int main(int argc, char** argv){
 				camPosition.y = maxCoeffArray[5] + halfVoxelSize;
 			}else{
 				/* get the top current voxel height */
-				//~ for(uint32_t i=0;i<memory.size();++i){
-					//~ if(memory[i].d < 2){
-						//~ std::cout<<memory[i].d<<std::endl;
-					//~ }
-				//~ }
-				//~ camPosition.y = 2.f;
-				//~ std::cout<<"/////////////////////////"<<std::endl;
+				voxX = voxX%nbSub_lvl2;
+				voxZ = voxZ%nbSub_lvl2;
+				uint32_t voxY = nbSub_lvl2;
+				for(int32_t j=nbSub_lvl2-1;j>=0;--j){
+					if(memory[0].voxels[voxX + j*nbSub_lvl2 + voxZ*nbSub_lvl2*nbSub_lvl2].nbFaces != 0){
+						break;
+					}
+					voxY = j;
+				}
+				camPosition.y = (voxY*voxelSize+memory[0].pos.y+leafSize)*terrainScale;
 			}
 			ffCam.setCameraPosition(camPosition, 0.f);
-		}
-		
-		/* Refresh memory with camera position */
-		for(uint32_t i=0;i<memory.size();++i){
-			Leaf tmpLeaf;
-			tmpLeaf.pos = memory[i].pos;
-			tmpLeaf.size = leafSize;
-			memory[i].d = computeDistanceLeafCamera(tmpLeaf, camPosition, terrainScale);
-			std::sort(memory.begin(), memory.end(), memory.front());
-		}
+		}		
 		
 		/* Move Camera */
 		if(!ihm){

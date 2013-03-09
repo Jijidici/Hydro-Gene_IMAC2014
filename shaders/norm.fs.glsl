@@ -203,7 +203,7 @@ void main() {
 					mat4 uNormalMatrix = transpose(inverse(uViewMatrix));
 					vec4 N = normalize(uNormalMatrix * newNormal);
 					vec4 R = reflect(D,N);
-					int sh = 1;
+					int sh = 25;
 					float sCoeff = pow(max(0,dot(pc,R)),sh);
 					vec3 sColor = vec3(1.f, 1.f, 0.9f);
 
