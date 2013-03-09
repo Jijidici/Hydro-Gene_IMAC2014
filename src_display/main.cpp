@@ -48,7 +48,7 @@ static const size_t WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
 static const size_t BYTES_PER_PIXEL = 32;
 
 static const size_t GRID_3D_SIZE = 2;
-static const size_t TERRAIN_SCALE_PARAM = 50000;
+static const size_t TERRAIN_SCALE_PARAM = 150000;
 
 int main(int argc, char** argv){
 
@@ -457,10 +457,13 @@ int main(int argc, char** argv){
 
 		// Choose the camera
 		glm::mat4 V;
+		glm::vec3 camPosition;
 		if(currentCam == TRACK_BALL){
 			V = tbCam.getViewMatrix();
+			camPosition = tbCam.getCameraPosition();
 		}else if(currentCam == FREE_FLY){
 			V = ffCam.getViewMatrix();
+			camPosition = ffCam.getCameraPosition();
 		}
 		glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));			
 
@@ -505,12 +508,7 @@ int main(int argc, char** argv){
 			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
 				//For each leaf
 				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
-					double d = 0.;
-					if(currentCam == FREE_FLY){
-						d = computeDistanceLeafCamera(leafArrays[lvl][idx], ffCam.getCameraPosition(), terrainScale);
-					}else{
-						d = computeDistanceLeafCamera(leafArrays[lvl][idx], tbCam.getCameraPosition(), terrainScale);
-					}
+					double d = computeDistanceLeafCamera(leafArrays[lvl][idx], camPosition, terrainScale);
 					
 					double crt_lvlTD = thresholdDistance*(lvl+1);
 					double nxt_lvlTD = 0;
@@ -1088,7 +1086,39 @@ int main(int argc, char** argv){
 			}
 		}
 		
-		//IDLE
+		//IDLE		
+		/* set the ffcam height */
+		if(currentCam == FREE_FLY){
+			float unscaleCamPosX = camPosition.x/terrainScale;
+			float unscaleCamPosZ = camPosition.z/terrainScale;
+			
+			int32_t voxX = (unscaleCamPosX+1.f)*0.5f*total_nbSub;
+			int32_t voxZ = (unscaleCamPosZ+1.f)*0.5f*total_nbSub;
+			if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub){
+				camPosition.y = maxCoeffArray[5] + halfVoxelSize;
+			}else{
+				/* get the top current voxel height */
+				//~ for(uint32_t i=0;i<memory.size();++i){
+					//~ if(memory[i].d < 2){
+						//~ std::cout<<memory[i].d<<std::endl;
+					//~ }
+				//~ }
+				//~ camPosition.y = 2.f;
+				//~ std::cout<<"/////////////////////////"<<std::endl;
+			}
+			ffCam.setCameraPosition(camPosition, 0.f);
+		}
+		
+		/* Refresh memory with camera position */
+		for(uint32_t i=0;i<memory.size();++i){
+			Leaf tmpLeaf;
+			tmpLeaf.pos = memory[i].pos;
+			tmpLeaf.size = leafSize;
+			memory[i].d = computeDistanceLeafCamera(tmpLeaf, camPosition, terrainScale);
+			std::sort(memory.begin(), memory.end(), memory.front());
+		}
+		
+		/* Move Camera */
 		if(!ihm){
 			if(is_lKeyPressed){ ffCam.moveLeft(camSpeed); }
 			if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
@@ -1107,29 +1137,6 @@ int main(int argc, char** argv){
 				}
 				ffCam.rotateLeft((old_positionX - new_positionX)*0.6);
 			}
-		}
-		
-		/* set the ffcam height */
-		if(currentCam == FREE_FLY){
-			glm::vec3 camPos = ffCam.getCameraPosition();
-			float unscaleCamPosX = camPos.x/terrainScale;
-			float unscaleCamPosZ = camPos.z/terrainScale;
-			
-			int32_t voxX = (unscaleCamPosX+1.f)*0.5f*total_nbSub;
-			int32_t voxZ = (unscaleCamPosZ+1.f)*0.5f*total_nbSub;
-			if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub){
-				camPos.y = maxCoeffArray[5] + halfVoxelSize;
-			}else{
-				/* get the top current voxel height */
-				for(uint32_t i=0;i<memory.size();++i){
-					if(memory[i].d < 2){
-						std::cout<<memory[i].d<<std::endl;
-					}
-				}
-				camPos.y = 2.f;
-				std::cout<<"/////////////////////////"<<std::endl;
-			}
-			ffCam.setCameraPosition(camPos, 0.f);
 		}
 			
 		//Manage the sun
@@ -1176,19 +1183,6 @@ int main(int argc, char** argv){
 			if(timelapsPosOffset >= 1.){
 				rotationAnim = false;
 			}
-		}
-		
-		/* Refresh memory position */
-		for(uint32_t i=0;i<memory.size();++i){
-			Leaf tmpLeaf;
-			tmpLeaf.pos = memory[i].pos;
-			tmpLeaf.size = leafSize;
-			if(currentCam == FREE_FLY){
-				memory[i].d = computeDistanceLeafCamera(tmpLeaf, ffCam.getCameraPosition(), terrainScale);
-			}else if(currentCam == TRACK_BALL){
-				memory[i].d = computeDistanceLeafCamera(tmpLeaf, tbCam.getCameraPosition(), terrainScale);
-			}
-			std::sort(memory.begin(), memory.end(), memory.front());
 		}
 		
 		// Gestion compteur
