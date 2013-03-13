@@ -316,7 +316,7 @@ int main(int argc, char** argv){
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
-	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4], 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
+	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, terrainScale, 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
 	
 	/* Uniform Locations */
 	GLint* locations = new GLint[NB_LOCATIONS];
@@ -1078,37 +1078,13 @@ int main(int argc, char** argv){
 			
 		/* set the ffcam height */
 		if(currentCam == FREE_FLY){
-			float unscaleCamPosX = camPosition.x/terrainScale;
-			float unscaleCamPosZ = camPosition.z/terrainScale;
-			
-			int32_t voxX = (unscaleCamPosX+1.f)*0.5f*total_nbSub;
-			int32_t voxZ = (unscaleCamPosZ+1.f)*0.5f*total_nbSub;
-			if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub){
-				camPosition.y = maxCoeffArray[5] + halfVoxelSize;
-			}else{
-				/* get the top current voxel height */
-				voxX = voxX%nbSub_lvl2;
-				voxZ = voxZ%nbSub_lvl2;
-				uint32_t voxY = nbSub_lvl2;
-				for(int32_t j=nbSub_lvl2-1;j>=0;--j){
-					if(memory[0].voxels[voxX + j*nbSub_lvl2 + voxZ*nbSub_lvl2*nbSub_lvl2].nbFaces != 0){
-						break;
-					}
-					voxY = j;
-				}
-				camPosition.y = (voxY*voxelSize+memory[0].pos.y+leafSize)*terrainScale;
-			}
-			ffCam.setCameraPosition(camPosition, 0.f);
-		}		
-		
-		/* Move Camera */
-		if(!ihm){
-			if(is_lKeyPressed){ ffCam.moveLeft(camSpeed); }
-			if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
-			if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
-			if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
-			
-			if(currentCam == FREE_FLY){
+			/* Move Camera */
+			if(!ihm){
+				if(is_lKeyPressed){ ffCam.moveLeft(camSpeed); }
+				if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
+				if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
+				if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
+				
 				if(new_positionX >= WINDOW_WIDTH-1){
 					SDL_WarpMouse(0, new_positionY);
 					old_positionX = 0-(old_positionX - new_positionX);
@@ -1120,7 +1096,36 @@ int main(int argc, char** argv){
 				}
 				ffCam.rotateLeft((old_positionX - new_positionX)*0.6);
 			}
-		}
+			
+			camPosition = ffCam.getCameraPosition();
+			float xtremAltitude;
+			float unscaleCamPosX = camPosition.x/terrainScale;
+			float unscaleCamPosZ = camPosition.z/terrainScale;
+			
+			int32_t voxX = (unscaleCamPosX+1.f)*0.5f*total_nbSub;
+			int32_t voxZ = (unscaleCamPosZ+1.f)*0.5f*total_nbSub;
+			
+			if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub){
+				xtremAltitude = maxCoeffArray[5] + halfVoxelSize;
+			}else{
+				/* get the top current voxel height */
+				voxX = voxX%nbSub_lvl2;
+				voxZ = voxZ%nbSub_lvl2;
+				uint32_t voxY = nbSub_lvl2;
+				for(int32_t j=nbSub_lvl2-1;j>=0;--j){
+					if(memory[0].voxels[voxX + j*nbSub_lvl2 + voxZ*nbSub_lvl2*nbSub_lvl2].nbFaces != 0){
+						break;
+					}
+					voxY = j;
+				}
+				xtremAltitude = (voxY*voxelSize+memory[0].pos.y+leafSize)*terrainScale;
+			}
+			
+			if(camPosition.y < xtremAltitude){
+				camPosition.y = xtremAltitude;
+			}
+			ffCam.setCameraPosition(camPosition, 0);
+		}	
 			
 		//Manage the sun
 		coefLight -= coefLightStep;

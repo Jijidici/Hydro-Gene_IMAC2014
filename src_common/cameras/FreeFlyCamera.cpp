@@ -70,12 +70,12 @@ namespace hydrogene{
 	}
 
 	void FreeFlyCamera::moveLeft(float const t){
-		m_Position += glm::vec3(t * m_LeftVector.x, 0, t * m_LeftVector.z);
+		m_Position += glm::vec3(t * m_LeftVector.x, t * m_LeftVector.y, t * m_LeftVector.z);
 		computeFrustumPlanes();
 	}
 
 	void FreeFlyCamera::moveFront(float const t){
-		m_Position += glm::vec3(t * m_FrontVector.x, 0, t * m_FrontVector.z);
+		m_Position += glm::vec3(t * m_FrontVector.x, t * m_FrontVector.y, t * m_FrontVector.z);
 		computeFrustumPlanes();
 	}
 
