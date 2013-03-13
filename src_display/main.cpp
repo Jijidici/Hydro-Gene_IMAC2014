@@ -481,22 +481,6 @@ int main(int argc, char** argv){
 			BindTexture(0, GL_TEXTURE1);
 		ms.pop();
 		
-		//Memory test
-		//~ if(memory.size() > 0){
-		//~ ms.push();
-			//~ ms.mult(V);
-			//~ ms.translate(glm::vec3(memory[0].pos.x+halfLeafSize, 2.1f, memory[0].pos.z+halfLeafSize));
-			//~ ms.scale(glm::vec3(leafSize));
-			//~ glUniform1i(locations[CHOICE], NORMAL);
-			//~ glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-			//~ BindTexture(texture_terrain[0], GL_TEXTURE0);
-				//~ glBindVertexArray(groundVAO);
-					//~ glDrawArrays(GL_TRIANGLES, 0, 6);
-				//~ glBindVertexArray(0);
-			//~ BindTexture(0, GL_TEXTURE0);
-		//~ ms.pop();
-		//~ }
-		
 		//Terrain
 		ms.push();
 			ms.mult(V);
@@ -540,6 +524,8 @@ int main(int argc, char** argv){
 								/* DISPLAYING */
 								for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 									if(idx == n->idxLeaf){
+										/* set the distance */
+										n->d = d;
 										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 										if(displayDebug){
 											/* leaf cube */
@@ -565,6 +551,8 @@ int main(int argc, char** argv){
 							/* DISPLAYING */
 							for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 								if(idx == n->idxLeaf){
+									/* set the distance */
+									n->d = d;
 									if(displayDebug){
 										if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
 											/* real triangles */
@@ -1085,14 +1073,8 @@ int main(int argc, char** argv){
 		}
 		
 		//IDLE	
-		/* Refresh memory with camera position */
-		for(uint32_t i=0;i<memory.size();++i){
-			Leaf tmpLeaf;
-			tmpLeaf.pos = memory[i].pos;
-			tmpLeaf.size = leafSize;
-			memory[i].d = computeDistanceLeafCamera(tmpLeaf, camPosition, terrainScale);
-			std::sort(memory.begin(), memory.end(), memory.front());
-		}
+		/* Sort the memory with camera position */
+		std::sort(memory.begin(), memory.end(), memory.front());
 			
 		/* set the ffcam height */
 		if(currentCam == FREE_FLY){
