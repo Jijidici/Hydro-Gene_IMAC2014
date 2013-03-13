@@ -12,7 +12,7 @@
 #define GRADIENT_LOCATION 5
 #define SURFACE_LOCATION 6
 
-static const size_t MAX_MEMORY_SIZE = 536870912;
+static const size_t MAX_MEMORY_SIZE = 1610612736;
 static const size_t CONFIGCHUNK_OFFSET = 2;
 
 size_t loadInMemory(std::vector<Chunk>& memory, bool* loadedLeaf, Leaf l, double distance, uint16_t nbSub_lvl2, size_t freeMemory);

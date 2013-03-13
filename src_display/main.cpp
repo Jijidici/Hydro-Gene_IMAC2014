@@ -316,7 +316,7 @@ int main(int argc, char** argv){
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
-	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, terrainScale, 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
+	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, 0.f, 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
 	
 	/* Uniform Locations */
 	GLint* locations = new GLint[NB_LOCATIONS];
@@ -1072,10 +1072,7 @@ int main(int argc, char** argv){
 			}
 		}
 		
-		//IDLE	
-		/* Sort the memory with camera position */
-		std::sort(memory.begin(), memory.end(), memory.front());
-			
+		//IDLE			
 		/* set the ffcam height */
 		if(currentCam == FREE_FLY){
 			/* Move Camera */
@@ -1126,7 +1123,10 @@ int main(int argc, char** argv){
 			}
 			ffCam.setCameraPosition(camPosition, 0);
 		}	
-			
+		
+		/* Sort the memory with camera position */
+		std::sort(memory.begin(), memory.end(), memory.front());
+		
 		//Manage the sun
 		coefLight -= coefLightStep;
 		lightSun.x = glm::cos(coefLight);
