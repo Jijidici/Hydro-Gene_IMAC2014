@@ -102,40 +102,44 @@ size_t freeInMemory(std::vector<Chunk>& memory, bool* loadedLeaf){
 }
 
 double computeDistanceLeafCamera(Leaf& l, glm::vec3 camPosition, float terrainScale){
-	float scaledHalfLeafSize = (l.size*terrainScale)*0.5f;
+	float scaledLeafSize = l.size*terrainScale;
 	
-	/* get the relative position of the camera in comparison of leaf center */
+	/* get the relative position of the camera in comparison of leaf origin */
 	glm::vec3 rel_camPosition = camPosition - glm::vec3(l.pos.x*terrainScale, l.pos.y*terrainScale, l.pos.z*terrainScale);
 	
 	/* Declare closest point on leaf cube */
 	glm::vec3 closestPoint(0.f,0.f,0.f);
 	
 	/* Get the closest x coordinate*/
-	if(rel_camPosition.x < -scaledHalfLeafSize){
-		closestPoint.x = -scaledHalfLeafSize;
-	}else if(rel_camPosition.x > scaledHalfLeafSize){
-		closestPoint.x = scaledHalfLeafSize;	
+	if(rel_camPosition.x < 0.f){
+		closestPoint.x = 0.f;
+	}else if(rel_camPosition.x > scaledLeafSize){
+		closestPoint.x = scaledLeafSize;	
 	}else{
 		closestPoint.x = rel_camPosition.x;	
 	}
 	
 	/* Get the closest y coordinate*/
-	if(rel_camPosition.y < -scaledHalfLeafSize){
-		closestPoint.y = -scaledHalfLeafSize;
-	}else if(rel_camPosition.y > scaledHalfLeafSize){
-		closestPoint.y = scaledHalfLeafSize;	
+	if(rel_camPosition.y < 0.f){
+		closestPoint.y = 0.f;
+	}else if(rel_camPosition.y > scaledLeafSize){
+		closestPoint.y = scaledLeafSize;	
 	}else{
 		closestPoint.y = rel_camPosition.y;	
 	}
 	
 	/* Get the closest z coordinate*/
-	if(rel_camPosition.z < -scaledHalfLeafSize){
-		closestPoint.z = -scaledHalfLeafSize;
-	}else if(rel_camPosition.z > scaledHalfLeafSize){
-		closestPoint.z = scaledHalfLeafSize;	
+	if(rel_camPosition.z < 0.f){
+		closestPoint.z = 0.f;
+	}else if(rel_camPosition.z > scaledLeafSize){
+		closestPoint.z = scaledLeafSize;	
 	}else{
 		closestPoint.z = rel_camPosition.z;	
 	}
 	
+	/* case where the camera is inside the cube */
+	if(closestPoint == rel_camPosition){
+		return 0;
+	}
 	return glm::distance(closestPoint, rel_camPosition);
 }  
