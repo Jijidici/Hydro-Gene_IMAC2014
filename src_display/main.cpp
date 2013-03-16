@@ -293,8 +293,12 @@ int main(int argc, char** argv){
 	float farDistance = 100.;
 	glm::mat4 P = glm::perspective(verticalFieldOfView, WINDOW_WIDTH / (float) WINDOW_HEIGHT, nearDistance, farDistance);
 	
+	/* Initialize the MVP matrix stack */
 	MatrixStack ms;
 	ms.set(P);
+	
+	/* Initialize the ModelView matrix stack */
+	MatrixStack mvStack;
 	
 	//distance for changing of LOD
 	float thresholdDistance = 5.f;
@@ -466,147 +470,160 @@ int main(int argc, char** argv){
 			V = ffCam.getViewMatrix();
 			camPosition = ffCam.getCameraPosition();
 		}
-		glUniformMatrix4fv(locations[MODELVIEW], 1, GL_FALSE, glm::value_ptr(V));			
+		mvStack.push();
+			mvStack.mult(V);
 
-		//Ground
-		ms.push();
-			ms.mult(V);
-			ms.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
-			ms.scale(glm::vec3(100.f, 100.f, 100.f));
+			//Ground
 			glUniform1i(locations[CHOICE], NORMAL);
-			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-			BindTexture(texture_terrain[1], GL_TEXTURE1);
-				glBindVertexArray(groundVAO);
-					glDrawArrays(GL_TRIANGLES, 0, 6);
-				glBindVertexArray(0);
-			BindTexture(0, GL_TEXTURE1);
-		ms.pop();
-		
-		//Terrain
-		ms.push();
-			ms.mult(V);
-			/* terrain scaling */
-			ms.scale(glm::vec3(terrainScale));
+			mvStack.push();
+				mvStack.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
+				mvStack.scale(glm::vec3(10*terrainScale));
+				/* Send the model view */
+				glUniformMatrix4fv(locations[MODELVIEW], 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+				ms.push();
+					ms.mult(mvStack.top());
+					glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
+					BindTexture(texture_terrain[1], GL_TEXTURE1);
+						glBindVertexArray(groundVAO);
+							glDrawArrays(GL_TRIANGLES, 0, 6);
+						glBindVertexArray(0);
+					BindTexture(0, GL_TEXTURE1);
+				ms.pop();
+			mvStack.pop();
+			
+			//Terrain
+			mvStack.push();
+				/* terrain scaling */
+				mvStack.scale(glm::vec3(terrainScale));
+				/* Send the model view */
+				glUniformMatrix4fv(locations[MODELVIEW], 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+				ms.push();
+					ms.mult(mvStack.top());
+					
 
-			uint32_t vao_idx = 0;
-			//For each level
-			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
-				//For each leaf
-				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
-					double d = computeDistanceLeafCamera(leafArrays[lvl][idx], camPosition, terrainScale);
-					
-					double crt_lvlTD = thresholdDistance*(lvl+1);
-					double nxt_lvlTD = 0;
-					/* special case of uppest level */
-					if(lvl == nbLevel-1){
-						nxt_lvlTD = 1000;
-					}else{
-						nxt_lvlTD = crt_lvlTD+thresholdDistance;
-					}
-					
-					//display the leaf of this level if it is in the distance fork
-					if(crt_lvlTD <= d && d < nxt_lvlTD){
-						display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-					}
-					
-					//special case of lvl 0
-					if(lvl == 0 && d < thresholdDistance){
-						//Enable BackFace Culling
-						glEnable(GL_CULL_FACE);
-						glCullFace(GL_FRONT);
-					
-						if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
-							/* FRUSTUM CULLING */
-							if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
-								/* LOADING */
-								if(!loadedLeaf[idx]){
-									loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
-								}
-								/* DISPLAYING */
-								for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
-									if(idx == n->idxLeaf){
-										/* set the distance */
-										n->d = d;
-										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
-										if(displayDebug){
-											/* leaf cube */
-											glUniform1i(locations[CHOICE], DEBUG_BOX);
-											display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
-											
-											/* Computed triangles */
-											glUniform1i(locations[CHOICE], DEBUG_TRI);
-											display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-										}else{
-											if(displayVegetation){
-												display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
+					uint32_t vao_idx = 0;
+					//For each level
+					for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
+						//For each leaf
+						for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
+							double d = computeDistanceLeafCamera(leafArrays[lvl][idx], camPosition, terrainScale);
+							
+							double crt_lvlTD = thresholdDistance*(lvl+1);
+							double nxt_lvlTD = 0;
+							/* special case of uppest level */
+							if(lvl == nbLevel-1){
+								nxt_lvlTD = 1000;
+							}else{
+								nxt_lvlTD = crt_lvlTD+thresholdDistance;
+							}
+							
+							//display the leaf of this level if it is in the distance fork
+							if(crt_lvlTD <= d && d < nxt_lvlTD){
+								display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+							}
+							
+							//special case of lvl 0
+							if(lvl == 0 && d < thresholdDistance){
+								//Enable BackFace Culling
+								glEnable(GL_CULL_FACE);
+								glCullFace(GL_FRONT);
+							
+								if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
+									/* FRUSTUM CULLING */
+									if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
+										/* LOADING */
+										if(!loadedLeaf[idx]){
+											loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
+										}
+										/* DISPLAYING */
+										for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+											if(idx == n->idxLeaf){
+												/* set the distance */
+												n->d = d;
+												display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+												if(displayDebug){
+													/* leaf cube */
+													glUniform1i(locations[CHOICE], DEBUG_BOX);
+													display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
+													
+													/* Computed triangles */
+													glUniform1i(locations[CHOICE], DEBUG_TRI);
+													display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+												}else{
+													if(displayVegetation){
+														display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
+													}
+												}
 											}
 										}
 									}
-								}
-							}
-						}else if(currentCam == TRACK_BALL){ /////////////////////////////TRACKBALL
-							/* LOADING */
-							if(!loadedLeaf[idx]){
-								loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
-							}
-							/* DISPLAYING */
-							for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
-								if(idx == n->idxLeaf){
-									/* set the distance */
-									n->d = d;
-									if(displayDebug){
-										if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
-											/* real triangles */
-											display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+								}else if(currentCam == TRACK_BALL){ /////////////////////////////TRACKBALL
+									/* LOADING */
+									if(!loadedLeaf[idx]){
+										loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
+									}
+									/* DISPLAYING */
+									for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
+										if(idx == n->idxLeaf){
+											/* set the distance */
+											n->d = d;
+											if(displayDebug){
+												if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
+													/* real triangles */
+													display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+												}
+												/* leaf cube */
+												glUniform1i(locations[CHOICE], DEBUG_BOX);
+												display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
+												/* Computed triangles */
+												glUniform1i(locations[CHOICE], DEBUG_TRI);
+												display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
+											}else{
+												/* real triangles */
+												display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
+												if(displayVegetation){
+													display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
+												}
+											}								
+											break;
 										}
-										/* leaf cube */
-										glUniform1i(locations[CHOICE], DEBUG_BOX);
-										display_lvl1(cubeVAO, ms, locations[MVP], n->pos, halfLeafSize);
-										/* Computed triangles */
-										glUniform1i(locations[CHOICE], DEBUG_TRI);
-										display_triangle(l_VAOs[vao_idx], ms, locations[MVP], leafArrays[lvl][idx].nbVertices_lvl1, texture_terrain);
-									}else{
-										/* real triangles */
-										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
-										if(displayVegetation){
-											display_vegetation(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2/3, locations[CHOICE], texture_veget);
-										}
-									}								
-									break;
-								}
+									}
+								} //END camera
+								glDisable(GL_CULL_FACE);
 							}
-						} //END camera
-						glDisable(GL_CULL_FACE);
+
+							//DISPLAY OF THE COEFFICIENTS
+							if(displayNormal) glUniform1i(locations[CHOICE], NORMAL);
+							else if(displayDrain) glUniform1i(locations[CHOICE], DRAIN);
+							else if(displayBending) glUniform1i(locations[CHOICE], BENDING);
+							else if(displayGradient) glUniform1i(locations[CHOICE], GRADIENT);
+							else if(displaySurface) glUniform1i(locations[CHOICE], SURFACE);
+							
+							//set the vao idx
+							++vao_idx;
+						}
 					}
+				ms.pop();
+			mvStack.pop();
 
-					//DISPLAY OF THE COEFFICIENTS
-					if(displayNormal) glUniform1i(locations[CHOICE], NORMAL);
-					else if(displayDrain) glUniform1i(locations[CHOICE], DRAIN);
-					else if(displayBending) glUniform1i(locations[CHOICE], BENDING);
-					else if(displayGradient) glUniform1i(locations[CHOICE], GRADIENT);
-					else if(displaySurface) glUniform1i(locations[CHOICE], SURFACE);
-					
-					//set the vao idx
-					++vao_idx;
+			//Skybox
+			glUniform1i(locations[MODE], SKYBOX);
+			mvStack.push();
+				if(currentCam == FREE_FLY){
+					mvStack.translate(ffCam.getCameraPosition());
+				}else if(currentCam == TRACK_BALL){
+					mvStack.scale(glm::vec3(10*terrainScale));
 				}
-			}
-		ms.pop();
-
-		//Skybox
-		glUniform1i(locations[MODE], SKYBOX);
-		ms.push();
-			if(currentCam == FREE_FLY){
-				ms.mult(V);
-				ms.translate(ffCam.getCameraPosition());
-			}else if(currentCam == TRACK_BALL){
-				ms.mult(V);
-				ms.scale(glm::vec3(10*terrainScale));
-			}
-			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-			glBindVertexArray(cubeVAO);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			glBindVertexArray(0);
-		ms.pop();		
+				ms.push();
+					ms.mult(mvStack.top());
+					glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
+					glBindVertexArray(cubeVAO);
+						glDrawArrays(GL_TRIANGLES, 0, 36);
+					glBindVertexArray(0);
+				ms.pop();
+			mvStack.pop();
+		
+		mvStack.pop();
 		
 		if(ihm){
 			/* ------ IHM imgui ------ */
