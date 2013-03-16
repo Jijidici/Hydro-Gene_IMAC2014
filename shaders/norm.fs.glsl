@@ -204,13 +204,15 @@ void main() {
 					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon + sColor*sCoeff*coefDay);*/					
 					vec4 P = normalize(uModelView*vec4(gPos, 1.f));
 					vec4 N = normalize(uModelView*vec4(gNormal, 0.f));
-					vec4 D = normalize(uModelView*vec4(uLightSunVect, 0.f));
+					vec4 sun_D = normalize(uModelView*vec4(uLightSunVect, 0.f));
+					vec4 moon_D = normalize(uModelView*vec4(uLightMoonVect, 0.f));
 					vec4 reflect = reflect(P, N);
-					vec3 dWater = texture(uSkyTex, reflect.xyz).rgb;
+					vec3 dWater = texture(uSkyTex, reflect.xyz).rgb * coefDay;
 					
-					float coefDiffusWater = max(dot(-D, N), 0.f);
+					float coefDiffusWaterSun = max(dot(-sun_D, N), 0.f);					
+					float coefDiffusWaterMoon = max(dot(-moon_D, N), 0.f);					
 					
-					color = vec3(1.f, 1.f, 1.f)* (aColor + dWater*coefDiffusWater);
+					color = vec3(1.f, 1.f, 1.f)* (aColor + dWater*(coefDiffusWaterSun+coefDiffusWaterMoon));
 					fFragColor = vec4(color, 1.f);
 
 				} else {
@@ -234,6 +236,6 @@ void main() {
 		}
 	}
 	else if(uMode == SKYBOX){
-		fFragColor = texture(uSkyTex, gPos);
+		fFragColor = texture(uSkyTex, gPos)*coefDay;
 	}
 }
