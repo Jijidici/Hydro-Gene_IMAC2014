@@ -162,7 +162,7 @@ int main(int argc, char** argv){
 	GLuint cubeVBO = CreateCubeVBO();
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
 
-	GLuint texture_sky = CreateTexture("textures/skybox3.png");
+	GLuint texture_sky = CreateCubeMap();
 	GLuint texture_night = CreateTexture("textures/night.jpg");
 	/* vegetation textures */
 	GLuint texture_veget[5];
@@ -181,6 +181,8 @@ int main(int argc, char** argv){
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
 	texture_terrain[5] = CreateTexture("textures/cloud3.png");
 	
+	/* Bind the Cube Map */
+	BindCubeMap(texture_sky, GL_TEXTURE7);
 	
 	/* Leaves VBOs & VAOs creation for computed triangles*/
 	GLuint* l_VBOs = new GLuint[nbVao];
@@ -595,21 +597,17 @@ int main(int argc, char** argv){
 		glUniform1i(locations[MODE], SKYBOX);
 		ms.push();
 			if(currentCam == FREE_FLY){
-				ms.mult(ffCam.getViewMatrix());
+				ms.mult(V);
 				ms.translate(ffCam.getCameraPosition());
 				ms.scale(glm::vec3(2.f, 2.f, 2.f));
 			}else if(currentCam == TRACK_BALL){
-				ms.mult(tbCam.getViewMatrix());
+				ms.mult(V);
 				ms.scale(glm::vec3(100.f, 100.f, 100.f));
 			}
 			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-			BindTexture(texture_sky, GL_TEXTURE7);
-			BindTexture(texture_night, GL_TEXTURE6);
-				glBindVertexArray(cubeVAO);
-					glDrawArrays(GL_TRIANGLES, 0, 36);
-				glBindVertexArray(0);
-			BindTexture(0, GL_TEXTURE6);
-			BindTexture(0, GL_TEXTURE7);
+			glBindVertexArray(cubeVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
 		ms.pop();		
 		
 		if(ihm){
@@ -1190,7 +1188,10 @@ int main(int argc, char** argv){
 			SDL_Delay(MIN_LOOP_TIME - ellapsedTime);
 		}	
 	}
-
+	
+	/* Debind the Cube Map */
+	BindCubeMap(texture_sky, 0);
+	
 	// Destruction des ressources OpenGL
 	glDeleteBuffers(1, &cubeVBO);
 	glDeleteBuffers(1, &groundVBO);

@@ -28,10 +28,8 @@ void main(){
 
 	if(uMode == SKYBOX){
 		vPos = position;
-		vTexCoords = texcoords;
 		vec4 realPosition = uMVPMatrix * vec4(position, 1.f);
-		realPosition = realPosition.xyww;
-		gl_Position = realPosition;
+		gl_Position = realPosition.xyww;
 	}
 	else if(uMode == TRIANGLES){
 		vPos = position;

@@ -27,7 +27,7 @@ uniform vec3 uLightSunVect = vec3(0.,0.,0.);
 uniform vec3 uLightMoonVect = vec3(0.,0.,0.);
 uniform mat4 uViewMatrix = mat4(1.f);
 
-uniform sampler2D uSkyTex;
+uniform samplerCube uSkyTex;
 uniform sampler2D uNightTex;
 uniform sampler2D uGrassTex;
 uniform sampler2D uWaterTex;
@@ -209,6 +209,16 @@ void main() {
 					vec3 sColor = vec3(1.f, 1.f, 0.9f);
 
 					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon + sColor*sCoeff*coefDay);
+					/*vec4 cPos = uViewMatrix[3];
+					cPos.x /= cPos.w;
+					cPos.y /= cPos.w;
+					cPos.z /= cPos.w;
+					vec3 eyeToFragment = normalize(cPos.xyz - gPos);
+					vec3 reflectWater = reflect(eyeToFragment, gNormal); 
+					
+					vec3 dWater = texture(uSkyTex, reflectWater).rgb;
+					
+					color = vec3(0.8f, 0.8f, 0.8f)* (aColor + dWater*0.8);*/
 					fFragColor = vec4(color, 1.f);
 
 				} else {
@@ -232,22 +242,6 @@ void main() {
 		}
 	}
 	else if(uMode == SKYBOX){
-		/* Moving sky */
-		vec2 cloudTexCoord = gTexCoords;
-		cloudTexCoord.x -= uTime;
-		
-		vec3 nPos = normalize(gPos);
-		vec4 skyColor = mix(vec4(0.466666667, 0.682352941, 0.82745098, 1.f), vec4(0.235294118, 0.586956522, 0.721568627, 1.f), nPos.y);
-		vec4 cloudColor = texture(uSkyTex, cloudTexCoord);
-		skyColor = skyColor*(1-cloudColor.a) + cloudColor*cloudColor.a;
-		skyColor.r = min(skyColor.r, 1.);
-		skyColor.g = min(skyColor.g, 1.);
-		skyColor.b = min(skyColor.b, 1.);
-		
-		vec4 composDay = skyColor*(min(coefDay,1.));
-		vec4 composNight = texture(uNightTex, gTexCoords)*(min(coefNight,1.));
-		
-		fFragColor = composDay + composNight;
-		fFragColor += vec4(0.1f*abs(uTime),0.f,0.05f*(1.-abs(uTime)),0.f);
+		fFragColor = texture(uSkyTex, gPos);
 	}
 }
