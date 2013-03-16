@@ -39,7 +39,6 @@ uniform sampler2D uPlantTex;
 uniform sampler2D uTreeTex;
 uniform sampler2D uPineTreeTex;
 uniform sampler2D uSnowTreeTex;
-uniform sampler2D uCloudsShadows;
 
 uniform int uMode;
 uniform int uChoice;
@@ -69,10 +68,6 @@ void main() {
 		vec3 dColor;
 		float coefWater = 0.f;
 		vec3 color;
-		/* clouds shadowmap */
-		vec2 shadowCloudTexcoord = gCloudsTexCoords;
-		shadowCloudTexcoord.x += uTime;
-		float cloudsColor = texture(uCloudsShadows, shadowCloudTexcoord).r;		
 		
 		/* compute ratios */		
 		float ratioDrain;
@@ -134,7 +129,6 @@ void main() {
 				}
 				texel += vec4(0.1f*abs(uTime)*min(coefDay, 0.3),0.f,0.05f*(1.-abs(uTime))*min(coefNight, 0.3),0.f);
 				fFragColor = texel;
-				fFragColor *= (1. - cloudsColor)*coefDay;
 			}else discard;
 		}
 		else if(uChoice == DEBUG_BOX){
@@ -183,7 +177,6 @@ void main() {
 				dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
 			
 				vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
-				dColorSun *= (1. - cloudsColor)*coefDay;
 				vec3 dColorMoon = dColor + vec3(0.f,0.f,0.25f);
 				float dCoeffSun = max(0, dot(normalize(gNormal), -normalize(uLightSunVect)));
 				float dCoeffMoon = max(0, dot(normalize(gNormal), -normalize(uLightMoonVect)));

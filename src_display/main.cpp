@@ -173,13 +173,12 @@ int main(int argc, char** argv){
 	texture_veget[4] = CreateTexture("textures/snow_tree.png");
 
 	/* terrain textures */
-	GLuint texture_terrain[6];
+	GLuint texture_terrain[5];
 	texture_terrain[0] = CreateTexture("textures/grass.jpg");
 	texture_terrain[1] = CreateTexture("textures/heightmap.jpg");
 	texture_terrain[2] = CreateTexture("textures/stone.jpg");
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
-	texture_terrain[5] = CreateTexture("textures/cloud3.png");
 	
 	/* Bind the Cube Map */
 	BindCubeMap(texture_sky, GL_TEXTURE7);
