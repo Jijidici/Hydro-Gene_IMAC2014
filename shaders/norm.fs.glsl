@@ -184,7 +184,7 @@ void main() {
 				dCoeffMoon *= 0.1;
 
 				/* Draw water */
-				if(coefWater>0.5f){
+				if(coefWater>0.3f){
 
 					/*vec2 HMCoord = gTexCoords*200 + uTime;
 					vec2 waveCoord = gTexCoords*200 - uTime;
@@ -201,17 +201,16 @@ void main() {
 					float sCoeff = pow(max(0,dot(pc,R)),sh);
 					vec3 sColor = vec3(1.f, 1.f, 0.9f);
 
-					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon + sColor*sCoeff*coefDay);*/
-					vec4 cPos = -uModelView[3];
-					cPos.x /= cPos.w;
-					cPos.y /= cPos.w;
-					cPos.z /= cPos.w;
-					vec3 eyeToFragment = normalize(cPos.xyz - gPos);
-					vec3 reflectWater = reflect(eyeToFragment, gNormal); 
+					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon + sColor*sCoeff*coefDay);*/					
+					vec4 P = normalize(uModelView*vec4(gPos, 1.f));
+					vec4 N = normalize(uModelView*vec4(gNormal, 0.f));
+					vec4 D = normalize(uModelView*vec4(uLightSunVect, 0.f));
+					vec4 reflect = reflect(P, N);
+					vec3 dWater = texture(uSkyTex, reflect.xyz).rgb;
 					
-					vec3 dWater = texture(uSkyTex, reflectWater).rgb;
+					float coefDiffusWater = max(dot(-D, N), 0.f);
 					
-					color = vec3(0.8f, 0.8f, 0.8f)* (aColor + dWater*0.8);
+					color = vec3(1.f, 1.f, 1.f)* (aColor + dWater*coefDiffusWater);
 					fFragColor = vec4(color, 1.f);
 
 				} else {

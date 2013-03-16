@@ -5,10 +5,10 @@
 #define VEGET 7
 
 layout(triangles) in;
-layout(triangle_strip, max_vertices=5) out;
+layout(triangle_strip, max_vertices=3) out;
 
-in vec3 vNormal[];
 in vec3 vPos[];
+in vec3 vNormal[];
 in vec2 vTexCoords[];
 in vec2 vCloudsTexCoords[];
 in float vBending[];
@@ -85,6 +85,7 @@ void main(){
 				gTexCoords = vTexCoords[i];
 				gCloudsTexCoords = vCloudsTexCoords[i];
 				gNormal = vNormal[i];
+				gPos = vPos[i];
 				gBending = vBending[i];
 				gDrain = vDrain[i];
 				gGradient = vGradient[i];
