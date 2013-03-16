@@ -25,7 +25,7 @@ in float gAltitude;
 
 uniform vec3 uLightSunVect = vec3(0.,0.,0.);
 uniform vec3 uLightMoonVect = vec3(0.,0.,0.);
-uniform mat4 uViewMatrix = mat4(1.f);
+uniform mat4 uModelView = mat4(1.f);
 
 uniform samplerCube uSkyTex;
 uniform sampler2D uNightTex;
@@ -191,10 +191,10 @@ void main() {
 					vec4 newNormal = uMVPMatrix * vec4(gNormal.x, 0.05*texture(uWaterTex, HMCoord).r, gNormal.z, 1.0f);
 					vec4 newPos = uMVPMatrix * vec4(gPos.x, 0.05*texture(uWaterTex, waveCoord).r, gPos.z, 1.0f);
 
-					vec4 cPos = uViewMatrix[3];
+					vec4 cPos = uModelView[3];
 					vec4 pc = normalize(cPos - newPos);
-					vec4 D = normalize(uViewMatrix * vec4(uLightSunVect,1.f));
-					mat4 uNormalMatrix = transpose(inverse(uViewMatrix));
+					vec4 D = normalize(uModelView * vec4(uLightSunVect,1.f));
+					mat4 uNormalMatrix = transpose(inverse(uModelView));
 					vec4 N = normalize(uNormalMatrix * newNormal);
 					vec4 R = reflect(D,N);
 					int sh = 25;
@@ -202,7 +202,7 @@ void main() {
 					vec3 sColor = vec3(1.f, 1.f, 0.9f);
 
 					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon + sColor*sCoeff*coefDay);*/
-					vec4 cPos = uViewMatrix[3];
+					vec4 cPos = -uModelView[3];
 					cPos.x /= cPos.w;
 					cPos.y /= cPos.w;
 					cPos.z /= cPos.w;

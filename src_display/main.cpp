@@ -466,7 +466,7 @@ int main(int argc, char** argv){
 			V = ffCam.getViewMatrix();
 			camPosition = ffCam.getCameraPosition();
 		}
-		glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));			
+		glUniformMatrix4fv(locations[MODELVIEW], 1, GL_FALSE, glm::value_ptr(V));			
 
 		//Ground
 		ms.push();
@@ -598,10 +598,9 @@ int main(int argc, char** argv){
 			if(currentCam == FREE_FLY){
 				ms.mult(V);
 				ms.translate(ffCam.getCameraPosition());
-				ms.scale(glm::vec3(2.f, 2.f, 2.f));
 			}else if(currentCam == TRACK_BALL){
 				ms.mult(V);
-				ms.scale(glm::vec3(100.f, 100.f, 100.f));
+				ms.scale(glm::vec3(10*terrainScale));
 			}
 			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
 			glBindVertexArray(cubeVAO);

@@ -18,7 +18,7 @@ in float vSurface[];
 in float vAltitude[];
 
 uniform mat4 uMVPMatrix = mat4(1.f);
-uniform mat4 uViewMatrix = mat4(1.f);
+uniform mat4 uModelView = mat4(1.f);
 uniform float uDistance;
 uniform int uMode;
 uniform int uChoice;
@@ -46,7 +46,7 @@ void main(){
 	else if(uMode == TRIANGLES){
 		if(uChoice == VEGET){
 			float distance = uDistance/2;
-			vec4 testDistance = uViewMatrix * vec4(vPos[0],1.f);
+			vec4 testDistance = uModelView * vec4(vPos[0],1.f);
 			float vegetSizeCoef = 0.5f;
 			if(length(testDistance)-1.05f < distance){
 				for(int i=0; i<gl_in.length(); i++){
