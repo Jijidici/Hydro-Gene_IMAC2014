@@ -22,6 +22,11 @@ in float gGradient;
 in float gSurface;
 in float gAltitude;
 
+in vec4 N;
+in vec4 H;
+in vec4 L;
+in vec4 V;
+
 uniform vec3 uLightSunVect = vec3(0.,0.,0.);
 uniform vec3 uLightMoonVect = vec3(0.,0.,0.);
 uniform mat4 uViewMatrix = mat4(1.f);
@@ -175,46 +180,46 @@ void main() {
 				
 				float coefGrass = restingCoef;
 	
-				dColor = coefWater*vec3(0.06f,0.55f,0.89f);
+				dColor = coefWater*vec3(0.6f,0.6f,1.f);
 				dColor += coefStone*texture(uStoneTex, gTexCoords).rgb;
 				dColor += coefSnow*texture(uSnowTex, gTexCoords).rgb;
 				dColor += coefSand*texture(uSandTex, gTexCoords).rgb;
 				dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
-			
+
+				vec3 newNormal = normalize(gNormal);
+				vec2 HMCoord = gTexCoords*200 + uTime;
+				vec3 bump;
+
+				if(coefWater>0.5f){
+					bump = normalize(texture(uWaterTex, HMCoord).xyz*2.f-1.f);
+					newNormal = normalize(bump + gNormal);
+				}
+
 				vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
 				dColorSun *= (1. - cloudsColor)*coefDay;
 				vec3 dColorMoon = dColor + vec3(0.f,0.f,0.25f);
-				float dCoeffSun = max(0, dot(normalize(gNormal), -normalize(uLightSunVect)));
-				float dCoeffMoon = max(0, dot(normalize(gNormal), -normalize(uLightMoonVect)));
+				float dCoeffSun = min(max(0, dot(normalize(newNormal), -normalize(uLightSunVect))), 1.);
+				float dCoeffMoon = min(max(0, dot(normalize(newNormal), -normalize(uLightMoonVect))), 1.);
 				dCoeffSun *= 0.7;
 				dCoeffMoon *= 0.1;
 
 				/* Draw water */
 				if(coefWater>0.5f){
 
-					vec2 HMCoord = gTexCoords*200 + uTime;
-					vec2 waveCoord = gTexCoords*200 - uTime;
-					vec4 newNormal = uMVPMatrix * vec4(gNormal.x, 0.05*texture(uWaterTex, HMCoord).r, gNormal.z, 1.0f);
-					vec4 newPos = uMVPMatrix * vec4(gPos.x, 0.05*texture(uWaterTex, waveCoord).r, gPos.z, 1.0f);
+					float diffusWater = max(dot(-uLightSunVect,newNormal),0.f);
+					int sh = 100;
 
-					vec4 cPos = uViewMatrix[3];
-					vec4 pc = normalize(cPos - newPos);
-					vec4 D = normalize(uViewMatrix * vec4(uLightSunVect,1.f));
-					mat4 uNormalMatrix = transpose(inverse(uViewMatrix));
-					vec4 N = normalize(uNormalMatrix * newNormal);
-					vec4 R = reflect(D,N);
-					int sh = 1;
-					float sCoeff = pow(max(0,dot(pc,R)),sh);
-					vec3 sColor = vec3(1.f, 1.f, 0.9f);
+					float sCoeff = pow(max(0,dot(N+vec4(bump,0.f),H)),sh);
 
-					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon + sColor*sCoeff*coefDay);
+					vec3 sColor = vec3(1.f, 1.f, 1.f);
+
+					color = vec3(1.f, 1.f, 1.f) * (aColor + dColor*diffusWater + sColor*sCoeff);
 					fFragColor = vec4(color, 1.f);
 
 				} else {
 					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon);
 					fFragColor = vec4(color, 1.f);
 				}
-
 			}
 			
 			/* Simulate fog */

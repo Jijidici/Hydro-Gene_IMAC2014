@@ -13,6 +13,8 @@ layout(location = 6) in float surface;
 
 uniform mat4 uMVPMatrix = mat4(1.f);
 uniform int uMode;
+uniform mat4 uViewMatrix = mat4(1.f);
+uniform vec3 uLightSunVect = vec3(0.,0.,0.);
 
 out vec3 vPos;
 out vec3 vNormal;
@@ -22,6 +24,11 @@ out float vDrain;
 out float vGradient;
 out float vSurface;
 out float vAltitude;
+
+out vec4 gN;
+out vec4 gH;
+out vec4 gL;
+out vec4 gV;
 
 void main(){
 
@@ -42,5 +49,11 @@ void main(){
 		vSurface = surface;
 		vAltitude = position.y;
 		gl_Position = uMVPMatrix * vec4(position, 1.f);
+
+		gN = normalize(transpose(inverse(uViewMatrix)) * vec4(normal, 0.f));
+		gL = normalize(vec4(uLightSunVect,0.f));
+		gV = normalize(uViewMatrix * vec4(vPos,1.f));
+		gH = normalize(gV-gL);
+
 	}
 }

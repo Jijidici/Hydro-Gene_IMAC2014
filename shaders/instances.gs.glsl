@@ -16,6 +16,11 @@ in float vGradient[];
 in float vSurface[];
 in float vAltitude[];
 
+in vec4 gN[];
+in vec4 gH[];
+in vec4 gL[];
+in vec4 gV[];
+
 uniform mat4 uMVPMatrix = mat4(1.f);
 uniform mat4 uViewMatrix = mat4(1.f);
 uniform float uDistance;
@@ -30,6 +35,11 @@ out float gDrain;
 out float gGradient;
 out float gSurface;
 out float gAltitude;
+
+out vec4 N;
+out vec4 H;
+out vec4 L;
+out vec4 V;
 
 void main(){	
 	if(uMode == SKYBOX){
@@ -88,6 +98,10 @@ void main(){
 				gSurface = vSurface[i];
 				gAltitude = vAltitude[i];
 				gl_Position = gl_in[i].gl_Position;
+				N = gN[i];
+				V = gV[i];
+				L = gL[i];
+				H = gH[i];
 		 	  EmitVertex();
 		 	}
 		 	EndPrimitive();
