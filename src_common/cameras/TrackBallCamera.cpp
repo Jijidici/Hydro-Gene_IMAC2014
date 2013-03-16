@@ -22,7 +22,9 @@ void TrackBallCamera::rotateLeft(float degrees){
 }
 
 void TrackBallCamera::rotateUp(float degrees){
-	m_fAngleX = degrees;
+	if(degrees >= 5 && degrees <= 175){
+		m_fAngleX = degrees;
+	}
 }
 
 glm::mat4 TrackBallCamera::getViewMatrix(){

@@ -3,7 +3,10 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -152,7 +155,7 @@ GLuint CreateTexture(const char* path){
 		std::cout << "Unable to load the image : " << path << std::endl;
 		exit(EXIT_FAILURE);
 	}
-
+	
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -177,20 +180,73 @@ GLuint CreateTexture(const char* path){
 		GL_UNSIGNED_BYTE,
 		image->pixels
 	);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+	
+	glGenerateMipmap(GL_TEXTURE_2D);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	
 	glBindTexture(GL_TEXTURE_2D, 0);
 	SDL_FreeSurface(image);
 
 	return texture;
 }
 
-void BindTexture(GLuint texture, GLenum unity){
 
+GLuint CreateCubeMap(){
+	GLuint cubeMap;
+	glGenTextures(1, &cubeMap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+	
+	GLenum types[] = { GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+					   GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+					   GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+					   GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+					   GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+					   GL_TEXTURE_CUBE_MAP_NEGATIVE_Z};
+	
+	std::string filePaths[] = { "./textures/posX.png",
+								"./textures/negX.png",
+								"./textures/posY.png",
+								"./textures/negY.png",
+								"./textures/posZ.png",
+								"./textures/negZ.png"};
+								
+	for(uint8_t i=0;i<6;++i){
+		SDL_Surface* image = IMG_Load(filePaths[i].c_str());
+		if(!image){
+			std::cout << "Unable to load the image : " << filePaths[i] << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		
+		glTexImage2D(types[i], 0, GL_RGBA, image->w, image->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->pixels);
+		
+		SDL_FreeSurface(image);
+	}
+	
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	
+	return cubeMap;
+}
+
+void BindTexture(GLuint texture, GLenum unity){
 	glActiveTexture(unity);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
+}
+
+
+void BindCubeMap(GLuint texture, GLenum unity){
+	glActiveTexture(unity);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
 }
 

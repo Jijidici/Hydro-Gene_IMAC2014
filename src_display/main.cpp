@@ -75,6 +75,7 @@ int main(int argc, char** argv){
 
 	uint16_t nbSub_lvl1 = arguments[0];
 	uint16_t nbSub_lvl2 = arguments[1];
+	uint16_t total_nbSub = nbSub_lvl1*nbSub_lvl2;
 	uint16_t nbLevel = arguments[7];
 	
 	std::cout<<"//-> Nb Subdivision lvl 1 : "<<nbSub_lvl1<<std::endl;
@@ -152,6 +153,8 @@ int main(int argc, char** argv){
 	/* Differents cube size */
 	double leafSize = GRID_3D_SIZE/(double)nbSub_lvl1;
 	double halfLeafSize = leafSize*0.5;
+	double voxelSize = leafSize/(double) nbSub_lvl2;
+	double halfVoxelSize = voxelSize*0.5;
 	
 	/* ******************************** */
 	/* 		Creation des VBO, VAO 		*/
@@ -159,7 +162,7 @@ int main(int argc, char** argv){
 	GLuint cubeVBO = CreateCubeVBO();
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
 
-	GLuint texture_sky = CreateTexture("textures/skybox3.png");
+	GLuint texture_sky = CreateCubeMap();
 	GLuint texture_night = CreateTexture("textures/night.jpg");
 	/* vegetation textures */
 	GLuint texture_veget[5];
@@ -170,15 +173,16 @@ int main(int argc, char** argv){
 	texture_veget[4] = CreateTexture("textures/snow_tree.png");
 
 	/* terrain textures */
-	GLuint texture_terrain[6];
+	GLuint texture_terrain[5];
 	texture_terrain[0] = CreateTexture("textures/grass.jpg");
 //	texture_terrain[1] = CreateTexture("textures/heightmap.jpg");
 	texture_terrain[1] = CreateTexture("textures/normalmap.jpg");
 	texture_terrain[2] = CreateTexture("textures/stone.jpg");
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
-	texture_terrain[5] = CreateTexture("textures/cloud3.png");
 	
+	/* Bind the Cube Map */
+	BindCubeMap(texture_sky, GL_TEXTURE7);
 	
 	/* Leaves VBOs & VAOs creation for computed triangles*/
 	GLuint* l_VBOs = new GLuint[nbVao];
@@ -314,7 +318,7 @@ int main(int argc, char** argv){
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam;
-	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4], 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
+	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, 0.f, 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
 	
 	/* Uniform Locations */
 	GLint* locations = new GLint[NB_LOCATIONS];
@@ -330,8 +334,6 @@ int main(int argc, char** argv){
 	
 	// Creation des ressources OpenGL
 	glEnable(GL_DEPTH_TEST);
-	//~ //glEnable(GL_CULL_FACE); /* not so cool */
-	//~ //glCullFace(GL_FRONT);
 	glDepthFunc(GL_LEQUAL);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.f);
 	
@@ -434,7 +436,6 @@ int main(int argc, char** argv){
 		}
 		day = (100. - fabsf(time))*dayFlag;
 		night = -day;
-
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -458,10 +459,13 @@ int main(int argc, char** argv){
 
 		// Choose the camera
 		glm::mat4 V;
+		glm::vec3 camPosition;
 		if(currentCam == TRACK_BALL){
 			V = tbCam.getViewMatrix();
+			camPosition = tbCam.getCameraPosition();
 		}else if(currentCam == FREE_FLY){
 			V = ffCam.getViewMatrix();
+			camPosition = ffCam.getCameraPosition();
 		}
 		glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));			
 
@@ -478,7 +482,7 @@ int main(int argc, char** argv){
 				glBindVertexArray(0);
 			BindTexture(0, GL_TEXTURE1);
 		ms.pop();
-			
+		
 		//Terrain
 		ms.push();
 			ms.mult(V);
@@ -490,12 +494,8 @@ int main(int argc, char** argv){
 			for(uint16_t lvl=0;lvl<nbLevel;++lvl){			
 				//For each leaf
 				for(uint16_t idx=0;idx<nbLeaves[lvl];++idx){
-					double d = 0;
-					if(currentCam == FREE_FLY){
-						d = computeDistanceLeafCamera(leafArrays[lvl][idx], ffCam.getCameraPosition(), terrainScale);
-					}else{
-						d = computeDistanceLeafCamera(leafArrays[lvl][idx], tbCam.getCameraPosition(), terrainScale);
-					}
+					double d = computeDistanceLeafCamera(leafArrays[lvl][idx], camPosition, terrainScale);
+					
 					double crt_lvlTD = thresholdDistance*(lvl+1);
 					double nxt_lvlTD = 0;
 					/* special case of uppest level */
@@ -512,17 +512,22 @@ int main(int argc, char** argv){
 					
 					//special case of lvl 0
 					if(lvl == 0 && d < thresholdDistance){
+						//Enable BackFace Culling
+						glEnable(GL_CULL_FACE);
+						glCullFace(GL_FRONT);
+					
 						if(currentCam == FREE_FLY){ //////////////////////////////////FREEFLY
 							/* FRUSTUM CULLING */
 							if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
 								/* LOADING */
 								if(!loadedLeaf[idx]){
 									loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
-									std::sort(memory.begin(), memory.end(), memory.front());
 								}
 								/* DISPLAYING */
 								for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 									if(idx == n->idxLeaf){
+										/* set the distance */
+										n->d = d;
 										display_triangle(n->vao, ms, locations[MVP], leafArrays[0][idx].nbVertices_lvl2, texture_terrain);	
 										if(displayDebug){
 											/* leaf cube */
@@ -544,11 +549,12 @@ int main(int argc, char** argv){
 							/* LOADING */
 							if(!loadedLeaf[idx]){
 								loadInMemory(memory, loadedLeaf, leafArrays[0][idx], d, nbSub_lvl2, freeMemory);
-								std::sort(memory.begin(), memory.end(), memory.front());
 							}
 							/* DISPLAYING */
 							for(std::vector<Chunk>::iterator n=memory.begin();n!=memory.end();++n){
 								if(idx == n->idxLeaf){
+									/* set the distance */
+									n->d = d;
 									if(displayDebug){
 										if(ffCam.leavesFrustum(leafArrays[0][idx], terrainScale)){
 											/* real triangles */
@@ -571,6 +577,7 @@ int main(int argc, char** argv){
 								}
 							}
 						} //END camera
+						glDisable(GL_CULL_FACE);
 					}
 
 					//DISPLAY OF THE COEFFICIENTS
@@ -590,23 +597,19 @@ int main(int argc, char** argv){
 		glUniform1i(locations[MODE], SKYBOX);
 		ms.push();
 			if(currentCam == FREE_FLY){
-				ms.mult(ffCam.getViewMatrix());
+				ms.mult(V);
 				ms.translate(ffCam.getCameraPosition());
 				ms.scale(glm::vec3(2.f, 2.f, 2.f));
 			}else if(currentCam == TRACK_BALL){
-				ms.mult(tbCam.getViewMatrix());
+				ms.mult(V);
 				ms.scale(glm::vec3(100.f, 100.f, 100.f));
 			}
 			glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-			BindTexture(texture_sky, GL_TEXTURE7);
-			BindTexture(texture_night, GL_TEXTURE6);
-				glBindVertexArray(cubeVAO);
-					glDrawArrays(GL_TRIANGLES, 0, 36);
-				glBindVertexArray(0);
-			BindTexture(0, GL_TEXTURE6);
-			BindTexture(0, GL_TEXTURE7);
-		ms.pop();
-
+			glBindVertexArray(cubeVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
+		ms.pop();		
+		
 		if(ihm){
 			/* ------ IHM imgui ------ */
 			glActiveTexture(GL_TEXTURE0);
@@ -1023,7 +1026,15 @@ int main(int argc, char** argv){
 							if(currentCam == TRACK_BALL){
 								is_lClicPressed = false;
 								tbC_angleX += tbC_tmpAngleX;
-								tbC_angleY += tbC_tmpAngleY;
+								/* constrain trackball camera */
+								float sum_angleY = tbC_angleY + tbC_tmpAngleY;
+								if(sum_angleY >= 5 && sum_angleY <= 175){
+									tbC_angleY = sum_angleY;
+								}else if(sum_angleY < 5){
+									tbC_angleY = 5;
+								}else{
+									tbC_angleY = 175;
+								}
 							}
 							
 							break;
@@ -1059,14 +1070,16 @@ int main(int argc, char** argv){
 			}
 		}
 		
-		//IDLE
-		if(!ihm){
-			if(is_lKeyPressed){ ffCam.moveLeft(camSpeed); }
-			if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
-			if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
-			if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
-		
-			if(currentCam == FREE_FLY){
+		//IDLE			
+		/* set the ffcam height */
+		if(currentCam == FREE_FLY){
+			/* Move Camera */
+			if(!ihm){
+				if(is_lKeyPressed){ ffCam.moveLeft(camSpeed); }
+				if(is_rKeyPressed){ ffCam.moveLeft(-camSpeed); }
+				if(is_uKeyPressed){ ffCam.moveFront(camSpeed); }
+				if(is_dKeyPressed){ ffCam.moveFront(-camSpeed); }
+				
 				if(new_positionX >= WINDOW_WIDTH-1){
 					SDL_WarpMouse(0, new_positionY);
 					old_positionX = 0-(old_positionX - new_positionX);
@@ -1078,7 +1091,40 @@ int main(int argc, char** argv){
 				}
 				ffCam.rotateLeft((old_positionX - new_positionX)*0.6);
 			}
-		}
+			
+			camPosition = ffCam.getCameraPosition();
+			float xtremAltitude;
+			float unscaleCamPosX = camPosition.x/terrainScale;
+			float unscaleCamPosZ = camPosition.z/terrainScale;
+			
+			int32_t voxX = (unscaleCamPosX+1.f)*0.5f*total_nbSub;
+			int32_t voxZ = (unscaleCamPosZ+1.f)*0.5f*total_nbSub;
+			
+			if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub){
+				xtremAltitude = maxCoeffArray[5] + halfVoxelSize;
+			}else{
+				/* get the top current voxel height */
+				voxX = voxX%nbSub_lvl2;
+				voxZ = voxZ%nbSub_lvl2;
+				uint32_t voxY = nbSub_lvl2;
+				for(int32_t j=nbSub_lvl2-1;j>=0;--j){
+					if(memory[0].voxels[voxX + j*nbSub_lvl2 + voxZ*nbSub_lvl2*nbSub_lvl2].nbFaces != 0){
+						break;
+					}
+					voxY = j;
+				}
+				xtremAltitude = (voxY*voxelSize+memory[0].pos.y+leafSize)*terrainScale;
+			}
+			
+			if(camPosition.y < xtremAltitude){
+				camPosition.y = xtremAltitude;
+			}
+			ffCam.setCameraPosition(camPosition, 0);
+		}	
+		
+		/* Sort the memory with camera position */
+		std::sort(memory.begin(), memory.end(), memory.front());
+		
 		//Manage the sun
 		coefLight -= coefLightStep;
 		lightSun.x = glm::cos(coefLight);
@@ -1142,7 +1188,10 @@ int main(int argc, char** argv){
 			SDL_Delay(MIN_LOOP_TIME - ellapsedTime);
 		}	
 	}
-
+	
+	/* Debind the Cube Map */
+	BindCubeMap(texture_sky, 0);
+	
 	// Destruction des ressources OpenGL
 	glDeleteBuffers(1, &cubeVBO);
 	glDeleteBuffers(1, &groundVBO);

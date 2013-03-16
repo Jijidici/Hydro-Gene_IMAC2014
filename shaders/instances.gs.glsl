@@ -10,6 +10,7 @@ layout(triangle_strip, max_vertices=5) out;
 in vec3 vNormal[];
 in vec3 vPos[];
 in vec2 vTexCoords[];
+in vec2 vCloudsTexCoords[];
 in float vBending[];
 in float vDrain[];
 in float vGradient[];
@@ -30,6 +31,7 @@ uniform int uChoice;
 out vec3 gPos;
 out vec3 gNormal;
 out vec2 gTexCoords;
+out vec2 gCloudsTexCoords;
 out float gBending;
 out float gDrain;
 out float gGradient;
@@ -91,6 +93,7 @@ void main(){
 		else{
 			for(int i=0; i<gl_in.length(); i++){
 				gTexCoords = vTexCoords[i];
+				gCloudsTexCoords = vCloudsTexCoords[i];
 				gNormal = vNormal[i];
 				gBending = vBending[i];
 				gDrain = vDrain[i];
