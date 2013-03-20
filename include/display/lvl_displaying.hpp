@@ -17,7 +17,7 @@ static const size_t NB_LOCATIONS = 29;
 enum Locations{
 	MVP,
 	MODELVIEW,
-	VIEWMATRIX,
+	INV_VIEWMATRIX,
 	LIGHTSUN,
 	LIGHTMOON,
 	TIME,

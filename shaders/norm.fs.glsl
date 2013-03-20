@@ -27,7 +27,7 @@ uniform vec3 uLightSunVect = vec3(0.,0.,0.);
 uniform vec3 uLightMoonVect = vec3(0.,0.,0.);
 uniform mat4 uMVPMatrix = mat4(1.f);
 uniform mat4 uModelView = mat4(1.f);
-uniform mat4 uViewMatrix = mat4(1.f);
+uniform mat4 uInvViewMatrix = mat4(1.f);
 
 uniform samplerCube uSkyTex;
 uniform sampler2D uNightTex;
@@ -212,7 +212,7 @@ void main() {
 					reflect.y /= reflect.w;
 					reflect.z /= reflect.w;
 					reflect.w = 0.;
-					reflect = inverse(uViewMatrix)*reflect;
+					reflect = uInvViewMatrix*reflect;
 					vec3 dWater = texture(uSkyTex, reflect.xyz).rgb * coefDay;
 					
 					float coefDiffusWaterSun = max(dot(-sun_D, N), 0.f);					

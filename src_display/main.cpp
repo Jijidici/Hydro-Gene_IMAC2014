@@ -471,7 +471,7 @@ int main(int argc, char** argv){
 			camPosition = ffCam.getCameraPosition();
 		}
 		/* Sending the ViewMatrix */
-		glUniformMatrix4fv(locations[VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(V));
+		glUniformMatrix4fv(locations[INV_VIEWMATRIX], 1, GL_FALSE, glm::value_ptr(glm::inverse(V)));
 		
 		mvStack.push();
 			mvStack.mult(V);

@@ -21,7 +21,7 @@ void getLocations(GLint* locations, GLuint program){
 	/* Matrices */
 	locations[MVP] = glGetUniformLocation(program, "uMVPMatrix");
 	locations[MODELVIEW] = glGetUniformLocation(program, "uModelView");
-	locations[VIEWMATRIX] = glGetUniformLocation(program, "uViewMatrix");
+	locations[INV_VIEWMATRIX] = glGetUniformLocation(program, "uInvViewMatrix");
 	
 	/* Light */
 	locations[LIGHTSUN] = glGetUniformLocation(program, "uLightSunVect");
