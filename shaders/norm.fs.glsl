@@ -25,7 +25,9 @@ in float gAltitude;
 
 uniform vec3 uLightSunVect = vec3(0.,0.,0.);
 uniform vec3 uLightMoonVect = vec3(0.,0.,0.);
+uniform mat4 uMVPMatrix = mat4(1.f);
 uniform mat4 uModelView = mat4(1.f);
+uniform mat4 uViewMatrix = mat4(1.f);
 
 uniform samplerCube uSkyTex;
 uniform sampler2D uNightTex;
@@ -52,7 +54,6 @@ uniform float uMaxGradient = 0;
 uniform float uMaxSurface = 0;
 uniform float uMaxAltitude = 0;
 
-uniform mat4 uMVPMatrix = mat4(1.f);
 
 out vec4 fFragColor;
 
@@ -207,6 +208,11 @@ void main() {
 					vec4 sun_D = normalize(uModelView*vec4(uLightSunVect, 0.f));
 					vec4 moon_D = normalize(uModelView*vec4(uLightMoonVect, 0.f));
 					vec4 reflect = reflect(P, N);
+					reflect.x /= reflect.w;
+					reflect.y /= reflect.w;
+					reflect.z /= reflect.w;
+					reflect.w = 0.;
+					reflect = inverse(uViewMatrix)*reflect;
 					vec3 dWater = texture(uSkyTex, reflect.xyz).rgb * coefDay;
 					
 					float coefDiffusWaterSun = max(dot(-sun_D, N), 0.f);					
