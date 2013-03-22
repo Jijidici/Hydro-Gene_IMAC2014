@@ -219,11 +219,12 @@ void main() {
 					float coefDiffusWaterMoon = max(dot(-moon_D, N), 0.f);					
 					
 					/* Specular */
-					int sh = 50;
-					float coefSpecWaterSun = pow(max(0,dot(-P,reflect(sun_D, N))),sh);
-					vec3 sWater = vec3(1.f, 1.f, 1.f)*coefDay;
+					int sh = 100;
+					float coefSpecWaterSun = pow(max(0,dot(-P,reflect(sun_D, N))),sh) * coefDay;
+					float coefSpecWaterMoon = pow(max(0,dot(-P,reflect(moon_D, N))),sh) * coefNight;
+					vec3 sWater = vec3(1.f, 1.f, 1.f);
 					
-					color = vec3(1.f, 1.f, 1.f)* (aColor + dWater*(coefDiffusWaterSun+coefDiffusWaterMoon) + sWater*(coefSpecWaterSun));
+					color = vec3(1.f, 1.f, 1.f)* (aColor + dWater*(coefDiffusWaterSun+coefDiffusWaterMoon) + sWater*(coefSpecWaterSun+coefSpecWaterMoon));
 					fFragColor = vec4(color, 1.f);
 
 				} else {
