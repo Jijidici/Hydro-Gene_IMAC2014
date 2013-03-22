@@ -13,7 +13,7 @@
 #define DEBUG_BOX 8
 #define DEBUG_TRI 9
 
-#define HALF_PI 1.4835298642
+#define REFLECT_ANGLE -1.4835298642
 
 in vec3 gPos;
 in vec3 gNormal;
@@ -24,11 +24,6 @@ in float gDrain;
 in float gGradient;
 in float gSurface;
 in float gAltitude;
-
-in vec4 N;
-in vec4 H;
-in vec4 L;
-in vec4 V;
 
 uniform vec3 uLightSunVect = vec3(0.,0.,0.);
 uniform vec3 uLightMoonVect = vec3(0.,0.,0.);
@@ -212,9 +207,9 @@ void main() {
 					ref.w = 0.;
 					ref = uInvViewMatrix*ref;
 					mat4 reflectRotMat = mat4(1.f);
-					reflectRotMat[1][1] = cos(-HALF_PI);
+					reflectRotMat[1][1] = cos(REFLECT_ANGLE);
 					reflectRotMat[2][2] = reflectRotMat[1][1];
-					reflectRotMat[1][2] = sin(-HALF_PI);
+					reflectRotMat[1][2] = sin(REFLECT_ANGLE);
 					reflectRotMat[2][1] = - reflectRotMat[1][2];
 					ref = reflectRotMat*ref;
 					

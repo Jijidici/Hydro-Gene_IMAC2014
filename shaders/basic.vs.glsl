@@ -26,11 +26,6 @@ out float vGradient;
 out float vSurface;
 out float vAltitude;
 
-out vec4 gN;
-out vec4 gH;
-out vec4 gL;
-out vec4 gV;
-
 void main(){
 
 	if(uMode == SKYBOX){
@@ -50,11 +45,5 @@ void main(){
 		vSurface = surface;
 		vAltitude = position.y;
 		gl_Position = uMVPMatrix * vec4(position, 1.f);
-
-		gN = normalize(transpose(inverse(uViewMatrix)) * vec4(normal, 0.f));
-		gL = normalize(vec4(uLightSunVect,0.f));
-		gV = normalize(uViewMatrix * vec4(vPos,1.f));
-		gH = normalize(gV-gL);
-
 	}
 }
