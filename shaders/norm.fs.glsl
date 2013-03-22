@@ -13,6 +13,8 @@
 #define DEBUG_BOX 8
 #define DEBUG_TRI 9
 
+#define HALF_PI 1.4835298642
+
 in vec3 gPos;
 in vec3 gNormal;
 in vec2 gTexCoords;
@@ -30,7 +32,9 @@ in vec4 V;
 
 uniform vec3 uLightSunVect = vec3(0.,0.,0.);
 uniform vec3 uLightMoonVect = vec3(0.,0.,0.);
-uniform mat4 uViewMatrix = mat4(1.f);
+uniform mat4 uMVPMatrix = mat4(1.f);
+uniform mat4 uModelView = mat4(1.f);
+uniform mat4 uInvViewMatrix = mat4(1.f);
 
 uniform samplerCube uSkyTex;
 uniform sampler2D uNightTex;
@@ -57,7 +61,6 @@ uniform float uMaxGradient = 0;
 uniform float uMaxSurface = 0;
 uniform float uMaxAltitude = 0;
 
-uniform mat4 uMVPMatrix = mat4(1.f);
 
 out vec4 fFragColor;
 
@@ -181,33 +184,51 @@ void main() {
 				dColor += coefSand*texture(uSandTex, gTexCoords).rgb;
 				dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
 
-				vec3 newNormal = normalize(gNormal);
-				vec2 HMCoord = gTexCoords*200 + uTime;
-				vec3 bump;
-
-				if(coefWater>0.5f){
-					bump = normalize(texture(uWaterTex, HMCoord).xyz*2.f-1.f);
-					newNormal = normalize(bump + gNormal);
-				}
-
 				vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
 				vec3 dColorMoon = dColor + vec3(0.f,0.f,0.25f);
-				float dCoeffSun = min(max(0, dot(normalize(newNormal), -normalize(uLightSunVect))), 1.);
-				float dCoeffMoon = min(max(0, dot(normalize(newNormal), -normalize(uLightMoonVect))), 1.);
+				float dCoeffSun = min(max(0, dot(normalize(gNormal), -normalize(uLightSunVect))), 1.);
+				float dCoeffMoon = min(max(0, dot(normalize(gNormal), -normalize(uLightMoonVect))), 1.);
 				dCoeffSun *= 0.7;
 				dCoeffMoon *= 0.1;
 
 				/* Draw water */
-				if(coefWater>0.5f){
-
-					float diffusWater = max(dot(-uLightSunVect,newNormal),0.f);
-					int sh = 100;
-
-					float sCoeff = pow(max(0,dot(N+vec4(bump,0.f),H)),sh);
-
-					vec3 sColor = vec3(1.f, 1.f, 1.f);
-
-					color = vec3(1.f, 1.f, 1.f) * (aColor + dColor*diffusWater + sColor*sCoeff);
+				if(coefWater>0.3f){
+					/* Normal Mapping */
+					vec2 HMCoord = gTexCoords + uTime;
+					vec4 bump = vec4(texture(uWaterTex, HMCoord).xyz*2.f-1.f, 0.f);
+					vec4 N = normalize(uModelView*(bump + vec4(normalize(gNormal), 0.f)));
+					
+					/* fragment position in camera space */
+					vec4 P = normalize(uModelView*vec4(gPos, 1.f));
+					
+					/* diffus form reflection */
+					vec4 sun_D = normalize(uModelView*vec4(uLightSunVect, 0.f));
+					vec4 moon_D = normalize(uModelView*vec4(uLightMoonVect, 0.f));
+					
+					vec4 ref = reflect(P, N);
+					ref.x /= ref.w;
+					ref.y /= ref.w;
+					ref.z /= ref.w;
+					ref.w = 0.;
+					ref = uInvViewMatrix*ref;
+					mat4 reflectRotMat = mat4(1.f);
+					reflectRotMat[1][1] = cos(-HALF_PI);
+					reflectRotMat[2][2] = reflectRotMat[1][1];
+					reflectRotMat[1][2] = sin(-HALF_PI);
+					reflectRotMat[2][1] = - reflectRotMat[1][2];
+					ref = reflectRotMat*ref;
+					
+					vec3 dWater = texture(uSkyTex, ref.xyz).rgb * coefDay;
+					
+					float coefDiffusWaterSun = max(dot(-sun_D, N), 0.f);					
+					float coefDiffusWaterMoon = max(dot(-moon_D, N), 0.f);					
+					
+					/* Specular */
+					int sh = 50;
+					float coefSpecWaterSun = pow(max(0,dot(-P,reflect(sun_D, N))),sh);
+					vec3 sWater = vec3(1.f, 1.f, 1.f)*coefDay;
+					
+					color = vec3(1.f, 1.f, 1.f)* (aColor + dWater*(coefDiffusWaterSun+coefDiffusWaterMoon) + sWater*(coefSpecWaterSun));
 					fFragColor = vec4(color, 1.f);
 
 				} else {
@@ -230,6 +251,6 @@ void main() {
 		}
 	}
 	else if(uMode == SKYBOX){
-		fFragColor = texture(uSkyTex, gPos);
+		fFragColor = texture(uSkyTex, gPos)*coefDay;
 	}
 }

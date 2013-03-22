@@ -5,10 +5,10 @@
 #define VEGET 7
 
 layout(triangles) in;
-layout(triangle_strip, max_vertices=5) out;
+layout(triangle_strip, max_vertices=3) out;
 
-in vec3 vNormal[];
 in vec3 vPos[];
+in vec3 vNormal[];
 in vec2 vTexCoords[];
 in vec2 vCloudsTexCoords[];
 in float vBending[];
@@ -23,7 +23,7 @@ in vec4 gL[];
 in vec4 gV[];
 
 uniform mat4 uMVPMatrix = mat4(1.f);
-uniform mat4 uViewMatrix = mat4(1.f);
+uniform mat4 uModelView = mat4(1.f);
 uniform float uDistance;
 uniform int uMode;
 uniform int uChoice;
@@ -56,7 +56,7 @@ void main(){
 	else if(uMode == TRIANGLES){
 		if(uChoice == VEGET){
 			float distance = uDistance/2;
-			vec4 testDistance = uViewMatrix * vec4(vPos[0],1.f);
+			vec4 testDistance = uModelView * vec4(vPos[0],1.f);
 			float vegetSizeCoef = 0.5f;
 			if(length(testDistance)-1.05f < distance){
 				for(int i=0; i<gl_in.length(); i++){
@@ -95,6 +95,7 @@ void main(){
 				gTexCoords = vTexCoords[i];
 				gCloudsTexCoords = vCloudsTexCoords[i];
 				gNormal = vNormal[i];
+				gPos = vPos[i];
 				gBending = vBending[i];
 				gDrain = vDrain[i];
 				gGradient = vGradient[i];
