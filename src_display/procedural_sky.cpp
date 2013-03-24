@@ -15,9 +15,19 @@ void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVA
 	glUseProgram(skyProgram);
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
+		
+	GLenum types[] = {
+		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+	};
 	
+	for(uint32_t i=0;i<6;++i){
 		//Attach the top of the skybox cubemap
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, texID, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], texID, 0);
 		//check the FBO status
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if(status != GL_FRAMEBUFFER_COMPLETE){
@@ -31,6 +41,6 @@ void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVA
 		glBindVertexArray(quadVAO);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
-		
+	}		
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
