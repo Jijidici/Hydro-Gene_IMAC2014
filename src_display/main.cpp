@@ -301,9 +301,11 @@ int main(int argc, char** argv){
 	BindCubeMap(texture_sky, GL_TEXTURE7);
 	
 	/* ***************************************
-	 *       SKY FRAMEBUFFER CREATION
+	 *       DYNAMIC SKY CREATION
 	 * *************************************** */
 	GLuint skyFBO = createFBO();
+	GLint* skyLocations = new GLint[NB_SKYLOCATIONS];
+	getSkyLocation(skyLocations, skyProgram);
 	
 	/* MATRICES CAMERA AND LIGHTS */
 	float verticalFieldOfView = 90.0;
@@ -459,7 +461,7 @@ int main(int argc, char** argv){
 		night = -day;
 		
 		// Comupte the sky textures
-		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO);
+		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1267,6 +1269,7 @@ int main(int argc, char** argv){
 	delete[] nbLeaves;
 	delete[] chunkOffset;
 	delete[] locations;
+	delete[] skyLocations;
 
 	return (EXIT_SUCCESS);
 }

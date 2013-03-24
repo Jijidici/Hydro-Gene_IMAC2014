@@ -1,6 +1,7 @@
 #include "display/procedural_sky.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <GL/glew.h>
 
 /* Create FBO */
@@ -10,8 +11,18 @@ GLuint createFBO(){
 	return fboID;
 }
 
+/* Initialize the sky location */
+void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
+	skyLocations[PLAN_OR] = glGetUniformLocation(skyProgram, "uPlanOr");
+	skyLocations[PLAN_U] = glGetUniformLocation(skyProgram, "uPlanU");
+	skyLocations[PLAN_V] = glGetUniformLocation(skyProgram, "uPlanV");
+	std::cout<<skyLocations[PLAN_OR]<<std::endl;
+	std::cout<<skyLocations[PLAN_U]<<std::endl;
+	std::cout<<skyLocations[PLAN_V]<<std::endl;
+}
+
 /* Test for dynamique texturing the sky */
-void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO){
+void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO, GLint* skyLocations){
 	glUseProgram(skyProgram);
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
