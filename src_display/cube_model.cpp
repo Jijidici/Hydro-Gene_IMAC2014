@@ -31,93 +31,57 @@ GLuint CreateCubeVBO(){
 
 		//left
 		aCube.left, aCube.top, aCube.far,
-		0., 0.75,
 		aCube.left, aCube.bottom, aCube.far,
-		0.25, 0.75,
 		aCube.left, aCube.bottom, aCube.near,
-		0.25, 0.5,
 
 		aCube.left, aCube.bottom, aCube.near,
-		0.25, 0.5,
 		aCube.left, aCube.top, aCube.near,
-		0., 0.5,
 		aCube.left, aCube.top, aCube.far,
-		0., 0.75,
 
 		//top
 		aCube.right, aCube.top, aCube.far,
-		0.75, 0.75,
 		aCube.left, aCube.top, aCube.far,
-		1., 0.75,
 		aCube.left, aCube.top, aCube.near,
-		1., 0.5,
 
 		aCube.left, aCube.top, aCube.near,
-		1., 0.5,
 		aCube.right, aCube.top, aCube.near,
-		0.75, 0.5,
 		aCube.right, aCube.top, aCube.far,
-		0.75, 0.75,
 
 		//far
 		aCube.left, aCube.top, aCube.far,
-		0.25, 0.75,
 		aCube.right, aCube.top, aCube.far,
-		0.5, 0.75,
 		aCube.right, aCube.bottom, aCube.far,
-		0.5, 1.,
 
 		aCube.right, aCube.bottom, aCube.far,
-		0.5, 1.,
 		aCube.left, aCube.bottom, aCube.far,
-		0.25, 1.,
 		aCube.left, aCube.top, aCube.far,
-		0.25, 0.75,
 
 		//bottom
 		aCube.left, aCube.bottom, aCube.far,
-		0.25, 0.75,
 		aCube.right, aCube.bottom, aCube.far,
-		0.5, 0.75,
 		aCube.right, aCube.bottom, aCube.near,
-		0.5, 0.5,
 
 		aCube.right, aCube.bottom, aCube.near,
-		0.5, 0.5,
 		aCube.left, aCube.bottom, aCube.near,
-		0.25, 0.5,
 		aCube.left, aCube.bottom, aCube.far,
-		0.25, 0.75,
 
 		//right
 		aCube.right, aCube.bottom, aCube.far,
-		0.5, 0.75,
 		aCube.right, aCube.top, aCube.far,
-		0.75, 0.75,
 		aCube.right, aCube.top, aCube.near,
-		0.75, 0.5,
 
 		aCube.right, aCube.top, aCube.near,
-		0.75, 0.5,
 		aCube.right, aCube.bottom, aCube.near,
-		0.5, 0.5,
 		aCube.right, aCube.bottom, aCube.far,
-		0.5, 0.75,
 
 		//near
 		aCube.left, aCube.bottom, aCube.near,
-		0.25, 0.25,
 		aCube.right, aCube.bottom, aCube.near,
-		0.5, 0.25,
 		aCube.right, aCube.top, aCube.near,
-		0.5, 0.5,
 
 		aCube.right, aCube.top, aCube.near,
-		0.5, 0.5,
 		aCube.left, aCube.top, aCube.near,
-		0.25, 0.5,
-		aCube.left, aCube.bottom, aCube.near,
-		0.25, 0.25
+		aCube.left, aCube.bottom, aCube.near
 	};
 
 	GLuint cubeVBO = 0;
@@ -136,10 +100,8 @@ GLuint CreateCubeVAO(GLuint vbo){
 	glGenVertexArrays(1, &cubeVAO);  
 	glBindVertexArray(cubeVAO);  
 		glEnableVertexAttribArray(POSITION_LOCATION);
-		glEnableVertexAttribArray(TEXCOORDS_LOCATION);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, 5*sizeof(GLdouble), reinterpret_cast<const GLvoid*>(0));
-			glVertexAttribPointer(TEXCOORDS_LOCATION, 2, GL_DOUBLE, GL_FALSE, 5*sizeof(GLdouble), reinterpret_cast<const GLvoid*>(3*sizeof(GLdouble)));
+			glVertexAttribPointer(POSITION_LOCATION, 3, GL_DOUBLE, GL_FALSE, 3*sizeof(GLdouble), reinterpret_cast<const GLvoid*>(0));
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
