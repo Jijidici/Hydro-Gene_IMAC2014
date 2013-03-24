@@ -15,7 +15,8 @@ void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVA
 	glUseProgram(skyProgram);
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
-		
+	glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
+	
 	GLenum types[] = {
 		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,

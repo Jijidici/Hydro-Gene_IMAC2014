@@ -5,5 +5,19 @@ in vec2 vPos;
 out vec4 fFragColor;
 
 void main(){
-	fFragColor = vec4(normalize(abs(vPos)), 0.f, 1.f);
+	float r = 0.f;
+	float g = 0.f;
+	float b = 0.f;
+	
+	if(vPos.y > 0){
+		r = 1.f;
+	}else{
+		g = 1.f;
+	}
+	
+	if(vPos.x > 0){
+		b = 1.f;
+	}
+	
+	fFragColor = vec4(r, g, b, 1.f);
 }
