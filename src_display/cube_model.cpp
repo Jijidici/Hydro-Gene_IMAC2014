@@ -148,12 +148,12 @@ GLuint CreateCubeVAO(GLuint vbo){
 GLuint CreateQuadVBO(){
 	//creation of the quad
 	GLfloat vertices[] = {
-		-1.f, -1.f, 0.f,
-		 1.f, -1.f, 0.f,
-		 1.f,  1.f, 0.f,
-		 1.f,  1.f, 0.f,
-		-1.f,  1.f, 0.f,
-		-1.f, -1.f, 0.f,
+		 -1.f, -1.f,
+		  1.f, -1.f,
+		  1.f,  1.f,
+		  1.f,  1.f,
+		 -1.f,  1.f,
+		 -1.f, -1.f
 	};
 	
 	GLuint quadVBO = 0;
@@ -171,7 +171,7 @@ GLuint CreateQuadVAO(GLuint vbo){
 	glBindVertexArray(quadVAO);
 		glEnableVertexAttribArray(POSITION_LOCATION);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glVertexAttribPointer(POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), reinterpret_cast<const GLvoid*>(0));
+			glVertexAttribPointer(POSITION_LOCATION, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), reinterpret_cast<const GLvoid*>(0));
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	
