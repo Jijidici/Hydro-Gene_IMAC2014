@@ -3,7 +3,10 @@
 
 #include <GL/glew.h>
 
+/* Create FBO */
+GLuint createFBO();
+
 /* Test for dynamique texturing the sky */
-void paintTheSky(GLuint texID, GLuint skyProgram, GLuint quadVAO);
+void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO);
 
 #endif

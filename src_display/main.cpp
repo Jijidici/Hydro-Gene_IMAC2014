@@ -300,6 +300,11 @@ int main(int argc, char** argv){
 	/* Bind the Cube Map */
 	BindCubeMap(texture_sky, GL_TEXTURE7);
 	
+	/* ***************************************
+	 *       SKY FRAMEBUFFER CREATION
+	 * *************************************** */
+	GLuint skyFBO = createFBO();
+	
 	/* MATRICES CAMERA AND LIGHTS */
 	float verticalFieldOfView = 90.0;
 	float nearDistance = 0.001;
