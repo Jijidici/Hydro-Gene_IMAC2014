@@ -23,6 +23,7 @@
 #include "display/lvl_displaying.hpp"
 #include "display/memory_cache.hpp"
 #include "display/cube_model.hpp"
+#include "display/procedural_sky.hpp"
 
 #include "drn/drn_reader.h"
 #include "my_imgui/imgui.h"
@@ -269,7 +270,8 @@ int main(int argc, char** argv){
 	// Creation des programmes de shaders
 	GLuint terrainProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
 	GLuint debugProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/debug.gs.glsl");
-	if(!terrainProgram || !debugProgram){
+	GLuint skyProgram = hydrogene::loadProgram("shaders/skybox.vs.glsl", "shaders/skybox.fs.glsl");
+	if(!terrainProgram || !debugProgram || !skyProgram){
 		glDeleteBuffers(1, &cubeVBO);
 		glDeleteBuffers(nbVao, l_VBOs);
 		glDeleteBuffers(1, &groundVBO);

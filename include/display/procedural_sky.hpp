@@ -4,6 +4,6 @@
 #include <GL/glew.h>
 
 /* Test for dynamique texturing the sky */
-void paintTheSky(GLuint texID);
+void paintTheSky(GLuint texID, GLuint skyProgram);
 
 #endif
