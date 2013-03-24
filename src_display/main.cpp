@@ -51,6 +51,9 @@ static const size_t BYTES_PER_PIXEL = 32;
 static const size_t GRID_3D_SIZE = 2;
 static const size_t TERRAIN_SCALE_PARAM = 150000;
 
+static const size_t NB_TEXTURES_VEGET = 5;
+static const size_t NB_TEXTURES_TERRAIN = 5;
+
 int main(int argc, char** argv){
 
 	/* Open DATA file */
@@ -165,28 +168,6 @@ int main(int argc, char** argv){
 	GLuint quadVBO = CreateQuadVBO();
 	GLuint quadVAO = CreateQuadVAO(quadVBO);
 	
-	GLuint texture_sky = CreateCubeMap();
-	GLuint texture_night = CreateTexture("textures/night.jpg");
-	/* vegetation textures */
-	GLuint texture_veget[5];
-	texture_veget[0] = CreateTexture("textures/rock.png");
-	texture_veget[1] = CreateTexture("textures/plant.png");
-	texture_veget[2] = CreateTexture("textures/tree.png");
-	texture_veget[3] = CreateTexture("textures/pine_tree.png");
-	texture_veget[4] = CreateTexture("textures/snow_tree.png");
-
-	/* terrain textures */
-	GLuint texture_terrain[5];
-	texture_terrain[0] = CreateTexture("textures/grass.jpg");
-//	texture_terrain[1] = CreateTexture("textures/heightmap.jpg");
-	texture_terrain[1] = CreateTexture("textures/normalmap.jpg");
-	texture_terrain[2] = CreateTexture("textures/stone.jpg");
-	texture_terrain[3] = CreateTexture("textures/snow.jpg");
-	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
-	
-	/* Bind the Cube Map */
-	BindCubeMap(texture_sky, GL_TEXTURE7);
-	
 	/* Leaves VBOs & VAOs creation for computed triangles*/
 	GLuint* l_VBOs = new GLuint[nbVao];
 	glGenBuffers(nbVao, l_VBOs);
@@ -269,7 +250,9 @@ int main(int argc, char** argv){
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	
-	// Creation des programmes de shaders
+	/* *******************************
+	 *      PROGRAM CREATION
+	 * ******************************* */
 	GLuint terrainProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
 	GLuint debugProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/debug.gs.glsl");
 	GLuint skyProgram = hydrogene::loadProgram("shaders/skybox.vs.glsl", "shaders/skybox.fs.glsl");
@@ -293,6 +276,29 @@ int main(int argc, char** argv){
 		return (EXIT_FAILURE);
 	}	
 	glUseProgram(terrainProgram);
+	
+	/* *******************************
+	 *     TEXTURES CREATION
+	 * ******************************* */
+	GLuint texture_sky = CreateCubeMap();
+	/* vegetation textures */
+	GLuint texture_veget[NB_TEXTURES_VEGET];
+	texture_veget[0] = CreateTexture("textures/rock.png");
+	texture_veget[1] = CreateTexture("textures/plant.png");
+	texture_veget[2] = CreateTexture("textures/tree.png");
+	texture_veget[3] = CreateTexture("textures/pine_tree.png");
+	texture_veget[4] = CreateTexture("textures/snow_tree.png");
+
+	/* terrain textures */
+	GLuint texture_terrain[NB_TEXTURES_TERRAIN];
+	texture_terrain[0] = CreateTexture("textures/grass.jpg");
+	texture_terrain[1] = CreateTexture("textures/normalmap.jpg");
+	texture_terrain[2] = CreateTexture("textures/stone.jpg");
+	texture_terrain[3] = CreateTexture("textures/snow.jpg");
+	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
+	
+	/* Bind the Cube Map */
+	BindCubeMap(texture_sky, GL_TEXTURE7);
 	
 	/* MATRICES CAMERA AND LIGHTS */
 	float verticalFieldOfView = 90.0;
@@ -1221,10 +1227,18 @@ int main(int argc, char** argv){
 	glDeleteBuffers(1, &cubeVBO);
 	glDeleteBuffers(1, &quadVBO);
 	glDeleteBuffers(1, &groundVBO);
+	glDeleteBuffers(nbVao, l_VBOs);
 	glDeleteVertexArrays(1, &cubeVAO);
 	glDeleteVertexArrays(1, &quadVAO);
 	glDeleteVertexArrays(1, &groundVAO);
+	glDeleteVertexArrays(nbVao, l_VAOs);
 	glDeleteTextures(1, &texture_sky);
+	for(uint16_t i=0; i<NB_TEXTURES_VEGET;++i){
+		glDeleteTextures(1, &texture_veget[i]);
+	}
+	for(uint16_t i=0; i<NB_TEXTURES_TERRAIN;++i){
+		glDeleteTextures(1, &texture_terrain[i]);
+	}
 	
 	// imgui
 	imguiRenderGLDestroy();
@@ -1235,8 +1249,6 @@ int main(int argc, char** argv){
 		freeInMemory(memory, loadedLeaf);
 	}
 	
-	glDeleteBuffers(nbVao, l_VBOs);
-	glDeleteVertexArrays(nbVao, l_VAOs);
 	delete[] l_VAOs;
 	delete[] l_VBOs;
 	for(uint16_t lvl=0;lvl<nbLevel;++lvl){
