@@ -162,7 +162,9 @@ int main(int argc, char** argv){
 	/* ******************************** */
 	GLuint cubeVBO = CreateCubeVBO();
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
-
+	GLuint quadVBO = CreateQuadVBO();
+	GLuint quadVAO = CreateQuadVAO(quadVBO);
+	
 	GLuint texture_sky = CreateCubeMap();
 	GLuint texture_night = CreateTexture("textures/night.jpg");
 	/* vegetation textures */
@@ -273,9 +275,11 @@ int main(int argc, char** argv){
 	GLuint skyProgram = hydrogene::loadProgram("shaders/skybox.vs.glsl", "shaders/skybox.fs.glsl");
 	if(!terrainProgram || !debugProgram || !skyProgram){
 		glDeleteBuffers(1, &cubeVBO);
+		glDeleteBuffers(1, &quadVBO);
 		glDeleteBuffers(nbVao, l_VBOs);
 		glDeleteBuffers(1, &groundVBO);
 		glDeleteVertexArrays(1, &cubeVAO);
+		glDeleteVertexArrays(1, &quadVAO);
 		glDeleteVertexArrays(nbVao, l_VAOs);
 		glDeleteVertexArrays(1, &groundVAO);
 		delete[] l_VAOs;
@@ -1215,8 +1219,10 @@ int main(int argc, char** argv){
 	
 	// Destruction des ressources OpenGL
 	glDeleteBuffers(1, &cubeVBO);
+	glDeleteBuffers(1, &quadVBO);
 	glDeleteBuffers(1, &groundVBO);
 	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteVertexArrays(1, &quadVAO);
 	glDeleteVertexArrays(1, &groundVAO);
 	glDeleteTextures(1, &texture_sky);
 	

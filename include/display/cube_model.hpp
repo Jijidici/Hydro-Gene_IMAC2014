@@ -6,6 +6,9 @@
 
 GLuint CreateCubeVBO();
 GLuint CreateCubeVAO(GLuint vbo);
+GLuint CreateQuadVBO();
+GLuint CreateQuadVAO(GLuint vbo);
+
 GLuint CreateTexture(const char* path);
 GLuint CreateCubeMap();
 void BindTexture(GLuint texture, GLenum unity);
