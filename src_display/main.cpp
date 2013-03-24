@@ -458,6 +458,9 @@ int main(int argc, char** argv){
 		day = (100. - fabsf(time))*dayFlag;
 		night = -day;
 		
+		// Comupte the sky textures
+		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO);
+		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
