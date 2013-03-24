@@ -24,5 +24,13 @@ void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVA
 			throw std::runtime_error("sky framebuffer isn't complete");
 		}
 		
+		//Clear the drawing zone
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		//Draw the quad
+		glBindVertexArray(quadVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+		
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
