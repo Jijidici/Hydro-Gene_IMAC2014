@@ -17,6 +17,7 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[PLAN_OR] = glGetUniformLocation(skyProgram, "uPlanOr");
 	skyLocations[PLAN_U] = glGetUniformLocation(skyProgram, "uPlanU");
 	skyLocations[PLAN_V] = glGetUniformLocation(skyProgram, "uPlanV");
+	skyLocations[SUN_POS] = glGetUniformLocation(skyProgram, "uSunPos");
 }
 
 /* Test for dynamique texturing the sky */

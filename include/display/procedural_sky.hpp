@@ -4,12 +4,13 @@
 #include <GL/glew.h>
 
 static const size_t SKYTEX_SIZE = 1024;
-static const size_t NB_SKYLOCATIONS = 3;
+static const size_t NB_SKYLOCATIONS = 4;
 
 enum SkyLocation{
 	PLAN_OR,
 	PLAN_U,
-	PLAN_V
+	PLAN_V,
+	SUN_POS
 };
 
 /* Create FBO */

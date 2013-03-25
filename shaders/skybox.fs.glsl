@@ -5,6 +5,7 @@ in vec2 vPos;
 uniform vec3 uPlanOr;
 uniform vec3 uPlanU;
 uniform vec3 uPlanV;
+uniform vec3 uSunPos;
 
 out vec4 fFragColor;
 
