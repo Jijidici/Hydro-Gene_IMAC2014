@@ -1,5 +1,6 @@
 #version 330
 #define SUN_RADIUS 0.05
+#define HALO_RADIUS 0.08
 
 in vec2 vPos;
 
@@ -57,8 +58,11 @@ void main(){
 	float skySat = 0.7;
 	int skyHue = 220;
 	
-	if(distance(absolutePos, uSunPos) <= SUN_RADIUS){
+	float sunFragDistance = distance(absolutePos, uSunPos);
+	if(sunFragDistance <= SUN_RADIUS){
 		skyLightness = 1.f;
+	}else if(sunFragDistance <= HALO_RADIUS){
+		skyLightness += (1-skyLightness)*(1-(sunFragDistance-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS));
 	}
 	
 	fFragColor = vec4(HSLtoRGB(skyHue, skySat, skyLightness), 1.f);
