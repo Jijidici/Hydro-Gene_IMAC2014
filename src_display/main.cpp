@@ -476,7 +476,6 @@ int main(int argc, char** argv){
 		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
 		glUniform3fv(locations[LIGHTMOON], 1, glm::value_ptr(lightMoon));
 		/* Send uniform to skybox shaders */
-		glUniform3fv(skyLocations[SUN_POS], 1, glm::value_ptr(glm::normalize(glm::vec3(1.f, 1.f, 0.f))));
 
 		/* Send fog */
 		if(displayFog){

@@ -213,7 +213,7 @@ void main() {
 					reflectRotMat[2][1] = - reflectRotMat[1][2];
 					ref = reflectRotMat*ref;
 					
-					vec3 dWater = texture(uSkyTex, ref.xyz).rgb * coefDay;
+					vec3 dWater = texture(uSkyTex, ref.xyz).rgb;
 					
 					float coefDiffusWaterSun = max(dot(-sun_D, N), 0.f);					
 					float coefDiffusWaterMoon = max(dot(-moon_D, N), 0.f);					
@@ -247,6 +247,6 @@ void main() {
 		}
 	}
 	else if(uMode == SKYBOX){
-		fFragColor = texture(uSkyTex, gPos)*coefDay;
+		fFragColor = texture(uSkyTex, gPos);
 	}
 }

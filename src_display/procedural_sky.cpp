@@ -24,6 +24,9 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO, GLint* skyLocations){
 	glUseProgram(skyProgram);
 	
+	//send uniforms
+	glUniform3fv(skyLocations[SUN_POS], 1, glm::value_ptr(glm::normalize(glm::vec3(3.f, 1.f, 0.f))));
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
 	glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
 	

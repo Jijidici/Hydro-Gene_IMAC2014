@@ -1,4 +1,5 @@
 #version 330
+#define SUN_RADIUS 0.05
 
 in vec2 vPos;
 
@@ -55,5 +56,10 @@ void main(){
 	float skyLightness = 0.3 + 0.5*max(0., 1 - absolutePos.y);
 	float skySat = 0.7;
 	int skyHue = 220;
+	
+	if(distance(absolutePos, uSunPos) <= SUN_RADIUS){
+		skyLightness = 1.f;
+	}
+	
 	fFragColor = vec4(HSLtoRGB(skyHue, skySat, skyLightness), 1.f);
 }
