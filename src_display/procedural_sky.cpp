@@ -1,8 +1,9 @@
 #include "display/procedural_sky.hpp"
 
 #include <stdexcept>
-#include <iostream>
 #include <GL/glew.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 /* Create FBO */
 GLuint createFBO(){
@@ -16,9 +17,6 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[PLAN_OR] = glGetUniformLocation(skyProgram, "uPlanOr");
 	skyLocations[PLAN_U] = glGetUniformLocation(skyProgram, "uPlanU");
 	skyLocations[PLAN_V] = glGetUniformLocation(skyProgram, "uPlanV");
-	std::cout<<skyLocations[PLAN_OR]<<std::endl;
-	std::cout<<skyLocations[PLAN_U]<<std::endl;
-	std::cout<<skyLocations[PLAN_V]<<std::endl;
 }
 
 /* Test for dynamique texturing the sky */
@@ -36,6 +34,30 @@ void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVA
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 	};
 	
+	glm::vec3 origins[] = {
+		glm::vec3(0.5, 0.5, 0.5),
+		glm::vec3(-0.5, 0.5, -0.5),
+		glm::vec3(-0.5, 0.5, -0.5),
+		glm::vec3(-0.5, 0.5, 0.5),
+		glm::vec3(0.5, 0.5, -0.5)
+	};
+	
+	glm::vec3 planU[] = {
+		glm::vec3(0., 0., -1.),
+		glm::vec3(0., 0., 1.),
+		glm::vec3(1., 0., 0.),
+		glm::vec3(1., 0., 0.),
+		glm::vec3(-1., 0., 0.)
+	};
+	
+	glm::vec3 planV[] = {
+		glm::vec3(0., -1., 0.),
+		glm::vec3(0., -1., 0.),
+		glm::vec3(0., 0., 1.),
+		glm::vec3(0., -1., 0.),
+		glm::vec3(0., -1., 0.),
+	};
+	
 	for(uint32_t i=0;i<5;++i){
 		//Attach the top of the skybox cubemap
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], texID, 0);
@@ -44,6 +66,11 @@ void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVA
 		if(status != GL_FRAMEBUFFER_COMPLETE){
 			throw std::runtime_error("sky framebuffer isn't complete");
 		}
+		
+		/* send uniforms */
+		glUniform3fv(skyLocations[PLAN_OR], 1, glm::value_ptr(origins[i]));
+		glUniform3fv(skyLocations[PLAN_U], 1, glm::value_ptr(planU[i]));
+		glUniform3fv(skyLocations[PLAN_V], 1, glm::value_ptr(planV[i]));
 		
 		//Clear the drawing zone
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

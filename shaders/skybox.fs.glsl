@@ -9,15 +9,8 @@ uniform vec3 uPlanV;
 out vec4 fFragColor;
 
 void main(){
-	float r = 0.f;
-	float g = 0.f;
-	float b = 0.f;
+	vec3 absolutePos = normalize(uPlanOr + vPos.x*uPlanU + vPos.y*uPlanV);
 	
-	if(uPlanOr.x == 0.5){
-		r = 1.f;
-	}else{
-		g = 1.f;
-	}
-	
-	fFragColor = vec4(r, g, b, 1.f);
+	float skyGama = 0.5 + 0.5*max(0., 1 - absolutePos.y);
+	fFragColor = vec4(skyGama, skyGama, skyGama, 1.f);
 }
