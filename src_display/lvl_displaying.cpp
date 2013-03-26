@@ -33,6 +33,7 @@ void getLocations(GLint* locations, GLuint program){
 	
 	/* Controlers  */
 	locations[FOG] = glGetUniformLocation(program, "uFog");
+	locations[OCEAN] = glGetUniformLocation(program, "uOcean");
 	/* Textures */
 	locations[SKYTEX] = glGetUniformLocation(program, "uSkyTex");
 	locations[GRASSTEX] = glGetUniformLocation(program, "uGrassTex");

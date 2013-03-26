@@ -480,6 +480,7 @@ int main(int argc, char** argv){
 
 			//Ground
 			glUniform1i(locations[CHOICE], NORMAL);
+			glUniform1i(locations[OCEAN], 1);
 			mvStack.push();
 				mvStack.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
 				mvStack.scale(glm::vec3(10*terrainScale));
@@ -495,6 +496,7 @@ int main(int argc, char** argv){
 					BindTexture(0, GL_TEXTURE1);
 				ms.pop();
 			mvStack.pop();
+			glUniform1i(locations[OCEAN], 0);
 			
 			//Terrain
 			mvStack.push();

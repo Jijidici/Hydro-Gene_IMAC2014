@@ -13,6 +13,7 @@ layout(location = 6) in float surface;
 
 uniform mat4 uMVPMatrix = mat4(1.f);
 uniform int uMode;
+uniform int uOcean;
 uniform float uTerrainScale;
 
 out vec3 vPos;
@@ -33,7 +34,11 @@ void main(){
 	}
 	else if(uMode == TRIANGLES){
 		vPos = position;
-		vTexCoords = (position.xz)*uTerrainScale;
+		if(uOcean == 1){
+			vTexCoords = (position.xz*uTerrainScale)*50;
+		}else{
+			vTexCoords = (position.xz)*50;
+		}
 		vNormal = normal;
 		vBending = bending;
 		vDrain = drain;
