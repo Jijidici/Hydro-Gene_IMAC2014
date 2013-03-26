@@ -25,7 +25,6 @@ void getLocations(GLint* locations, GLuint program){
 	
 	/* Light */
 	locations[LIGHTSUN] = glGetUniformLocation(program, "uLightSunVect");
-	locations[LIGHTMOON] = glGetUniformLocation(program, "uLightMoonVect");
 	locations[TIME] = glGetUniformLocation(program, "uTime");
 	locations[DAY] = glGetUniformLocation(program, "uDay");
 	locations[NIGHT] = glGetUniformLocation(program, "uNight");

@@ -26,7 +26,6 @@ in float gSurface;
 in float gAltitude;
 
 uniform vec3 uLightSunVect = vec3(0.,0.,0.);
-uniform vec3 uLightMoonVect = vec3(0.,0.,0.);
 uniform mat4 uMVPMatrix = mat4(1.f);
 uniform mat4 uModelView = mat4(1.f);
 uniform mat4 uInvViewMatrix = mat4(1.f);
@@ -182,11 +181,8 @@ void main() {
 				dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
 
 				vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
-				vec3 dColorMoon = dColor + vec3(0.f,0.f,0.25f);
 				float dCoeffSun = min(max(0, dot(normalize(gNormal), -normalize(uLightSunVect))), 1.);
-				float dCoeffMoon = min(max(0, dot(normalize(gNormal), -normalize(uLightMoonVect))), 1.);
 				dCoeffSun *= 0.7;
-				dCoeffMoon *= 0.1;
 
 				/* Draw water */
 				if(coefWater>0.3f){
@@ -200,7 +196,6 @@ void main() {
 					
 					/* diffus form reflection */
 					vec4 sun_D = normalize(uModelView*vec4(uLightSunVect, 0.f));
-					vec4 moon_D = normalize(uModelView*vec4(uLightMoonVect, 0.f));
 					
 					vec4 ref = reflect(P, N);
 					ref.x /= ref.w;
@@ -217,14 +212,13 @@ void main() {
 					
 					vec3 dWater = texture(uSkyTex, ref.xyz).rgb;
 					
-					float coefDiffusWaterSun = max(dot(-sun_D, N), 0.f);					
-					float coefDiffusWaterMoon = max(dot(-moon_D, N), 0.f);					
+					float coefDiffusWaterSun = max(dot(-sun_D, N), 0.f);				
 					
-					color = vec3(1.f, 1.f, 1.f)* (aColor + dWater*(coefDiffusWaterSun+coefDiffusWaterMoon));
+					color = vec3(1.f, 1.f, 1.f)* (aColor + dWater*coefDiffusWaterSun);
 					fFragColor = vec4(color, 1.f);
 
 				} else {
-					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun + dColorMoon*dCoeffMoon);
+					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun);
 					fFragColor = vec4(color, 1.f);
 				}
 			}

@@ -326,7 +326,6 @@ int main(int argc, char** argv){
 	// Creation Light
 	float coefLight = 0.;
 	glm::vec3 lightSun(glm::cos(coefLight),glm::sin(coefLight),0.f);
-	glm::vec3 lightMoon(0.f,glm::sin(coefLight-2.5),glm::cos(coefLight-2.5));
 	float time = -100.;
 	float day = 0.;
 	float dayFlag = 1.;
@@ -474,8 +473,6 @@ int main(int argc, char** argv){
 		glUniform1f(locations[DAY], day/100.);
 		glUniform1f(locations[NIGHT], night/100.);
 		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
-		glUniform3fv(locations[LIGHTMOON], 1, glm::value_ptr(lightMoon));
-		/* Send uniform to skybox shaders */
 
 		/* Send fog */
 		if(displayFog){
@@ -1171,11 +1168,6 @@ int main(int argc, char** argv){
 		coefLight -= coefLightStep;
 		lightSun.x = glm::cos(coefLight);
 		lightSun.y = glm::sin(coefLight);
-		
-		lightMoon.y = glm::sin(coefLight-2.5);
-		lightMoon.z = glm::cos(coefLight-2.5);
-		
-		//~ std::cout << "coefLight : " << coefLight << std::endl;
 		
 		if(coefLight < -4.71238898){ coefLight = 1.57079633; }
 		
