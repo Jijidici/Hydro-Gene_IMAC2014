@@ -1135,7 +1135,7 @@ int main(int argc, char** argv){
 					}
 					voxY = j;
 				}
-				xtremAltitude = (voxY*voxelSize+memory[0].pos.y+leafSize)*terrainScale;
+				xtremAltitude = (voxY*voxelSize+memory[0].pos.y+leafSize*0.8)*terrainScale;
 			}
 			
 			if(camPosition.y < xtremAltitude){
