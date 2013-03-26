@@ -141,6 +141,8 @@ void main() {
 			fFragColor = vec4(0.f, 1.f, 0.f, 1.f);
 		}
 		else{
+			
+			// REALISTIC ILLUMINATION
 			if(uChoice == BENDING){
 				float ratio = gBending/uMaxBending;
 				dColor = vec3(1.f - ratio, ratio, 1.f - ratio);
@@ -218,13 +220,7 @@ void main() {
 					float coefDiffusWaterSun = max(dot(-sun_D, N), 0.f);					
 					float coefDiffusWaterMoon = max(dot(-moon_D, N), 0.f);					
 					
-					/* Specular */
-					int sh = 100;
-					float coefSpecWaterSun = pow(max(0,dot(-P,reflect(sun_D, N))),sh) * coefDay;
-					float coefSpecWaterMoon = pow(max(0,dot(-P,reflect(moon_D, N))),sh) * coefNight;
-					vec3 sWater = vec3(1.f, 1.f, 1.f);
-					
-					color = vec3(1.f, 1.f, 1.f)* (aColor + dWater*(coefDiffusWaterSun+coefDiffusWaterMoon) + sWater*(coefSpecWaterSun+coefSpecWaterMoon));
+					color = vec3(1.f, 1.f, 1.f)* (aColor + dWater*(coefDiffusWaterSun+coefDiffusWaterMoon));
 					fFragColor = vec4(color, 1.f);
 
 				} else {
