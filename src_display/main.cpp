@@ -325,13 +325,10 @@ int main(int argc, char** argv){
 	
 	// Creation Light
 	glm::vec3 lightSun = -glm::normalize(glm::vec3(3.f, 1.f, 0.f));
-	float time = -100.;
-	float day = 0.;
-	float dayFlag = 1.;
-	float night = 0.;
-	float timeStep = 100./720.;
 	
-	float bigTime = 0.;
+	// Time variables
+	float time = 0.;
+	float timeStep = (2*M_PI)/1000.;
 	bool timePause = false;
 	
 	//Creation Cameras
@@ -444,17 +441,6 @@ int main(int argc, char** argv){
 		Uint32 end = 0;
 		Uint32 ellapsedTime = 0;
 		start = SDL_GetTicks();
-
-		/* time settings */
-		if(bigTime < 200){
-			time = bigTime - 100.;
-			dayFlag = 1.;
-		}else{
-			time = bigTime - 300.;
-			dayFlag = -1.;
-		}
-		day = (100. - fabsf(time))*dayFlag;
-		night = -day;
 		
 		// Comupte the sky textures
 		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, skyLocations);
@@ -466,9 +452,7 @@ int main(int argc, char** argv){
 		sendUniforms(locations, maxCoeffArray, thresholdDistance);
 		
 		glUniform1i(locations[MODE], TRIANGLES);
-		glUniform1f(locations[TIME], time/100.);
-		glUniform1f(locations[DAY], day/100.);
-		glUniform1f(locations[NIGHT], night/100.);
+		glUniform1f(locations[TIME], cos(time));
 		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
 
 		/* Send fog */
@@ -664,13 +648,13 @@ int main(int argc, char** argv){
 			
 			imguiLabel("Time Scroller");
 			
-			float timeMod = bigTime / 4.;
-			imguiSlider("time progression", &timeMod, 0.f, 100.f, 0.1f);
-			bigTime = timeMod * 4.;
+			float tmpTime = time/(2*M_PI);
+			imguiSlider("time progression", &tmpTime, 0.f, 1.f, 0.001f);
+			time = tmpTime*(2*M_PI);
 			
 			imguiSeparator();
 			if(imguiButton("Time Pause (Spacebar)")){
-				timePause = timePauseTrigger(timePause, &timeStep);
+				timePause = timePauseTrigger(timePause);
 			}
 			
 			imguiEndScrollArea();
@@ -1002,7 +986,7 @@ int main(int argc, char** argv){
 							break;
 							
 						case SDLK_SPACE:
-							timePause = timePauseTrigger(timePause, &timeStep);
+							timePause = timePauseTrigger(timePause);
 							break;
 
 						default:
@@ -1163,20 +1147,13 @@ int main(int argc, char** argv){
 		
 		//Manage the sun
 		
-		//~ time += timeStep;
-		bigTime += timeStep;
-		//~ day += dayStep;
-		//~ night -= dayStep;
-		
-		//~ if(time > 100){time = -time; dayFlag = -dayFlag;}
-		if(bigTime > 400){bigTime = 0.;}
-		//~ if(bigTime == 200){dayFlag = -dayFlag;}
-		//~ if(day > 100){dayStep = -dayStep;}
-		//~ if(day < -100){dayStep = -dayStep;}
-		
-		//~ std::cout << "time : " << time << std::endl;
-		//~ std::cout << "day : " << 0.5 - fabs(day) << std::endl;
-		//~ std::cout << "night : " << night << std::endl;
+		//Simulate time
+		if(!timePause){
+			time += timeStep;
+			if(time >= 2*M_PI){
+				time = 0.;
+			}
+		}
 		
 		/* timelaps animation */
 		if(timelaps){			

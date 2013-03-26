@@ -45,8 +45,6 @@ uniform int uMode;
 uniform int uChoice;
 uniform int uFog;
 uniform float uTime;
-uniform float uDay;
-uniform float uNight;
 uniform float uMaxBending = 0;
 uniform float uMaxDrain = 0;
 uniform float uMaxGradient = 0;
@@ -56,12 +54,7 @@ uniform float uMaxAltitude = 0;
 
 out vec4 fFragColor;
 
-void main() {
-	float coefDay = uDay;
-	float coefNight = uNight;
-	if(coefDay < 0.){coefDay = 0.;}
-	if(coefNight < 0.){coefNight = 0.;}
-	
+void main() {	
 	if(uMode == TRIANGLES){
 		
 		vec3 aColor = vec3(0.05);
@@ -97,37 +90,36 @@ void main() {
 						if(texel.a <0.01){
 							discard;
 					}
-					texel += texture(uPlantTex, gTexCoords)*min(coefDay, 0.7);
+					texel += texture(uPlantTex, gTexCoords);
 				}
 				else if(ratioGradient < 0.1 && ratioDrain < 0.8){
 					texel = texture(uRockTex, gTexCoords)*0.1;
 						if(texel.a <0.01){
 							discard;
 					}
-					texel += texture(uRockTex, gTexCoords)*min(coefDay, 0.7);
+					texel += texture(uRockTex, gTexCoords);
 				}
 				else if(ratioAltitude > 0.5 && ratioAltitude <= 0.8){
 					texel = texture(uPineTreeTex, gTexCoords)*0.1;
 						if(texel.a <0.01){
 							discard;
 					}
-					texel += texture(uPineTreeTex, gTexCoords)*min(coefDay, 0.7);
+					texel += texture(uPineTreeTex, gTexCoords);
 				}
 				else if(ratioAltitude > 0.8){
 					texel = texture(uSnowTreeTex, gTexCoords)*0.1;
 						if(texel.a <0.01){
 							discard;
 					}
-					texel += texture(uSnowTreeTex, gTexCoords)*min(coefDay, 0.7);
+					texel += texture(uSnowTreeTex, gTexCoords);
 				}
 				else{
 					texel = texture(uTreeTex, gTexCoords)*0.1;
 						if(texel.a <0.01){
 							discard;
 					}
-					texel += texture(uTreeTex, gTexCoords)*min(coefDay, 0.7);
+					texel += texture(uTreeTex, gTexCoords);
 				}
-				texel += vec4(0.1f*abs(uTime)*min(coefDay, 0.3),0.f,0.05f*(1.-abs(uTime))*min(coefNight, 0.3),0.f);
 				fFragColor = texel;
 			}else discard;
 		}
@@ -177,15 +169,12 @@ void main() {
 				dColor += coefSnow*texture(uSnowTex, gTexCoords).rgb;
 				dColor += coefSand*texture(uSandTex, gTexCoords).rgb;
 				dColor += coefGrass*texture(uGrassTex, gTexCoords).rgb;
-
-				vec3 dColorSun = dColor + vec3(0.5f*abs(uTime),0.f,0.f);
 				float dCoeffSun = min(max(0, dot(normalize(gNormal), -normalize(uLightSunVect))), 1.);
-				dCoeffSun *= 0.7;
 
 				/* Draw water */
 				if(coefWater>0.3f){
 					/* Normal Mapping */
-					vec2 HMCoord = gTexCoords + uTime;
+					vec2 HMCoord = gTexCoords + (uTime+1.f)*0.5f;
 					vec4 bump = vec4(texture(uWaterTex, HMCoord).xyz*2.f-1.f, 0.f);
 					vec4 N = normalize(uModelView*(bump + vec4(normalize(gNormal), 0.f)));
 					
@@ -216,7 +205,7 @@ void main() {
 					fFragColor = vec4(color, 1.f);
 
 				} else {
-					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColorSun*dCoeffSun);
+					color = vec3(0.8f, 0.8f, 0.8f) * (aColor + dColor*dCoeffSun);
 					fFragColor = vec4(color, 1.f);
 				}
 			}

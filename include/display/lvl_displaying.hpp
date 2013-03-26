@@ -12,7 +12,7 @@
 using namespace hydrogene;
 
 /* ENUM */
-static const size_t NB_LOCATIONS = 27;
+static const size_t NB_LOCATIONS = 25;
 
 enum Locations{
 	MVP,
@@ -20,8 +20,6 @@ enum Locations{
 	INV_VIEWMATRIX,
 	LIGHTSUN,
 	TIME,
-	DAY,
-	NIGHT,
 	MODE,
 	CHOICE,
 	FOG,
@@ -60,7 +58,7 @@ bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, F
 
 
 /******** Time management *********/
-bool timePauseTrigger(bool timePause, float* timeStep);
+bool timePauseTrigger(bool timePause);
 
 
 #endif

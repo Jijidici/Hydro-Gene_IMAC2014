@@ -26,8 +26,6 @@ void getLocations(GLint* locations, GLuint program){
 	/* Light */
 	locations[LIGHTSUN] = glGetUniformLocation(program, "uLightSunVect");
 	locations[TIME] = glGetUniformLocation(program, "uTime");
-	locations[DAY] = glGetUniformLocation(program, "uDay");
-	locations[NIGHT] = glGetUniformLocation(program, "uNight");
 
 	/* Shaders modes */
 	locations[MODE] = glGetUniformLocation(program, "uMode");
@@ -196,12 +194,10 @@ bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, F
 }
 
 /***** Time management *****/
-bool timePauseTrigger(bool timePause, float* timeStep){
+bool timePauseTrigger(bool timePause){
 	if(!timePause){
-		*timeStep = 0.;
 		timePause = true;
 	}else{
-		*timeStep = 100./720.;
 		timePause = false;
 	}
 	return timePause;
