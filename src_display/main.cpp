@@ -324,8 +324,7 @@ int main(int argc, char** argv){
 	float thresholdDistance = 5.f;
 	
 	// Creation Light
-	float coefLight = 0.;
-	glm::vec3 lightSun(glm::cos(coefLight),glm::sin(coefLight),0.f);
+	glm::vec3 lightSun = -glm::normalize(glm::vec3(3.f, 1.f, 0.f));
 	float time = -100.;
 	float day = 0.;
 	float dayFlag = 1.;
@@ -333,8 +332,6 @@ int main(int argc, char** argv){
 	float timeStep = 100./720.;
 	
 	float bigTime = 0.;
-	
-	float coefLightStep = 0.00218166156f;
 	bool timePause = false;
 	
 	//Creation Cameras
@@ -460,7 +457,7 @@ int main(int argc, char** argv){
 		night = -day;
 		
 		// Comupte the sky textures
-		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, skyLocations);
+		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -673,7 +670,7 @@ int main(int argc, char** argv){
 			
 			imguiSeparator();
 			if(imguiButton("Time Pause (Spacebar)")){
-				timePause = timePauseTrigger(timePause, &coefLightStep, &timeStep);
+				timePause = timePauseTrigger(timePause, &timeStep);
 			}
 			
 			imguiEndScrollArea();
@@ -1005,7 +1002,7 @@ int main(int argc, char** argv){
 							break;
 							
 						case SDLK_SPACE:
-							timePause = timePauseTrigger(timePause, &coefLightStep, &timeStep);
+							timePause = timePauseTrigger(timePause, &timeStep);
 							break;
 
 						default:
@@ -1165,11 +1162,6 @@ int main(int argc, char** argv){
 		std::sort(memory.begin(), memory.end(), memory.front());
 		
 		//Manage the sun
-		coefLight -= coefLightStep;
-		lightSun.x = glm::cos(coefLight);
-		lightSun.y = glm::sin(coefLight);
-		
-		if(coefLight < -4.71238898){ coefLight = 1.57079633; }
 		
 		//~ time += timeStep;
 		bigTime += timeStep;

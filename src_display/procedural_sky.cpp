@@ -21,11 +21,11 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 }
 
 /* Test for dynamique texturing the sky */
-void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO, GLint* skyLocations){
+void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, GLint* skyLocations){
 	glUseProgram(skyProgram);
 	
 	//send uniforms
-	glUniform3fv(skyLocations[SUN_POS], 1, glm::value_ptr(glm::normalize(glm::vec3(3.f, 1.f, 0.f))));
+	glUniform3fv(skyLocations[SUN_POS], 1, glm::value_ptr(sunPos));
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
 	glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
