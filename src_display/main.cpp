@@ -298,7 +298,7 @@ int main(int argc, char** argv){
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
 	
 	/* Bind the Cube Map */
-	BindCubeMap(texture_sky, GL_TEXTURE7);
+	BindCubeMap(texture_sky, GL_TEXTURE5);
 	
 	/* ***************************************
 	 *       DYNAMIC SKY CREATION
@@ -1224,7 +1224,7 @@ int main(int argc, char** argv){
 	}
 	
 	/* Debind the Cube Map */
-	BindCubeMap(texture_sky, 0);
+	BindCubeMap(0, GL_TEXTURE5);
 	
 	// Destruction des ressources OpenGL
 	glDeleteBuffers(1, &cubeVBO);

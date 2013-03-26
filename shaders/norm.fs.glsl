@@ -18,7 +18,6 @@
 in vec3 gPos;
 in vec3 gNormal;
 in vec2 gTexCoords;
-in vec2 gCloudsTexCoords;
 in float gBending;
 in float gDrain;
 in float gGradient;
@@ -31,7 +30,6 @@ uniform mat4 uModelView = mat4(1.f);
 uniform mat4 uInvViewMatrix = mat4(1.f);
 
 uniform samplerCube uSkyTex;
-uniform sampler2D uNightTex;
 uniform sampler2D uGrassTex;
 uniform sampler2D uWaterTex;
 uniform sampler2D uStoneTex;

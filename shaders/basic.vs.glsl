@@ -17,7 +17,6 @@ uniform int uMode;
 out vec3 vPos;
 out vec3 vNormal;
 out vec2 vTexCoords;
-out vec2 vCloudsTexCoords;
 out float vBending;
 out float vDrain;
 out float vGradient;
@@ -34,7 +33,6 @@ void main(){
 	else if(uMode == TRIANGLES){
 		vPos = position;
 		vTexCoords = (position.xz)*50;
-		vCloudsTexCoords = (position.xz+1)*0.5;
 		vNormal = normal;
 		vBending = bending;
 		vDrain = drain;
