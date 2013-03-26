@@ -56,9 +56,12 @@ void getLocations(GLint* locations, GLuint program){
 	
 	/* Vegetation */
 	locations[DISTANCE] = glGetUniformLocation(program, "uDistance");
+	
+	/* Terrain */
+	locations[TERR_SCALE] = glGetUniformLocation(program, "uTerrainScale");
 }
 
-void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistance){
+void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistance, float terrainScale){
 	/**** SEND ****/
 	glUniform1f(locations[MAXBENDING], maxCoeffArray[0]);	
 	glUniform1f(locations[MAXDRAIN], maxCoeffArray[1]);
@@ -82,6 +85,7 @@ void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistanc
 	glUniform1i(locations[SNOWTREETEX], 4);
 	
 	glUniform1i(locations[DISTANCE], thresholdDistance);
+	glUniform1f(locations[TERR_SCALE], terrainScale);
 }
 
 void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize, FreeFlyCamera& ffCam, CamType camType){

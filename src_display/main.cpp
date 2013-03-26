@@ -339,7 +339,7 @@ int main(int argc, char** argv){
 	/* Uniform Locations */
 	GLint* locations = new GLint[NB_LOCATIONS];
 	getLocations(locations, terrainProgram);	 
-	sendUniforms(locations, maxCoeffArray, thresholdDistance);
+	sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
@@ -449,7 +449,7 @@ int main(int argc, char** argv){
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		glUseProgram(terrainProgram);
-		sendUniforms(locations, maxCoeffArray, thresholdDistance);
+		sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 		
 		glUniform1i(locations[MODE], TRIANGLES);
 		glUniform1f(locations[TIME], cos(time));
@@ -747,11 +747,11 @@ int main(int argc, char** argv){
 			if(toggle){
 				if(displayDebug){
 					glUseProgram(terrainProgram);
-					sendUniforms(locations, maxCoeffArray, thresholdDistance);
+					sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 					displayDebug = false;
 				}else{
 					glUseProgram(debugProgram);
-					sendUniforms(locations, maxCoeffArray, thresholdDistance);
+					sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 					displayDebug = true;
 				}
 			}
@@ -849,11 +849,11 @@ int main(int argc, char** argv){
 							//change shaders
 							if(displayDebug){
 								glUseProgram(terrainProgram);
-								sendUniforms(locations, maxCoeffArray, thresholdDistance);
+								sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 								displayDebug = false;
 							}else{
 								glUseProgram(debugProgram);
-								sendUniforms(locations, maxCoeffArray, thresholdDistance);
+								sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 								displayDebug = true;
 							}
 							break;

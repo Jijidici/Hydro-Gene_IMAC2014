@@ -12,7 +12,7 @@
 using namespace hydrogene;
 
 /* ENUM */
-static const size_t NB_LOCATIONS = 25;
+static const size_t NB_LOCATIONS = 26;
 
 enum Locations{
 	MVP,
@@ -39,12 +39,13 @@ enum Locations{
 	MAXGRADIENT,
 	MAXSURFACE,
 	MAXALTITUDE,
-	DISTANCE	
+	DISTANCE,
+	TERR_SCALE	
 };
 
 void getLocations(GLint* locations, GLuint program);
 
-void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistance);
+void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistance, float terrainScale);
 
 void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize, FreeFlyCamera& ffCam, CamType camType);
 
