@@ -418,6 +418,9 @@ int main(int argc, char** argv){
 	bool drainItem = false;
 	bool gradientItem = false;
 	bool surfaceItem = false;
+	float waterTime = 0.;
+	float step = 0.01;
+	float coeffStep = 1;
 	
 	if(arguments[BENDING]) bendItem = true;
 	if(arguments[DRAIN]) drainItem = true;
@@ -442,6 +445,14 @@ int main(int argc, char** argv){
 		Uint32 ellapsedTime = 0;
 		start = SDL_GetTicks();
 		
+		if(waterTime > 1){
+			coeffStep = -1;
+		}
+		if(waterTime < 0) {
+			coeffStep = 1;
+		}
+		waterTime += coeffStep*step;			
+		
 		// Comupte the sky textures
 		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, skyLocations);
 		
@@ -453,6 +464,7 @@ int main(int argc, char** argv){
 		
 		glUniform1i(locations[MODE], TRIANGLES);
 		glUniform1f(locations[TIME], cos(time));
+		glUniform1f(locations[WATERTIME], waterTime);
 		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
 
 		/* Send fog */
@@ -481,6 +493,7 @@ int main(int argc, char** argv){
 			//Ground
 			glUniform1i(locations[CHOICE], NORMAL);
 			glUniform1i(locations[OCEAN], 1);
+			BindTexture(texture_terrain[0], GL_TEXTURE0);
 			mvStack.push();
 				mvStack.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
 				mvStack.scale(glm::vec3(10*terrainScale));
@@ -496,6 +509,7 @@ int main(int argc, char** argv){
 					BindTexture(0, GL_TEXTURE1);
 				ms.pop();
 			mvStack.pop();
+			BindTexture(0, GL_TEXTURE0);
 			glUniform1i(locations[OCEAN], 0);
 			
 			//Terrain

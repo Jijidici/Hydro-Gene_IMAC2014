@@ -54,7 +54,8 @@ vec3 HSLtoRGB(int H, float S, float L){
 void main(){
 	vec3 absolutePos = normalize(uPlanOr + vPos.x*uPlanU + vPos.y*uPlanV);
 	
-	float skyLightness = 0.3 + 0.5*max(0., 1 - absolutePos.y);
+//	float skyLightness = 0.3 + 0.5*max(0., 1 - absolutePos.y);
+	float skyLightness = 0.5;
 	float skySat = 0.7;
 	int skyHue = 220;
 	
