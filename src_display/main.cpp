@@ -323,13 +323,13 @@ int main(int argc, char** argv){
 	//distance for changing of LOD
 	float thresholdDistance = 5.f;
 	
-	// Creation Light
-	glm::vec3 lightSun = -glm::normalize(glm::vec3(3.f, 1.f, 0.f));
-	
 	// Time variables
-	float time = 0.;
 	float timeStep = (2*M_PI)/1000.;
+	float time = 500*timeStep;
 	bool timePause = false;
+	
+	// Creation Light
+	glm::vec3 lightSun = -glm::normalize(glm::vec3(cos(time), sin(time), 0.f));
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -1147,8 +1147,6 @@ int main(int argc, char** argv){
 		/* Sort the memory with camera position */
 		std::sort(memory.begin(), memory.end(), memory.front());
 		
-		//Manage the sun
-		
 		//Simulate time
 		if(!timePause){
 			time += timeStep;
@@ -1156,6 +1154,10 @@ int main(int argc, char** argv){
 				time = 0.;
 			}
 		}
+		
+		//Manage the sun
+		lightSun.x = cos(time);
+		lightSun.y = sin(time);
 		
 		/* timelaps animation */
 		if(timelaps){			
