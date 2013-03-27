@@ -166,7 +166,7 @@ void main(){
 	if(sunFragDistance <= SUN_RADIUS){
 		skyLightness = 1;
 	}else if(sunFragDistance <= HALO_RADIUS){
-		skyLightness += (1-skyLightness)*(1-(sunFragDistance/HALO_RADIUS));
+		skyLightness += (1-skyLightness)*(1-((sunFragDistance-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS)));
 	}
 	
 	fFragColor = vec4( mix(HSLtoRGB(skyHue, skySat, skyLightness), vec3(1.), cloudCoef), 1.f);
