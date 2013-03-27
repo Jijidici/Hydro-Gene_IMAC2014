@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+static const size_t WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
+
 /* Create FBO */
 GLuint createFBO(){
 	GLuint fboID = 0;
@@ -85,4 +87,5 @@ void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVA
 		glBindVertexArray(0);
 	}		
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 }
