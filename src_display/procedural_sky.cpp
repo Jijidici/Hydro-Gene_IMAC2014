@@ -20,14 +20,16 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[PLAN_U] = glGetUniformLocation(skyProgram, "uPlanU");
 	skyLocations[PLAN_V] = glGetUniformLocation(skyProgram, "uPlanV");
 	skyLocations[SUN_POS] = glGetUniformLocation(skyProgram, "uSunPos");
+	skyLocations[SKY_TIME] = glGetUniformLocation(skyProgram, "uTime");
 }
 
 /* Test for dynamique texturing the sky */
-void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, GLint* skyLocations){
+void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, float time, GLint* skyLocations){
 	glUseProgram(skyProgram);
 	
 	//send uniforms
 	glUniform3fv(skyLocations[SUN_POS], 1, glm::value_ptr(sunPos));
+	glUniform1f(skyLocations[SKY_TIME], time);
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
 	glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
@@ -77,6 +79,7 @@ void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVA
 		glUniform3fv(skyLocations[PLAN_OR], 1, glm::value_ptr(origins[i]));
 		glUniform3fv(skyLocations[PLAN_U], 1, glm::value_ptr(planU[i]));
 		glUniform3fv(skyLocations[PLAN_V], 1, glm::value_ptr(planV[i]));
+		//~ glUniform1f(skyLocations[TIME], time);
 		
 		//Clear the drawing zone
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

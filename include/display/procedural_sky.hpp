@@ -11,7 +11,8 @@ enum SkyLocation{
 	PLAN_OR,
 	PLAN_U,
 	PLAN_V,
-	SUN_POS
+	SUN_POS,
+	SKY_TIME
 };
 
 /* Create FBO */
@@ -21,6 +22,6 @@ GLuint createFBO();
 void getSkyLocation(GLint* skyLocations, GLuint skyProgram);
 
 /* Test for dynamique texturing the sky */
-void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, GLint* skyLocations);
+void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, float time, GLint* skyLocations);
 
 #endif

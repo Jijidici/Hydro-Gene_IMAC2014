@@ -330,6 +330,7 @@ int main(int argc, char** argv){
 	float time = 0.;
 	float timeStep = (2*M_PI)/1000.;
 	bool timePause = false;
+	float cloudsTime = 0.;
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -443,7 +444,7 @@ int main(int argc, char** argv){
 		start = SDL_GetTicks();
 		
 		// Comupte the sky textures
-		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, skyLocations);
+		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, cloudsTime, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1156,6 +1157,7 @@ int main(int argc, char** argv){
 				time = 0.;
 			}
 		}
+		cloudsTime += timeStep;
 		
 		/* timelaps animation */
 		if(timelaps){			

@@ -8,6 +8,7 @@ uniform vec3 uPlanOr;
 uniform vec3 uPlanU;
 uniform vec3 uPlanV;
 uniform vec3 uSunPos;
+uniform float uTime;
 
 out vec4 fFragColor;
 
@@ -150,11 +151,13 @@ void main(){
 	float skyLightness = 0.3 + 0.5*max(0., 1 - absolutePos.y);
 	float skySat = 0.7;
 	int skyHue = 220;
-	
-	float cloudZone = snoise(absolutePos*2)*0.7;
+	float time = uTime*0.125f;
+	//~ float cloudZone = snoise(vec3(absolutePos.x + uTime, absolutePos.y, absolutePos.z)*2)*0.7;
+	float cloudZone = snoise((absolutePos+time)*2)*0.9;
 	
 	float cloudCoef = 0.f;
-	
+	absolutePos.x += time*2;
+	//~ absolutePos.z += time;
 	cloudCoef = snoise(vec3(absolutePos.x*2, absolutePos.y*4, absolutePos.z*0.75)*3);
 	cloudCoef = (cloudCoef + 1.f)/2.;
 	
