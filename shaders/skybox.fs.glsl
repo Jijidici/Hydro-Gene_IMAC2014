@@ -158,11 +158,9 @@ void main(){
 	float time = uTime*0.125f;
 
 	float cloudZone = cnoise((absolutePos+time)*3)*0.9;
-	//~ float cloudZone = 1.;
 	
 	float cloudCoef = 0.f;
 	absolutePos.x += time*2;
-	//~ absolutePos.z += time;
 	cloudCoef = cnoise(vec3(absolutePos.x*2, absolutePos.y*3, absolutePos.z*0.75)*5)*3;
 	cloudCoef = (cloudCoef + 2.f)/3.f;
 	
