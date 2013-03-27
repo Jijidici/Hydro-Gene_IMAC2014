@@ -45,7 +45,7 @@
 
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
-static const size_t WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
+static const size_t WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
 static const size_t BYTES_PER_PIXEL = 32;
 
 static const size_t GRID_3D_SIZE = 2;
@@ -330,6 +330,7 @@ int main(int argc, char** argv){
 	float time = 0.;
 	float timeStep = (2*M_PI)/1000.;
 	bool timePause = false;
+	float cloudsTime = 0.;
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -454,7 +455,7 @@ int main(int argc, char** argv){
 		waterTime += coeffStep*step;			
 		
 		// Comupte the sky textures
-		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, skyLocations);
+		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, cloudsTime, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -689,7 +690,7 @@ int main(int argc, char** argv){
 			
 			imguiSeparator();
 			imguiLabel("Level of details distance");
-			imguiSlider("threshold", &thresholdDistance, 0.f, 10.f, 0.001f);
+			imguiSlider("threshold", &thresholdDistance, 0.f, 30.f, 0.001f);
 			
 			imguiEndScrollArea();
 			/* end Details UI */
@@ -1170,6 +1171,7 @@ int main(int argc, char** argv){
 				time = 0.;
 			}
 		}
+		cloudsTime += timeStep;
 		
 		/* timelaps animation */
 		if(timelaps){			
