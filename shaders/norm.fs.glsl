@@ -45,6 +45,7 @@ uniform int uMode;
 uniform int uChoice;
 uniform int uFog;
 uniform float uTime;
+uniform float uWaterTime;
 uniform float uMaxBending = 0;
 uniform float uMaxDrain = 0;
 uniform float uMaxGradient = 0;
@@ -168,13 +169,23 @@ void main() {
 				vec4 dWater = vec4(0.f);
 				if(coefWater>0.f){
 					/* Normal Mapping */
-					vec2 HMCoord = gTexCoords + (uTime+1.f)*0.5f;
+					vec2 HMCoord = gTexCoords/5;// + uTime*0.05f;
+//					vec2 HMCoord = gTexCoords;
+					mat2 rotatHMcoord;
+					rotatHMcoord[0][0] = 0.965925826;
+					rotatHMcoord[0][1] = 0.258819045;
+					rotatHMcoord[1][0] = -0.258819045;
+					rotatHMcoord[1][1] = 0.965925826;
+					vec2 HMCoordAlt = -(rotatHMcoord*HMCoord);
+//					HMCoordAlt.y = -HMCoordAlt.y;
+
 					vec4 bump = vec4(texture(uWaterTex, HMCoord).xyz*2.f-1.f, 0.f);
-					vec4 N = normalize(uModelView*(bump + vec4(normalize(gNormal), 0.f)));
+					vec4 bumpAlt = vec4(texture(uWaterTex, HMCoordAlt).xyz*2.f-1.f, 0.f);
+					vec4 N = normalize(uModelView*(uWaterTime*bump + (1-uWaterTime)*bumpAlt + vec4(normalize(gNormal), 0.f)));
 				
 					/* compute normal for diffus component */
 					if(coefWater>0.3){
-						dCoeff = min(max(0, dot(normalize(gNormal+bump.xyz), -normalize(vec3(0.f, -1.f, 0.f)))), 1.);
+						dCoeff = min(max(0, dot(normalize(gNormal+uWaterTime*bump.xyz+(1-uWaterTime)*bumpAlt.xyz), -normalize(vec3(0.f, -1.f, 0.f)))), 1.);
 					}
 					
 					/* fragment position in camera space */
@@ -193,7 +204,9 @@ void main() {
 					reflectRotMat[2][1] = - reflectRotMat[1][2];
 					ref = reflectRotMat*ref;
 					
-					dWater = texture(uSkyTex, ref.xyz);
+					float dCoeffRef = 0.5*min(max(0, dot(N, -P)), 1.f);
+					
+					dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz) + dCoeffRef*texture(uGrassTex, gTexCoords);
 				}
 	
 				dColor = coefWater*dWater.rgb;

@@ -26,6 +26,7 @@ void getLocations(GLint* locations, GLuint program){
 	/* Light */
 	locations[LIGHTSUN] = glGetUniformLocation(program, "uLightSunVect");
 	locations[TIME] = glGetUniformLocation(program, "uTime");
+	locations[WATERTIME] = glGetUniformLocation(program, "uWaterTime");
 
 	/* Shaders modes */
 	locations[MODE] = glGetUniformLocation(program, "uMode");

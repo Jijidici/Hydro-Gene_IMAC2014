@@ -45,7 +45,7 @@
 
 
 static const Uint32 MIN_LOOP_TIME = 1000/FRAME_RATE;
-static const size_t WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
+static const size_t WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
 static const size_t BYTES_PER_PIXEL = 32;
 
 static const size_t GRID_3D_SIZE = 2;
@@ -327,6 +327,7 @@ int main(int argc, char** argv){
 	float timeStep = (2*M_PI)/1000.;
 	float time = 500*timeStep;
 	bool timePause = false;
+	float cloudsTime = 0.;
 	
 	// Creation Light
 	glm::vec3 lightSun = -glm::normalize(glm::vec3(cos(time), sin(time), 0.f));
@@ -418,6 +419,9 @@ int main(int argc, char** argv){
 	bool drainItem = false;
 	bool gradientItem = false;
 	bool surfaceItem = false;
+	float waterTime = 0.;
+	float step = 0.01;
+	float coeffStep = 1;
 	
 	if(arguments[BENDING]) bendItem = true;
 	if(arguments[DRAIN]) drainItem = true;
@@ -442,8 +446,16 @@ int main(int argc, char** argv){
 		Uint32 ellapsedTime = 0;
 		start = SDL_GetTicks();
 		
+		if(waterTime > 1){
+			coeffStep = -1;
+		}
+		if(waterTime < 0) {
+			coeffStep = 1;
+		}
+		waterTime += coeffStep*step;			
+		
 		// Comupte the sky textures
-		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, skyLocations);
+		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, cloudsTime, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -453,6 +465,7 @@ int main(int argc, char** argv){
 		
 		glUniform1i(locations[MODE], TRIANGLES);
 		glUniform1f(locations[TIME], cos(time));
+		glUniform1f(locations[WATERTIME], waterTime);
 		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
 
 		/* Send fog */
@@ -481,6 +494,7 @@ int main(int argc, char** argv){
 			//Ground
 			glUniform1i(locations[CHOICE], NORMAL);
 			glUniform1i(locations[OCEAN], 1);
+			BindTexture(texture_terrain[0], GL_TEXTURE0);
 			mvStack.push();
 				mvStack.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
 				mvStack.scale(glm::vec3(10*terrainScale));
@@ -496,6 +510,7 @@ int main(int argc, char** argv){
 					BindTexture(0, GL_TEXTURE1);
 				ms.pop();
 			mvStack.pop();
+			BindTexture(0, GL_TEXTURE0);
 			glUniform1i(locations[OCEAN], 0);
 			
 			//Terrain
@@ -675,7 +690,7 @@ int main(int argc, char** argv){
 			
 			imguiSeparator();
 			imguiLabel("Level of details distance");
-			imguiSlider("threshold", &thresholdDistance, 0.f, 10.f, 0.001f);
+			imguiSlider("threshold", &thresholdDistance, 0.f, 30.f, 0.001f);
 			
 			imguiEndScrollArea();
 			/* end Details UI */
@@ -1154,6 +1169,7 @@ int main(int argc, char** argv){
 				time = 0.;
 			}
 		}
+		cloudsTime += timeStep;
 		
 		//Manage the sun
 		lightSun.x = cos(time);
