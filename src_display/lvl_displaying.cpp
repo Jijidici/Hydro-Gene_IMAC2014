@@ -25,10 +25,7 @@ void getLocations(GLint* locations, GLuint program){
 	
 	/* Light */
 	locations[LIGHTSUN] = glGetUniformLocation(program, "uLightSunVect");
-	locations[LIGHTMOON] = glGetUniformLocation(program, "uLightMoonVect");
 	locations[TIME] = glGetUniformLocation(program, "uTime");
-	locations[DAY] = glGetUniformLocation(program, "uDay");
-	locations[NIGHT] = glGetUniformLocation(program, "uNight");
 
 	/* Shaders modes */
 	locations[MODE] = glGetUniformLocation(program, "uMode");
@@ -36,9 +33,9 @@ void getLocations(GLint* locations, GLuint program){
 	
 	/* Controlers  */
 	locations[FOG] = glGetUniformLocation(program, "uFog");
+	locations[OCEAN] = glGetUniformLocation(program, "uOcean");
 	/* Textures */
 	locations[SKYTEX] = glGetUniformLocation(program, "uSkyTex");
-	locations[NIGHTTEX] = glGetUniformLocation(program, "uNightTex");
 	locations[GRASSTEX] = glGetUniformLocation(program, "uGrassTex");
 	locations[WATERTEX] = glGetUniformLocation(program, "uWaterTex");
 	locations[STONETEX] = glGetUniformLocation(program, "uStoneTex");
@@ -60,9 +57,12 @@ void getLocations(GLint* locations, GLuint program){
 	
 	/* Vegetation */
 	locations[DISTANCE] = glGetUniformLocation(program, "uDistance");
+	
+	/* Terrain */
+	locations[TERR_SCALE] = glGetUniformLocation(program, "uTerrainScale");
 }
 
-void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistance){
+void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistance, float terrainScale){
 	/**** SEND ****/
 	glUniform1f(locations[MAXBENDING], maxCoeffArray[0]);	
 	glUniform1f(locations[MAXDRAIN], maxCoeffArray[1]);
@@ -77,8 +77,7 @@ void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistanc
 	glUniform1i(locations[SNOWTEX], 3);
 	glUniform1i(locations[SANDTEX], 4);
 	//Send sky textures
-	glUniform1i(locations[NIGHTTEX], 6);
-	glUniform1i(locations[SKYTEX], 7);
+	glUniform1i(locations[SKYTEX], 5);
 	// Send details textures
 	glUniform1i(locations[ROCKTEX], 0);
 	glUniform1i(locations[PLANTTEX], 1);
@@ -87,6 +86,7 @@ void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistanc
 	glUniform1i(locations[SNOWTREETEX], 4);
 	
 	glUniform1i(locations[DISTANCE], thresholdDistance);
+	glUniform1f(locations[TERR_SCALE], terrainScale);
 }
 
 void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize, FreeFlyCamera& ffCam, CamType camType){
@@ -199,17 +199,10 @@ bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, F
 }
 
 /***** Time management *****/
-bool timePauseTrigger(bool timePause, float* coefLightStep, float* timeStep){
+bool timePauseTrigger(bool timePause){
 	if(!timePause){
-		*coefLightStep = 0.;
-		//~ tempDayStep = dayStep;
-		//~ dayStep = 0.;
-		*timeStep = 0.;
 		timePause = true;
 	}else{
-		*timeStep = 100./720.;
-		//~ dayStep = tempDayStep;
-		*coefLightStep = 0.00218166156f;
 		timePause = false;
 	}
 	return timePause;

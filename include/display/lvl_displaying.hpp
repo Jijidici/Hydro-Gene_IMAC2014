@@ -12,22 +12,19 @@
 using namespace hydrogene;
 
 /* ENUM */
-static const size_t NB_LOCATIONS = 29;
+static const size_t NB_LOCATIONS = 27;
 
 enum Locations{
 	MVP,
 	MODELVIEW,
 	INV_VIEWMATRIX,
 	LIGHTSUN,
-	LIGHTMOON,
 	TIME,
-	DAY,
-	NIGHT,
 	MODE,
 	CHOICE,
 	FOG,
+	OCEAN,
 	SKYTEX,
-	NIGHTTEX,
 	GRASSTEX,
 	WATERTEX,
 	STONETEX,
@@ -43,12 +40,13 @@ enum Locations{
 	MAXGRADIENT,
 	MAXSURFACE,
 	MAXALTITUDE,
-	DISTANCE	
+	DISTANCE,
+	TERR_SCALE	
 };
 
 void getLocations(GLint* locations, GLuint program);
 
-void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistance);
+void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistance, float terrainScale);
 
 void display_lvl2(GLuint cubeVAO, MatrixStack& ms, GLuint MVPLocation, GLint NbIntersectionLocation, GLint NormSumLocation, uint32_t nbIntersectionMax, uint32_t nbVertices, VoxelData* voxArray, Leaf& l, uint16_t nbSub, double cubeSize, FreeFlyCamera& ffCam, CamType camType);
 
@@ -62,7 +60,7 @@ bool frustumTest(Leaf& l, uint32_t i, uint32_t j, uint32_t k, double cubeSize, F
 
 
 /******** Time management *********/
-bool timePauseTrigger(bool timePause, float* coefLightStep, float* timeStep);
+bool timePauseTrigger(bool timePause);
 
 
 #endif

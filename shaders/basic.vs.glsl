@@ -13,13 +13,12 @@ layout(location = 6) in float surface;
 
 uniform mat4 uMVPMatrix = mat4(1.f);
 uniform int uMode;
-uniform mat4 uViewMatrix = mat4(1.f);
-uniform vec3 uLightSunVect = vec3(0.,0.,0.);
+uniform int uOcean;
+uniform float uTerrainScale;
 
 out vec3 vPos;
 out vec3 vNormal;
 out vec2 vTexCoords;
-out vec2 vCloudsTexCoords;
 out float vBending;
 out float vDrain;
 out float vGradient;
@@ -35,9 +34,11 @@ void main(){
 	}
 	else if(uMode == TRIANGLES){
 		vPos = position;
-		//~ vTexCoords = (position.xz+1)*0.5;
-		vTexCoords = (position.xz)*50;
-		vCloudsTexCoords = (position.xz+1)*0.5;
+		if(uOcean == 1){
+			vTexCoords = (position.xz*uTerrainScale)*50;
+		}else{
+			vTexCoords = (position.xz)*50;
+		}
 		vNormal = normal;
 		vBending = bending;
 		vDrain = drain;

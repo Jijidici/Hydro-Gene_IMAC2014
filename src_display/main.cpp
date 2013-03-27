@@ -23,6 +23,7 @@
 #include "display/lvl_displaying.hpp"
 #include "display/memory_cache.hpp"
 #include "display/cube_model.hpp"
+#include "display/procedural_sky.hpp"
 
 #include "drn/drn_reader.h"
 #include "my_imgui/imgui.h"
@@ -49,6 +50,9 @@ static const size_t BYTES_PER_PIXEL = 32;
 
 static const size_t GRID_3D_SIZE = 2;
 static const size_t TERRAIN_SCALE_PARAM = 150000;
+
+static const size_t NB_TEXTURES_VEGET = 5;
+static const size_t NB_TEXTURES_TERRAIN = 5;
 
 int main(int argc, char** argv){
 
@@ -161,28 +165,8 @@ int main(int argc, char** argv){
 	/* ******************************** */
 	GLuint cubeVBO = CreateCubeVBO();
 	GLuint cubeVAO = CreateCubeVAO(cubeVBO);
-
-	GLuint texture_sky = CreateCubeMap();
-	GLuint texture_night = CreateTexture("textures/night.jpg");
-	/* vegetation textures */
-	GLuint texture_veget[5];
-	texture_veget[0] = CreateTexture("textures/rock.png");
-	texture_veget[1] = CreateTexture("textures/plant.png");
-	texture_veget[2] = CreateTexture("textures/tree.png");
-	texture_veget[3] = CreateTexture("textures/pine_tree.png");
-	texture_veget[4] = CreateTexture("textures/snow_tree.png");
-
-	/* terrain textures */
-	GLuint texture_terrain[5];
-	texture_terrain[0] = CreateTexture("textures/grass.jpg");
-//	texture_terrain[1] = CreateTexture("textures/heightmap.jpg");
-	texture_terrain[1] = CreateTexture("textures/normalmap.jpg");
-	texture_terrain[2] = CreateTexture("textures/stone.jpg");
-	texture_terrain[3] = CreateTexture("textures/snow.jpg");
-	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
-	
-	/* Bind the Cube Map */
-	BindCubeMap(texture_sky, GL_TEXTURE7);
+	GLuint quadVBO = CreateQuadVBO();
+	GLuint quadVAO = CreateQuadVAO(quadVBO);
 	
 	/* Leaves VBOs & VAOs creation for computed triangles*/
 	GLuint* l_VBOs = new GLuint[nbVao];
@@ -266,14 +250,19 @@ int main(int argc, char** argv){
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	
-	// Creation des programmes de shaders
+	/* *******************************
+	 *      PROGRAM CREATION
+	 * ******************************* */
 	GLuint terrainProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
 	GLuint debugProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/debug.gs.glsl");
-	if(!terrainProgram || !debugProgram){
+	GLuint skyProgram = hydrogene::loadProgram("shaders/skybox.vs.glsl", "shaders/skybox.fs.glsl");
+	if(!terrainProgram || !debugProgram || !skyProgram){
 		glDeleteBuffers(1, &cubeVBO);
+		glDeleteBuffers(1, &quadVBO);
 		glDeleteBuffers(nbVao, l_VBOs);
 		glDeleteBuffers(1, &groundVBO);
 		glDeleteVertexArrays(1, &cubeVAO);
+		glDeleteVertexArrays(1, &quadVAO);
 		glDeleteVertexArrays(nbVao, l_VAOs);
 		glDeleteVertexArrays(1, &groundVAO);
 		delete[] l_VAOs;
@@ -287,6 +276,36 @@ int main(int argc, char** argv){
 		return (EXIT_FAILURE);
 	}	
 	glUseProgram(terrainProgram);
+	
+	/* *******************************
+	 *     TEXTURES CREATION
+	 * ******************************* */
+	GLuint texture_sky = CreateCubeMap();
+	/* vegetation textures */
+	GLuint texture_veget[NB_TEXTURES_VEGET];
+	texture_veget[0] = CreateTexture("textures/rock.png");
+	texture_veget[1] = CreateTexture("textures/plant.png");
+	texture_veget[2] = CreateTexture("textures/tree.png");
+	texture_veget[3] = CreateTexture("textures/pine_tree.png");
+	texture_veget[4] = CreateTexture("textures/snow_tree.png");
+
+	/* terrain textures */
+	GLuint texture_terrain[NB_TEXTURES_TERRAIN];
+	texture_terrain[0] = CreateTexture("textures/grass.jpg");
+	texture_terrain[1] = CreateTexture("textures/normalmap.jpg");
+	texture_terrain[2] = CreateTexture("textures/stone.jpg");
+	texture_terrain[3] = CreateTexture("textures/snow.jpg");
+	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
+	
+	/* Bind the Cube Map */
+	BindCubeMap(texture_sky, GL_TEXTURE5);
+	
+	/* ***************************************
+	 *       DYNAMIC SKY CREATION
+	 * *************************************** */
+	GLuint skyFBO = createFBO();
+	GLint* skyLocations = new GLint[NB_SKYLOCATIONS];
+	getSkyLocation(skyLocations, skyProgram);
 	
 	/* MATRICES CAMERA AND LIGHTS */
 	float verticalFieldOfView = 90.0;
@@ -305,18 +324,11 @@ int main(int argc, char** argv){
 	float thresholdDistance = 5.f;
 	
 	// Creation Light
-	float coefLight = 0.;
-	glm::vec3 lightSun(glm::cos(coefLight),glm::sin(coefLight),0.f);
-	glm::vec3 lightMoon(0.f,glm::sin(coefLight-2.5),glm::cos(coefLight-2.5));
-	float time = -100.;
-	float day = 0.;
-	float dayFlag = 1.;
-	float night = 0.;
-	float timeStep = 100./720.;
+	glm::vec3 lightSun = -glm::normalize(glm::vec3(3.f, 1.f, 0.f));
 	
-	float bigTime = 0.;
-	
-	float coefLightStep = 0.00218166156f;
+	// Time variables
+	float time = 0.;
+	float timeStep = (2*M_PI)/1000.;
 	bool timePause = false;
 	
 	//Creation Cameras
@@ -327,7 +339,7 @@ int main(int argc, char** argv){
 	/* Uniform Locations */
 	GLint* locations = new GLint[NB_LOCATIONS];
 	getLocations(locations, terrainProgram);	 
-	sendUniforms(locations, maxCoeffArray, thresholdDistance);
+	sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 
 	/* Memory cache - vector of voxelarray */
 	std::vector<Chunk> memory;
@@ -429,30 +441,19 @@ int main(int argc, char** argv){
 		Uint32 end = 0;
 		Uint32 ellapsedTime = 0;
 		start = SDL_GetTicks();
-
-		/* time settings */
-		if(bigTime < 200){
-			time = bigTime - 100.;
-			dayFlag = 1.;
-		}else{
-			time = bigTime - 300.;
-			dayFlag = -1.;
-		}
-		day = (100. - fabsf(time))*dayFlag;
-		night = -day;
+		
+		// Comupte the sky textures
+		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		glUseProgram(terrainProgram);
-		sendUniforms(locations, maxCoeffArray, thresholdDistance);
+		sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 		
 		glUniform1i(locations[MODE], TRIANGLES);
-		glUniform1f(locations[TIME], time/100.);
-		glUniform1f(locations[DAY], day/100.);
-		glUniform1f(locations[NIGHT], night/100.);
+		glUniform1f(locations[TIME], cos(time));
 		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
-		glUniform3fv(locations[LIGHTMOON], 1, glm::value_ptr(lightMoon));
 
 		/* Send fog */
 		if(displayFog){
@@ -479,6 +480,7 @@ int main(int argc, char** argv){
 
 			//Ground
 			glUniform1i(locations[CHOICE], NORMAL);
+			glUniform1i(locations[OCEAN], 1);
 			mvStack.push();
 				mvStack.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
 				mvStack.scale(glm::vec3(10*terrainScale));
@@ -494,6 +496,7 @@ int main(int argc, char** argv){
 					BindTexture(0, GL_TEXTURE1);
 				ms.pop();
 			mvStack.pop();
+			glUniform1i(locations[OCEAN], 0);
 			
 			//Terrain
 			mvStack.push();
@@ -647,13 +650,13 @@ int main(int argc, char** argv){
 			
 			imguiLabel("Time Scroller");
 			
-			float timeMod = bigTime / 4.;
-			imguiSlider("time progression", &timeMod, 0.f, 100.f, 0.1f);
-			bigTime = timeMod * 4.;
+			float tmpTime = time/(2*M_PI);
+			imguiSlider("time progression", &tmpTime, 0.f, 1.f, 0.001f);
+			time = tmpTime*(2*M_PI);
 			
 			imguiSeparator();
 			if(imguiButton("Time Pause (Spacebar)")){
-				timePause = timePauseTrigger(timePause, &coefLightStep, &timeStep);
+				timePause = timePauseTrigger(timePause);
 			}
 			
 			imguiEndScrollArea();
@@ -746,11 +749,11 @@ int main(int argc, char** argv){
 			if(toggle){
 				if(displayDebug){
 					glUseProgram(terrainProgram);
-					sendUniforms(locations, maxCoeffArray, thresholdDistance);
+					sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 					displayDebug = false;
 				}else{
 					glUseProgram(debugProgram);
-					sendUniforms(locations, maxCoeffArray, thresholdDistance);
+					sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 					displayDebug = true;
 				}
 			}
@@ -848,11 +851,11 @@ int main(int argc, char** argv){
 							//change shaders
 							if(displayDebug){
 								glUseProgram(terrainProgram);
-								sendUniforms(locations, maxCoeffArray, thresholdDistance);
+								sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 								displayDebug = false;
 							}else{
 								glUseProgram(debugProgram);
-								sendUniforms(locations, maxCoeffArray, thresholdDistance);
+								sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 								displayDebug = true;
 							}
 							break;
@@ -985,7 +988,7 @@ int main(int argc, char** argv){
 							break;
 							
 						case SDLK_SPACE:
-							timePause = timePauseTrigger(timePause, &coefLightStep, &timeStep);
+							timePause = timePauseTrigger(timePause);
 							break;
 
 						default:
@@ -1132,7 +1135,7 @@ int main(int argc, char** argv){
 					}
 					voxY = j;
 				}
-				xtremAltitude = (voxY*voxelSize+memory[0].pos.y+leafSize)*terrainScale;
+				xtremAltitude = (voxY*voxelSize+memory[0].pos.y+leafSize*0.8)*terrainScale;
 			}
 			
 			if(camPosition.y < xtremAltitude){
@@ -1145,31 +1148,14 @@ int main(int argc, char** argv){
 		std::sort(memory.begin(), memory.end(), memory.front());
 		
 		//Manage the sun
-		coefLight -= coefLightStep;
-		lightSun.x = glm::cos(coefLight);
-		lightSun.y = glm::sin(coefLight);
 		
-		lightMoon.y = glm::sin(coefLight-2.5);
-		lightMoon.z = glm::cos(coefLight-2.5);
-		
-		//~ std::cout << "coefLight : " << coefLight << std::endl;
-		
-		if(coefLight < -4.71238898){ coefLight = 1.57079633; }
-		
-		//~ time += timeStep;
-		bigTime += timeStep;
-		//~ day += dayStep;
-		//~ night -= dayStep;
-		
-		//~ if(time > 100){time = -time; dayFlag = -dayFlag;}
-		if(bigTime > 400){bigTime = 0.;}
-		//~ if(bigTime == 200){dayFlag = -dayFlag;}
-		//~ if(day > 100){dayStep = -dayStep;}
-		//~ if(day < -100){dayStep = -dayStep;}
-		
-		//~ std::cout << "time : " << time << std::endl;
-		//~ std::cout << "day : " << 0.5 - fabs(day) << std::endl;
-		//~ std::cout << "night : " << night << std::endl;
+		//Simulate time
+		if(!timePause){
+			time += timeStep;
+			if(time >= 2*M_PI){
+				time = 0.;
+			}
+		}
 		
 		/* timelaps animation */
 		if(timelaps){			
@@ -1209,14 +1195,24 @@ int main(int argc, char** argv){
 	}
 	
 	/* Debind the Cube Map */
-	BindCubeMap(texture_sky, 0);
+	BindCubeMap(0, GL_TEXTURE5);
 	
 	// Destruction des ressources OpenGL
 	glDeleteBuffers(1, &cubeVBO);
+	glDeleteBuffers(1, &quadVBO);
 	glDeleteBuffers(1, &groundVBO);
+	glDeleteBuffers(nbVao, l_VBOs);
 	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteVertexArrays(1, &quadVAO);
 	glDeleteVertexArrays(1, &groundVAO);
+	glDeleteVertexArrays(nbVao, l_VAOs);
 	glDeleteTextures(1, &texture_sky);
+	for(uint16_t i=0; i<NB_TEXTURES_VEGET;++i){
+		glDeleteTextures(1, &texture_veget[i]);
+	}
+	for(uint16_t i=0; i<NB_TEXTURES_TERRAIN;++i){
+		glDeleteTextures(1, &texture_terrain[i]);
+	}
 	
 	// imgui
 	imguiRenderGLDestroy();
@@ -1227,8 +1223,6 @@ int main(int argc, char** argv){
 		freeInMemory(memory, loadedLeaf);
 	}
 	
-	glDeleteBuffers(nbVao, l_VBOs);
-	glDeleteVertexArrays(nbVao, l_VAOs);
 	delete[] l_VAOs;
 	delete[] l_VBOs;
 	for(uint16_t lvl=0;lvl<nbLevel;++lvl){
@@ -1239,6 +1233,7 @@ int main(int argc, char** argv){
 	delete[] nbLeaves;
 	delete[] chunkOffset;
 	delete[] locations;
+	delete[] skyLocations;
 
 	return (EXIT_SUCCESS);
 }

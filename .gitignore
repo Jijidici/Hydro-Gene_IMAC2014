@@ -5,8 +5,8 @@ $ git status
  
 !bin
 bin/*
-terrain_data/page_3.data
-terrain_data/page_4.data
-terrain_data/page_5.data
+terrain_data/*
 !voxels_data
 voxels_data/*
+textures/*
+
