@@ -26,7 +26,10 @@ void getLocations(GLint* locations, GLuint program){
 	/* Light */
 	locations[LIGHTSUN] = glGetUniformLocation(program, "uLightSunVect");
 	locations[TIME] = glGetUniformLocation(program, "uTime");
+
+	/* Time */
 	locations[WATERTIME] = glGetUniformLocation(program, "uWaterTime");
+	locations[MOVEWATERTIME] = glGetUniformLocation(program, "uMoveWaterTime");
 
 	/* Shaders modes */
 	locations[MODE] = glGetUniformLocation(program, "uMode");
@@ -39,6 +42,7 @@ void getLocations(GLint* locations, GLuint program){
 	locations[SKYTEX] = glGetUniformLocation(program, "uSkyTex");
 	locations[GRASSTEX] = glGetUniformLocation(program, "uGrassTex");
 	locations[WATERTEX] = glGetUniformLocation(program, "uWaterTex");
+	locations[WATERGROUNDTEX] = glGetUniformLocation(program, "uWaterGroundTex");
 	locations[STONETEX] = glGetUniformLocation(program, "uStoneTex");
 	locations[SNOWTEX] = glGetUniformLocation(program, "uSnowTex");
 	locations[SANDTEX] = glGetUniformLocation(program, "uSandTex");
@@ -80,6 +84,7 @@ void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistanc
 	glUniform1i(locations[STONETEX], 2);
 	glUniform1i(locations[SNOWTEX], 3);
 	glUniform1i(locations[SANDTEX], 4);
+	glUniform1i(locations[WATERGROUNDTEX], 6);
 	//Send sky textures
 	glUniform1i(locations[SKYTEX], 5);
 	// Send details textures

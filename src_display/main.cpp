@@ -52,7 +52,7 @@ static const size_t GRID_3D_SIZE = 2;
 static const size_t TERRAIN_SCALE_PARAM = 150000;
 
 static const size_t NB_TEXTURES_VEGET = 5;
-static const size_t NB_TEXTURES_TERRAIN = 5;
+static const size_t NB_TEXTURES_TERRAIN = 6;
 
 int main(int argc, char** argv){
 
@@ -292,10 +292,11 @@ int main(int argc, char** argv){
 	/* terrain textures */
 	GLuint texture_terrain[NB_TEXTURES_TERRAIN];
 	texture_terrain[0] = CreateTexture("textures/grass.jpg");
-	texture_terrain[1] = CreateTexture("textures/bignormalmap.jpg");
+	texture_terrain[1] = CreateTexture("textures/normalmap1.png");
 	texture_terrain[2] = CreateTexture("textures/stone.jpg");
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
+	texture_terrain[5] = CreateTexture("textures/waterground2.jpg");
 	
 	/* Bind the Cube Map */
 	BindCubeMap(texture_sky, GL_TEXTURE5);
@@ -420,7 +421,8 @@ int main(int argc, char** argv){
 	bool gradientItem = false;
 	bool surfaceItem = false;
 	float waterTime = 0.;
-	float step = 0.01;
+	float moveWaterTime = 0.;
+	float step = 0.03;
 	float coeffStep = 1;
 	
 	if(arguments[BENDING]) bendItem = true;
@@ -446,14 +448,15 @@ int main(int argc, char** argv){
 		Uint32 ellapsedTime = 0;
 		start = SDL_GetTicks();
 		
-		if(waterTime > 1){
+		if(waterTime >= 1){
 			coeffStep = -1;
 		}
-		if(waterTime < 0) {
+		if(waterTime <= 0) {
 			coeffStep = 1;
 		}
 		waterTime += coeffStep*step;			
 		
+		moveWaterTime+=0.0005;
 		// Comupte the sky textures
 		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, cloudsTime, skyLocations);
 		
@@ -466,6 +469,7 @@ int main(int argc, char** argv){
 		glUniform1i(locations[MODE], TRIANGLES);
 		glUniform1f(locations[TIME], cos(time));
 		glUniform1f(locations[WATERTIME], waterTime);
+		glUniform1f(locations[MOVEWATERTIME], moveWaterTime);
 		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
 		glUniform3fv(locations[FF_FRONT_VECTOR], 1, glm::value_ptr(ffCam.getFrontVector()));
 
@@ -503,13 +507,13 @@ int main(int argc, char** argv){
 				ms.push();
 					ms.mult(mvStack.top());
 					glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-					BindTexture(texture_terrain[4], GL_TEXTURE4);
+					BindTexture(texture_terrain[5], GL_TEXTURE6);
 					BindTexture(texture_terrain[1], GL_TEXTURE1);
 						glBindVertexArray(groundVAO);
 							glDrawArrays(GL_TRIANGLES, 0, 6);
 						glBindVertexArray(0);
 					BindTexture(0, GL_TEXTURE1);
-					BindTexture(0, GL_TEXTURE4);
+					BindTexture(0, GL_TEXTURE6);
 				ms.pop();
 			mvStack.pop();
 			glUniform1i(locations[OCEAN], 0);
