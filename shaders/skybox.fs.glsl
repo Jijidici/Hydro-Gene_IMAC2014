@@ -124,12 +124,14 @@ void main(){
 	vec3 absolutePos = normalize(uPlanOr + vPos.x*uPlanU + vPos.y*uPlanV);
 	float time = uTime*0.125f;
 	float sunY = (uSunPos.y+1.)*0.5;
+	float sunX = (uSunPos.x+1.)*0.5;
 	float distanceToSun = distance(absolutePos, uSunPos)*0.5;
 
 	/* sky color */
-	int skyHue = 209;
-	float skySat = 0.76 + 0.18*pow((1. - absolutePos.y), 2);
-	float skyLightness = 0.1 + (0.28 + 0.31*pow((1. - absolutePos.y), 2))*((2-distanceToSun)*sunY);
+	vec3 skyColor;
+	skyColor.x = 209;
+	skyColor.y = 0.76 + 0.18*pow((1. - absolutePos.y), 2);
+	skyColor.z = 0.5 + (0.28 + 0.31*pow((1. - absolutePos.y), 2))*((2-distanceToSun)*sunY);
 
 	/* stars noise */
 	float starsCoef = 0.f;
@@ -141,9 +143,9 @@ void main(){
 	/* day */
 	float sunFragDistance = distance(absolutePos, uSunPos);
 	if(sunFragDistance <= SUN_RADIUS){
-		skyLightness = 1;
+		skyColor.z = 1;
 	}else if(sunFragDistance <= HALO_RADIUS){
-		skyLightness += (1-skyLightness)*pow((1-((sunFragDistance-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS))), 3);
+		skyColor.z += (1-skyColor.z)*pow((1-((sunFragDistance-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS))), 3);
 	}
 
 
@@ -167,7 +169,7 @@ void main(){
 			cloudCoef = cloudCoef*(absolutePos.y*10);
 		}
 	}
-
-	fFragColor = vec4( mix(HSLtoRGB(skyHue, skySat, skyLightness), vec3(1.f), cloudCoef*sunY), 1.f );
+	
+	fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*sunY), 1.f );
 	fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-sunY));
 }
