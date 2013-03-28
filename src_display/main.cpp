@@ -292,7 +292,7 @@ int main(int argc, char** argv){
 	/* terrain textures */
 	GLuint texture_terrain[NB_TEXTURES_TERRAIN];
 	texture_terrain[0] = CreateTexture("textures/grass.jpg");
-	texture_terrain[1] = CreateTexture("textures/bignormalmap.jpg");
+	texture_terrain[1] = CreateTexture("textures/normalmap1.png");
 	texture_terrain[2] = CreateTexture("textures/stone.jpg");
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
@@ -448,15 +448,15 @@ int main(int argc, char** argv){
 		Uint32 ellapsedTime = 0;
 		start = SDL_GetTicks();
 		
-		if(waterTime > 1){
+		if(waterTime >= 1){
 			coeffStep = -1;
 		}
-		if(waterTime < 0) {
+		if(waterTime <= 0) {
 			coeffStep = 1;
 		}
 		waterTime += coeffStep*step;			
 		
-		moveWaterTime+=0.0001;
+		moveWaterTime+=0.0005;
 		// Comupte the sky textures
 		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, cloudsTime, skyLocations);
 		

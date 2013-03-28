@@ -172,7 +172,7 @@ void main() {
 				vec4 dWater = vec4(0.f);
 				if(coefWater>0.3f){
 					/* Normal Mapping */
-					vec2 HMCoord = gTexCoords + uMoveWaterTime;
+					vec2 HMCoord = gTexCoords*10 + uMoveWaterTime;
 					mat2 rotatHMcoord;
 					rotatHMcoord[0][0] = 0.965925826;
 					rotatHMcoord[0][1] = 0.258819045;
@@ -180,8 +180,8 @@ void main() {
 					rotatHMcoord[1][1] = 0.965925826;
 					vec2 HMCoordAlt = -(rotatHMcoord*HMCoord);
 
-					vec4 bump = vec4(texture(uWaterTex, HMCoord).xyz*2.f-1.f, 0.f);
-					vec4 bumpAlt = vec4(texture(uWaterTex, HMCoordAlt).xyz*2.f-1.f, 0.f);
+					vec4 bump = normalize(vec4(texture(uWaterTex, HMCoord).xyz*2.f-1.f, 0.f));
+					vec4 bumpAlt = normalize(vec4(texture(uWaterTex, HMCoordAlt).xyz*2.f-1.f, 0.f));
 					vec4 N = normalize(uModelView*(uWaterTime*bump + (1.-uWaterTime)*bumpAlt + vec4(normalize(gNormal), 0.f)));
 				
 					/* compute normal for diffus component */
@@ -205,9 +205,12 @@ void main() {
 					
 					vec4 viewModelFrontVector = normalize(uModelView*vec4(uFrontVector,0.));
 					
-					float dCoeffRef = 0.3*pow(min(max(0, dot(normalize(gNormal), -normalize(uFrontVector))), 1.f),2)*pow(dot(P, viewModelFrontVector),2);
+					float dCoeffRef = 0.4*pow(min(max(0, dot(normalize(gNormal), -normalize(uFrontVector))), 1.f),2)*pow(dot(P, viewModelFrontVector),2);
 					
 					dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz) + dCoeffRef*texture(uWaterGroundTex, gTexCoords/4.);
+					dWater.r = min(1,max(0,dWater.r));
+					dWater.g = min(1,max(0,dWater.g));
+					dWater.b = min(1,max(0,dWater.b));
 				}
 	
 				dColor = coefWater*dWater.rgb;
