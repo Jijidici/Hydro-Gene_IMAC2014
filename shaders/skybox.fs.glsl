@@ -146,12 +146,25 @@ vec3 HSLtoRGB(int H, float S, float L){
 
 void main(){
 	vec3 absolutePos = normalize(uPlanOr + vPos.x*uPlanU + vPos.y*uPlanV);
+	float time = uTime*0.125f;
 	
+	float dayCoef = (uSunPos.y+1.)*0.5;
+	
+	/* sky color */
 	float skyLightness = 0.3 + pow(0.5*(1. - absolutePos.y), 2);
 	float skySat = 0.7;
 	int skyHue = 220;
-	float time = uTime*0.125f;
-
+	
+	/* night */
+	float starsCoef = 0.f;
+	starsCoef = cnoise(absolutePos*100);
+	
+	if(starsCoef < 0.99f) starsCoef *= pow(0.5f, (1.f-starsCoef)*15.f);
+	
+	//~ vec4 nightColor = vec4( mix(vec3(0.), vec3(1.f*(starsCoef), 1.f*(starsCoef), 1.f), starsCoef), 1.f );
+	vec4 nightColor = vec4( mix(vec3(0.), vec3(1.f), starsCoef), 1.f );
+	
+	/* day */
 	float sunFragDistance = distance(absolutePos, uSunPos);
 	if(sunFragDistance <= SUN_RADIUS){
 		skyLightness = 1;
@@ -176,5 +189,10 @@ void main(){
 		cloudCoef = cloudCoef*(absolutePos.y*10);
 	}
 	
-	fFragColor = vec4( mix(HSLtoRGB(skyHue, skySat, skyLightness), vec3(1.), cloudCoef), 1.f );
+	vec4 dayColor = vec4( mix(HSLtoRGB(skyHue, skySat, skyLightness), vec3(1.f), cloudCoef), 1.f );
+	
+	//~ fFragColor = vec4(mix(dayColor, nightColor, max(0., 0.5-uSunPos.y)));
+	//~ fFragColor = vec4(mix(dayColor, nightColor, max(0., pow(0.8-uSunPos.y, 4))));
+	fFragColor = vec4( mix(HSLtoRGB(skyHue, skySat, skyLightness), vec3(1.f), cloudCoef*dayCoef), 1.f );
+	fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-dayCoef));
 }
