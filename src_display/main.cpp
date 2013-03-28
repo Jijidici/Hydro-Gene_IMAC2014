@@ -292,7 +292,7 @@ int main(int argc, char** argv){
 	/* terrain textures */
 	GLuint texture_terrain[NB_TEXTURES_TERRAIN];
 	texture_terrain[0] = CreateTexture("textures/grass.jpg");
-	texture_terrain[1] = CreateTexture("textures/normalmap.jpg");
+	texture_terrain[1] = CreateTexture("textures/bignormalmap.jpg");
 	texture_terrain[2] = CreateTexture("textures/stone.jpg");
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");

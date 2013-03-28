@@ -169,7 +169,7 @@ void main() {
 				vec4 dWater = vec4(0.f);
 				if(coefWater>0.f){
 					/* Normal Mapping */
-					vec2 HMCoord = gTexCoords/5;// + uTime*0.05f;
+					vec2 HMCoord = gTexCoords/100.;// + uTime*0.05f;
 //					vec2 HMCoord = gTexCoords;
 					mat2 rotatHMcoord;
 					rotatHMcoord[0][0] = 0.965925826;
@@ -206,7 +206,8 @@ void main() {
 					
 					float dCoeffRef = 0.5*min(max(0, dot(N, -P)), 1.f);
 					
-					dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz) + dCoeffRef*texture(uGrassTex, gTexCoords);
+					//~ dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz) + dCoeffRef*texture(uGrassTex, gTexCoords);
+					dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz);
 				}
 	
 				dColor = coefWater*dWater.rgb;
