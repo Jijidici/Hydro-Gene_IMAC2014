@@ -379,7 +379,7 @@ int main(int argc, char** argv){
 	bool displayFog = false;
 	
 	bool displayDebug = false;
-	float camSpeed = 0.01;
+	float camSpeed = 0.05;
 	
 	/* timelaps animation */
 	bool timelaps = false;
@@ -492,10 +492,9 @@ int main(int argc, char** argv){
 		mvStack.push();
 			mvStack.mult(V);
 
-			//Ground
+			//Ocean
 			glUniform1i(locations[CHOICE], NORMAL);
 			glUniform1i(locations[OCEAN], 1);
-			BindTexture(texture_terrain[4], GL_TEXTURE4);
 			mvStack.push();
 				mvStack.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
 				mvStack.scale(glm::vec3(10*terrainScale));
@@ -504,14 +503,15 @@ int main(int argc, char** argv){
 				ms.push();
 					ms.mult(mvStack.top());
 					glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
+					BindTexture(texture_terrain[4], GL_TEXTURE4);
 					BindTexture(texture_terrain[1], GL_TEXTURE1);
 						glBindVertexArray(groundVAO);
 							glDrawArrays(GL_TRIANGLES, 0, 6);
 						glBindVertexArray(0);
 					BindTexture(0, GL_TEXTURE1);
+					BindTexture(0, GL_TEXTURE4);
 				ms.pop();
 			mvStack.pop();
-			BindTexture(0, GL_TEXTURE4);
 			glUniform1i(locations[OCEAN], 0);
 			
 			//Terrain

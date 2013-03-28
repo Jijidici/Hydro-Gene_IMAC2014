@@ -35,7 +35,7 @@ void main(){
 	else if(uMode == TRIANGLES){
 		vPos = position;
 		if(uOcean == 1){
-			vTexCoords = (position.xz*uTerrainScale)*50;
+			vTexCoords = (position.xz*uTerrainScale)/2.;
 		}else{
 			vTexCoords = (position.xz)*50;
 		}

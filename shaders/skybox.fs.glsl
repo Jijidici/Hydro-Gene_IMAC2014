@@ -157,10 +157,10 @@ void main(){
 	float cloudCoef = 0.f;
 	absolutePos.x += time*2;
 	cloudCoef = cnoise(vec3(absolutePos.x*2, absolutePos.y*3, absolutePos.z*0.75)*5)*3;
-	cloudCoef = (cloudCoef + 2.f)/3.f;
+	cloudCoef = (cloudCoef + 2.f)*0.3f;
 	
 	cloudCoef *= cloudZone;
-	
+	if(cloudCoef < 0.f) cloudCoef = 0.f;
 	
 	float sunFragDistance = distance(absolutePos, uSunPos);
 	if(sunFragDistance <= SUN_RADIUS){

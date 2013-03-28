@@ -170,15 +170,13 @@ void main() {
 				vec4 dWater = vec4(0.f);
 				if(coefWater>0.f){
 					/* Normal Mapping */
-					vec2 HMCoord = gTexCoords/100.;// + uTime*0.05f;
-//					vec2 HMCoord = gTexCoords;
+					vec2 HMCoord = gTexCoords;// + uTime*0.05f;
 					mat2 rotatHMcoord;
 					rotatHMcoord[0][0] = 0.965925826;
 					rotatHMcoord[0][1] = 0.258819045;
 					rotatHMcoord[1][0] = -0.258819045;
 					rotatHMcoord[1][1] = 0.965925826;
 					vec2 HMCoordAlt = -(rotatHMcoord*HMCoord);
-//					HMCoordAlt.y = -HMCoordAlt.y;
 
 					vec4 bump = vec4(texture(uWaterTex, HMCoord).xyz*2.f-1.f, 0.f);
 					vec4 bumpAlt = vec4(texture(uWaterTex, HMCoordAlt).xyz*2.f-1.f, 0.f);
@@ -209,8 +207,7 @@ void main() {
 					
 					float dCoeffRef = 0.5*min(max(0, dot(N, -viewModelFrontVector)), 1.f)*pow(dot(P, viewModelFrontVector),2);
 					
-					dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz) + dCoeffRef*texture(uSandTex, gTexCoords/20.);
-					//~ dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz);
+					dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz) + dCoeffRef*texture(uSandTex, gTexCoords*3.);
 				}
 	
 				dColor = coefWater*dWater.rgb;
