@@ -33,6 +33,7 @@ uniform vec3 uFrontVector = vec3(0.);
 uniform samplerCube uSkyTex;
 uniform sampler2D uGrassTex;
 uniform sampler2D uWaterTex;
+uniform sampler2D uWaterGroundTex;
 uniform sampler2D uStoneTex;
 uniform sampler2D uSnowTex;
 uniform sampler2D uSandTex;
@@ -47,6 +48,7 @@ uniform int uChoice;
 uniform int uFog;
 uniform float uTime;
 uniform float uWaterTime;
+uniform float uMoveWaterTime;
 uniform float uMaxBending = 0;
 uniform float uMaxDrain = 0;
 uniform float uMaxGradient = 0;
@@ -168,9 +170,9 @@ void main() {
 				
 				/* Compute water's diffus color */
 				vec4 dWater = vec4(0.f);
-				if(coefWater>0.f){
+				if(coefWater>0.3f){
 					/* Normal Mapping */
-					vec2 HMCoord = gTexCoords;// + uTime*0.05f;
+					vec2 HMCoord = gTexCoords + uMoveWaterTime;
 					mat2 rotatHMcoord;
 					rotatHMcoord[0][0] = 0.965925826;
 					rotatHMcoord[0][1] = 0.258819045;
@@ -180,12 +182,10 @@ void main() {
 
 					vec4 bump = vec4(texture(uWaterTex, HMCoord).xyz*2.f-1.f, 0.f);
 					vec4 bumpAlt = vec4(texture(uWaterTex, HMCoordAlt).xyz*2.f-1.f, 0.f);
-					vec4 N = normalize(uModelView*(uWaterTime*bump + (1-uWaterTime)*bumpAlt + vec4(normalize(gNormal), 0.f)));
+					vec4 N = normalize(uModelView*(uWaterTime*bump + (1.-uWaterTime)*bumpAlt + vec4(normalize(gNormal), 0.f)));
 				
 					/* compute normal for diffus component */
-					if(coefWater>0.3){
-						dCoeff = min(max(0, dot(normalize(gNormal+uWaterTime*bump.xyz+(1-uWaterTime)*bumpAlt.xyz), -normalize(vec3(0.f, -1.f, 0.f)))), 1.);
-					}
+					dCoeff = min(max(0, dot(normalize(gNormal+uWaterTime*bump.xyz+(1-uWaterTime)*bumpAlt.xyz), -normalize(vec3(0.f, -1.f, 0.f)))), 1.);
 					
 					/* fragment position in camera space */
 					vec4 P = normalize(uModelView*vec4(gPos, 1.f));
@@ -205,9 +205,9 @@ void main() {
 					
 					vec4 viewModelFrontVector = normalize(uModelView*vec4(uFrontVector,0.));
 					
-					float dCoeffRef = 0.5*min(max(0, dot(N, -viewModelFrontVector)), 1.f)*pow(dot(P, viewModelFrontVector),2);
+					float dCoeffRef = 0.3*pow(min(max(0, dot(normalize(gNormal), -normalize(uFrontVector))), 1.f),2)*pow(dot(P, viewModelFrontVector),2);
 					
-					dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz) + dCoeffRef*texture(uSandTex, gTexCoords*3.);
+					dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz) + dCoeffRef*texture(uWaterGroundTex, gTexCoords/4.);
 				}
 	
 				dColor = coefWater*dWater.rgb;
