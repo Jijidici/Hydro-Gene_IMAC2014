@@ -104,44 +104,20 @@ float cnoise(vec3 P){
 
 
 // Hue - Saturation - Luminance to Red - Green - Blue model conversion
-vec3 HSLtoRGB(int H, float S, float L){
-	float chroma = (1 - abs(2.*L -1.))*S;
-	int Hprime = H/60;
-	float X = chroma*(1. - abs(Hprime%2 -1.));
+vec3 HSLtoRGB(int h, float s, float l){
+	vec3 color;	
+	float c = (1. - abs(2 * l - 1.)) * s;
+	float m = 1. * (l - 0.5 * c);
+	float x = c * (1. - abs(mod(h / 60., 2) - 1.));
 	
-	vec3 rgbColor;
-	switch(Hprime){
-		case 0:
-			rgbColor = vec3(chroma, X, 0.);
-			break;
-		
-		case 1:
-			rgbColor = vec3(X, chroma, 0.);
-			break;
-			
-		case 2:
-			rgbColor = vec3(0., chroma, X);
-			break;
-			
-		case 3:
-			rgbColor = vec3(0., X, chroma);
-			break;
-			
-		case 4:
-			rgbColor = vec3(X, 0., chroma);
-			break;
-			
-		case 5:
-			rgbColor = vec3(chroma, 0., X);
-			break;
-			
-		default:
-			rgbColor = vec3(0., 0., 0.);
-			break;
-	}
-	
-	float m = L - 0.5*chroma;
-	return rgbColor + m;
+	if(h >= 0 && h < 60){ color = vec3(c + m, x + m, m); }
+	else if(h >= 60 && h < 120){ color = vec3(x + m, c + m, m);	}
+	else if(h >= 120 && h < 180){ color = vec3(m, c + m, x + m); }
+	else if(h >= 180 && h < 240){ color = vec3(m, x + m, c + m); }
+	else if(h >= 240 && h < 300){ color = vec3(x + m, m, c + m); }
+	else if(h >= 300 && h < 360){ color = vec3(c + m, m, x + m); }
+	else{ color = vec3(m, m, m); }
+	return color;
 }
 
 void main(){
@@ -151,9 +127,9 @@ void main(){
 	float sunY = (uSunPos.y+1.)*0.5;
 	
 	/* sky color */
-	float skyLightness = 0.3 + pow(0.5*(1. - absolutePos.y), 2);
-	float skySat = 0.7;
-	int skyHue = 220;
+	int skyHue = 209;
+	float skySat = 0.76 + 0.18*pow((1. - absolutePos.y), 2);
+	float skyLightness = 0.38 + 0.31*pow((1. - absolutePos.y), 2);
 	
 	/* stars noise */
 	float starsCoef = 0.f;
@@ -166,9 +142,8 @@ void main(){
 	if(sunFragDistance <= SUN_RADIUS){
 		skyLightness = 1;
 	}else if(sunFragDistance <= HALO_RADIUS){
-		skyLightness += (1-skyLightness)*(1-((sunFragDistance-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS)));
+		skyLightness += (1-skyLightness)*pow((1-((sunFragDistance-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS))), 3);
 	}
-	vec3 skyColor = HSLtoRGB(skyHue, skySat, skyLightness);
 
 
 	/* clouds noise */
