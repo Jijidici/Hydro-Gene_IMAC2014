@@ -125,11 +125,12 @@ void main(){
 	float time = uTime*0.125f;
 	
 	float sunY = (uSunPos.y+1.)*0.5;
+	float distanceToSun = distance(absolutePos, uSunPos)*0.5;
 	
 	/* sky color */
 	int skyHue = 209;
 	float skySat = 0.76 + 0.18*pow((1. - absolutePos.y), 2);
-	float skyLightness = 0.38 + 0.31*pow((1. - absolutePos.y), 2);
+	float skyLightness = 0.1 + (0.28 + 0.31*pow((1. - absolutePos.y), 2))*((2-distanceToSun)*sunY);
 	
 	/* stars noise */
 	float starsCoef = 0.f;
