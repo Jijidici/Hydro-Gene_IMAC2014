@@ -12,7 +12,7 @@
 using namespace hydrogene;
 
 /* ENUM */
-static const size_t NB_LOCATIONS = 28;
+static const size_t NB_LOCATIONS = 29;
 
 enum Locations{
 	MVP,
@@ -42,7 +42,8 @@ enum Locations{
 	MAXSURFACE,
 	MAXALTITUDE,
 	DISTANCE,
-	TERR_SCALE	
+	TERR_SCALE,
+	FF_FRONT_VECTOR
 };
 
 void getLocations(GLint* locations, GLuint program);

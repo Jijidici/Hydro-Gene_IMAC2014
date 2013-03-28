@@ -61,6 +61,9 @@ void getLocations(GLint* locations, GLuint program){
 	
 	/* Terrain */
 	locations[TERR_SCALE] = glGetUniformLocation(program, "uTerrainScale");
+	
+	/* Cameras */
+	locations[FF_FRONT_VECTOR] = glGetUniformLocation(program, "uFrontVector");
 }
 
 void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistance, float terrainScale){

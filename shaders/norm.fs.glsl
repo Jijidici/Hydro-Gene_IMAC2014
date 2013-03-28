@@ -28,6 +28,7 @@ uniform vec3 uLightSunVect = vec3(0.,0.,0.);
 uniform mat4 uMVPMatrix = mat4(1.f);
 uniform mat4 uModelView = mat4(1.f);
 uniform mat4 uInvViewMatrix = mat4(1.f);
+uniform vec3 uFrontVector = vec3(0.);
 
 uniform samplerCube uSkyTex;
 uniform sampler2D uGrassTex;
@@ -204,10 +205,12 @@ void main() {
 					reflectRotMat[2][1] = - reflectRotMat[1][2];
 					ref = reflectRotMat*ref;
 					
-					float dCoeffRef = 0.5*min(max(0, dot(N, -P)), 1.f);
+					vec4 viewModelFrontVector = normalize(uModelView*vec4(uFrontVector,0.));
 					
-					//~ dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz) + dCoeffRef*texture(uGrassTex, gTexCoords);
-					dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz);
+					float dCoeffRef = 0.5*min(max(0, dot(N, -viewModelFrontVector)), 1.f)*pow(dot(P, viewModelFrontVector),2);
+					
+					dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz) + dCoeffRef*texture(uSandTex, gTexCoords/20.);
+					//~ dWater = (1-dCoeffRef)*texture(uSkyTex, ref.xyz);
 				}
 	
 				dColor = coefWater*dWater.rgb;

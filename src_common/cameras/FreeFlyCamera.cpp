@@ -139,5 +139,9 @@ namespace hydrogene{
 		computeDirectionVectors();
 		computeFrustumPlanes();
 	}
+	
+	glm::vec3 FreeFlyCamera::getFrontVector(){
+		return m_FrontVector;
+	}
 
 }
