@@ -123,21 +123,21 @@ vec3 HSLtoRGB(int h, float s, float l){
 void main(){
 	vec3 absolutePos = normalize(uPlanOr + vPos.x*uPlanU + vPos.y*uPlanV);
 	float time = uTime*0.125f;
-	
 	float sunY = (uSunPos.y+1.)*0.5;
 	float distanceToSun = distance(absolutePos, uSunPos)*0.5;
-	
+
 	/* sky color */
 	int skyHue = 209;
 	float skySat = 0.76 + 0.18*pow((1. - absolutePos.y), 2);
 	float skyLightness = 0.1 + (0.28 + 0.31*pow((1. - absolutePos.y), 2))*((2-distanceToSun)*sunY);
-	
+
 	/* stars noise */
 	float starsCoef = 0.f;
-	starsCoef = cnoise(absolutePos*100);
-	
-	if(starsCoef < 0.99f) starsCoef *= pow(0.5f, (1.f-starsCoef)*15.f);
-	
+	if(absolutePos.y > 0.f){
+		starsCoef = cnoise(absolutePos*100);
+		if(starsCoef < 0.99f) starsCoef *= pow(0.5f, (1.f-starsCoef)*15.f);
+	}
+
 	/* day */
 	float sunFragDistance = distance(absolutePos, uSunPos);
 	if(sunFragDistance <= SUN_RADIUS){
@@ -149,23 +149,25 @@ void main(){
 
 	/* clouds noise */
 	// where we draw clouds
-	float cloudZone = ((cnoise((absolutePos+time)*2)+1.)/2.)*0.9;
-	if(cloudZone < 0.f) cloudZone = 0.f;
-	
-	// clouds noise inside this zone
 	float cloudCoef = 0.f;
-	absolutePos.x += time*2;
-	cloudCoef = cnoise(vec3(absolutePos.x*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
-	cloudCoef = (cloudCoef + 2.f)*0.3f;
-	
-	cloudCoef *= cloudZone;
-	if(cloudCoef < 0.f) cloudCoef = 0.f;
-	
-	/* no clouds on the horizon */
-	if(absolutePos.y < 0.1){
-		cloudCoef = cloudCoef*(absolutePos.y*10);
+	if(absolutePos.y > 0.f){
+		float cloudZone = ((cnoise((absolutePos+time)*2)+1.)/2.)*0.9;
+		if(cloudZone < 0.f) cloudZone = 0.f;
+
+		// clouds noise inside this zone
+		absolutePos.x += time*2;
+		cloudCoef = cnoise(vec3(absolutePos.x*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
+		cloudCoef = (cloudCoef + 2.f)*0.3f;
+
+		cloudCoef *= cloudZone;
+		if(cloudCoef < 0.f) cloudCoef = 0.f;
+
+		/* no clouds on the horizon */
+		if(absolutePos.y < 0.1){
+			cloudCoef = cloudCoef*(absolutePos.y*10);
+		}
 	}
-	
+
 	fFragColor = vec4( mix(HSLtoRGB(skyHue, skySat, skyLightness), vec3(1.f), cloudCoef*sunY), 1.f );
 	fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-sunY));
 }
