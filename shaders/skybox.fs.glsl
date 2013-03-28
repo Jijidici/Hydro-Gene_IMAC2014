@@ -148,21 +148,18 @@ void main(){
 	vec3 absolutePos = normalize(uPlanOr + vPos.x*uPlanU + vPos.y*uPlanV);
 	float time = uTime*0.125f;
 	
-	float dayCoef = (uSunPos.y+1.)*0.5;
+	float sunY = (uSunPos.y+1.)*0.5;
 	
 	/* sky color */
 	float skyLightness = 0.3 + pow(0.5*(1. - absolutePos.y), 2);
 	float skySat = 0.7;
 	int skyHue = 220;
 	
-	/* night */
+	/* stars noise */
 	float starsCoef = 0.f;
 	starsCoef = cnoise(absolutePos*100);
 	
 	if(starsCoef < 0.99f) starsCoef *= pow(0.5f, (1.f-starsCoef)*15.f);
-	
-	//~ vec4 nightColor = vec4( mix(vec3(0.), vec3(1.f*(starsCoef), 1.f*(starsCoef), 1.f), starsCoef), 1.f );
-	vec4 nightColor = vec4( mix(vec3(0.), vec3(1.f), starsCoef), 1.f );
 	
 	/* day */
 	float sunFragDistance = distance(absolutePos, uSunPos);
@@ -174,9 +171,12 @@ void main(){
 	vec3 skyColor = HSLtoRGB(skyHue, skySat, skyLightness);
 
 
+	/* clouds noise */
+	// where we draw clouds
 	float cloudZone = ((cnoise((absolutePos+time)*2)+1.)/2.)*0.9;
 	if(cloudZone < 0.f) cloudZone = 0.f;
 	
+	// clouds noise inside this zone
 	float cloudCoef = 0.f;
 	absolutePos.x += time*2;
 	cloudCoef = cnoise(vec3(absolutePos.x*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
@@ -185,14 +185,11 @@ void main(){
 	cloudCoef *= cloudZone;
 	if(cloudCoef < 0.f) cloudCoef = 0.f;
 	
+	/* no clouds on the horizon */
 	if(absolutePos.y < 0.1){
 		cloudCoef = cloudCoef*(absolutePos.y*10);
 	}
 	
-	vec4 dayColor = vec4( mix(HSLtoRGB(skyHue, skySat, skyLightness), vec3(1.f), cloudCoef), 1.f );
-	
-	//~ fFragColor = vec4(mix(dayColor, nightColor, max(0., 0.5-uSunPos.y)));
-	//~ fFragColor = vec4(mix(dayColor, nightColor, max(0., pow(0.8-uSunPos.y, 4))));
-	fFragColor = vec4( mix(HSLtoRGB(skyHue, skySat, skyLightness), vec3(1.f), cloudCoef*dayCoef), 1.f );
-	fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-dayCoef));
+	fFragColor = vec4( mix(HSLtoRGB(skyHue, skySat, skyLightness), vec3(1.f), cloudCoef*sunY), 1.f );
+	fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-sunY));
 }
