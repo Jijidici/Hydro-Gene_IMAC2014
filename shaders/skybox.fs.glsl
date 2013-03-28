@@ -152,22 +152,29 @@ void main(){
 	int skyHue = 220;
 	float time = uTime*0.125f;
 
-	float cloudZone = cnoise((absolutePos+time)*3)*0.9;
-	
-	float cloudCoef = 0.f;
-	absolutePos.x += time*2;
-	cloudCoef = cnoise(vec3(absolutePos.x*2, absolutePos.y*3, absolutePos.z*0.75)*5)*3;
-	cloudCoef = (cloudCoef + 2.f)*0.3f;
-	
-	cloudCoef *= cloudZone;
-	if(cloudCoef < 0.f) cloudCoef = 0.f;
-	
 	float sunFragDistance = distance(absolutePos, uSunPos);
 	if(sunFragDistance <= SUN_RADIUS){
 		skyLightness = 1;
 	}else if(sunFragDistance <= HALO_RADIUS){
 		skyLightness += (1-skyLightness)*(1-((sunFragDistance-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS)));
 	}
+	vec3 skyColor = HSLtoRGB(skyHue, skySat, skyLightness);
+
+
+	float cloudZone = ((cnoise((absolutePos+time)*2)+1.)/2.)*0.9;
+	if(cloudZone < 0.f) cloudZone = 0.f;
 	
-	fFragColor = vec4( mix(HSLtoRGB(skyHue, skySat, skyLightness), vec3(1.), cloudCoef), 1.f);
+	float cloudCoef = 0.f;
+	absolutePos.x += time*2;
+	cloudCoef = cnoise(vec3(absolutePos.x*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
+	cloudCoef = (cloudCoef + 2.f)*0.3f;
+	
+	cloudCoef *= cloudZone;
+	if(cloudCoef < 0.f) cloudCoef = 0.f;
+	
+	if(absolutePos.y < 0.1){
+		cloudCoef = cloudCoef*(absolutePos.y*10);
+	}
+	
+	fFragColor = vec4( mix(HSLtoRGB(skyHue, skySat, skyLightness), vec3(1.), cloudCoef), 1.f );
 }
