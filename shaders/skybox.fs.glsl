@@ -131,7 +131,7 @@ void main(){
 	vec3 skyColor;
 	skyColor.x = 209;
 	skyColor.y = 0.76 + 0.18*pow((1. - absolutePos.y), 2);
-	skyColor.z = 0.5 + (0.28 + 0.31*pow((1. - absolutePos.y), 2))*((2-distanceToSun)*sunY);
+	skyColor.z = 0.1 + (0.28 + 0.31*pow((1. - absolutePos.y), 2))*((2-distanceToSun)*sunY);
 
 	/* stars noise */
 	float starsCoef = 0.f;
