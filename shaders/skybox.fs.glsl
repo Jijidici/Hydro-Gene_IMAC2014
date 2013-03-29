@@ -126,13 +126,25 @@ void main(){
 	float sunY = (uSunPos.y+1.)*0.5;
 	float sunX = (uSunPos.x+1.)*0.5;
 	float distanceToSun = distance(absolutePos, uSunPos)*0.5;
+	float satGradient = 0.18*pow((1. - absolutePos.y), 2);
+	float lighnessGradient = 0.28 + 0.31*pow((1. - absolutePos.y), 2);
 
 	/* sky color */
 	vec3 skyColor;
 	skyColor.x = 209;
-	skyColor.y = 0.76 + 0.18*pow((1. - absolutePos.y), 2);
-	skyColor.z = 0.1 + (0.28 + 0.31*pow((1. - absolutePos.y), 2))*((2-distanceToSun)*sunY);
-
+	skyColor.y = 0.76 + satGradient;
+	skyColor.z = 0.1 + lighnessGradient*((2-distanceToSun)*sunY);
+	
+	/* dawn effect */
+	if(sunX > 0.9){
+		vec3 dawnColor;
+		dawnColor.x = 359;
+		dawnColor.y = 0.82+satGradient;
+		dawnColor.z = 0.325+lighnessGradient;
+		float dawnCoef = (1-(1-sunX)/0.1)*max(0., absolutePos.x);
+		skyColor = mix(skyColor, dawnColor, dawnCoef);
+	}
+	
 	/* stars noise */
 	float starsCoef = 0.f;
 	if(absolutePos.y > 0.f){
