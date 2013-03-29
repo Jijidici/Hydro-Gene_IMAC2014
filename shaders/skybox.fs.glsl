@@ -110,6 +110,7 @@ vec3 HSLtoRGB(int h, float s, float l){
 	float m = 1. * (l - 0.5 * c);
 	float x = c * (1. - abs(mod(h / 60., 2) - 1.));
 	
+	h = h%360;
 	if(h >= 0 && h < 60){ color = vec3(c + m, x + m, m); }
 	else if(h >= 60 && h < 120){ color = vec3(x + m, c + m, m);	}
 	else if(h >= 120 && h < 180){ color = vec3(m, c + m, x + m); }
@@ -125,6 +126,7 @@ void main(){
 	float time = uTime*0.125f;
 	float sunY = (uSunPos.y+1.)*0.5;
 	float sunX = (uSunPos.x+1.)*0.5;
+	float normPosX = (absolutePos.x+1)*0.5;
 	float distanceToSun = distance(absolutePos, uSunPos)*0.5;
 	float satGradient = 0.18*pow((1. - absolutePos.y), 2);
 	float lighnessGradient = 0.28 + 0.31*pow((1. - absolutePos.y), 2);
@@ -141,8 +143,18 @@ void main(){
 		dawnColor.x = 359;
 		dawnColor.y = 0.82+satGradient;
 		dawnColor.z = 0.325+lighnessGradient;
-		float dawnCoef = (1-(1-sunX)/0.1)*max(0., absolutePos.x);
+		float dawnCoef = (1-(1-sunX)/0.1)*max(0., normPosX);
 		skyColor = mix(skyColor, dawnColor, dawnCoef);
+	}
+	
+	/* twillight effect */
+	if(sunX < 0.1){
+		vec3 twillightColor;
+		twillightColor.x = 384;
+		twillightColor.y = 0.8+satGradient;
+		twillightColor.z = 0.165+lighnessGradient;
+		float twillightCoef = (1-(sunX)/0.1)*max(0., 1-normPosX);
+		skyColor = mix(skyColor, twillightColor, twillightCoef);
 	}
 	
 	/* stars noise */
