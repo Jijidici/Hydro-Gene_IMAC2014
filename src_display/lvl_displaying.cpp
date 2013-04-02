@@ -83,9 +83,9 @@ void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistanc
 	glUniform1i(locations[STONETEX], 2);
 	glUniform1i(locations[SNOWTEX], 3);
 	glUniform1i(locations[SANDTEX], 4);
-	glUniform1i(locations[WATERGROUNDTEX], 6);
+	glUniform1i(locations[WATERGROUNDTEX], 5);
 	//Send sky textures
-	glUniform1i(locations[SKYTEX], 5);
+	glUniform1i(locations[SKYTEX], 6);
 	// Send details textures
 	glUniform1i(locations[ROCKTEX], 0);
 	glUniform1i(locations[PLANTTEX], 1);

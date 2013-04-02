@@ -299,7 +299,7 @@ int main(int argc, char** argv){
 	texture_terrain[5] = CreateTexture("textures/waterground2.jpg");
 	
 	/* Bind the Cube Map */
-	BindCubeMap(texture_sky, GL_TEXTURE5);
+	BindCubeMap(texture_sky, GL_TEXTURE6);
 	
 	/* ***************************************
 	 *       DYNAMIC SKY CREATION
@@ -506,13 +506,13 @@ int main(int argc, char** argv){
 				ms.push();
 					ms.mult(mvStack.top());
 					glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
-					BindTexture(texture_terrain[5], GL_TEXTURE6);
+					BindTexture(texture_terrain[5], GL_TEXTURE5);
 					BindTexture(texture_terrain[1], GL_TEXTURE1);
 						glBindVertexArray(groundVAO);
 							glDrawArrays(GL_TRIANGLES, 0, 6);
 						glBindVertexArray(0);
 					BindTexture(0, GL_TEXTURE1);
-					BindTexture(0, GL_TEXTURE6);
+					BindTexture(0, GL_TEXTURE5);
 				ms.pop();
 			mvStack.pop();
 			glUniform1i(locations[OCEAN], 0);
@@ -1217,7 +1217,7 @@ int main(int argc, char** argv){
 	}
 	
 	/* Debind the Cube Map */
-	BindCubeMap(0, GL_TEXTURE5);
+	BindCubeMap(0, GL_TEXTURE6);
 	
 	// Destruction des ressources OpenGL
 	glDeleteBuffers(1, &cubeVBO);
