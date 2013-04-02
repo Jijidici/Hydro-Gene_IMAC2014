@@ -39,6 +39,7 @@ void getLocations(GLint* locations, GLuint program){
 	locations[OCEAN] = glGetUniformLocation(program, "uOcean");
 	/* Textures */
 	locations[SKYTEX] = glGetUniformLocation(program, "uSkyTex");
+	locations[ENVMAPTEX] = glGetUniformLocation(program, "uEnvmapTex");
 	locations[GRASSTEX] = glGetUniformLocation(program, "uGrassTex");
 	locations[WATERTEX] = glGetUniformLocation(program, "uWaterTex");
 	locations[WATERGROUNDTEX] = glGetUniformLocation(program, "uWaterGroundTex");
@@ -86,6 +87,7 @@ void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistanc
 	glUniform1i(locations[WATERGROUNDTEX], 5);
 	//Send sky textures
 	glUniform1i(locations[SKYTEX], 6);
+	glUniform1i(locations[ENVMAPTEX], 7);
 	// Send details textures
 	glUniform1i(locations[ROCKTEX], 0);
 	glUniform1i(locations[PLANTTEX], 1);

@@ -30,6 +30,7 @@ uniform mat4 uInvViewMatrix = mat4(1.f);
 uniform vec3 uFrontVector = vec3(0.);
 
 uniform samplerCube uSkyTex;
+uniform samplerCube uEnvmapTex;
 uniform sampler2D uGrassTex;
 uniform sampler2D uWaterTex;
 uniform sampler2D uWaterGroundTex;

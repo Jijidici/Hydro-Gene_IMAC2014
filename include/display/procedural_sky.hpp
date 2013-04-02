@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 
 static const size_t SKYTEX_SIZE = 1024;
+static const size_t ENVMAP_SIZE = 256;
 static const size_t NB_SKYLOCATIONS = 6;
 
 enum SkyLocation{
@@ -23,6 +24,6 @@ GLuint createFBO();
 void getSkyLocation(GLint* skyLocations, GLuint skyProgram);
 
 /* Test for dynamique texturing the sky */
-void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, float time, GLint* skyLocations);
+void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, float time, GLint* skyLocations);
 
 #endif

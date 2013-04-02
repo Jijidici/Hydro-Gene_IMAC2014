@@ -280,7 +280,8 @@ int main(int argc, char** argv){
 	/* *******************************
 	 *     TEXTURES CREATION
 	 * ******************************* */
-	GLuint texture_sky = CreateCubeMap();
+	GLuint texture_sky = CreateCubeMap(SKYTEX_SIZE);
+	GLuint texture_envmap = CreateCubeMap(ENVMAP_SIZE);
 	/* vegetation textures */
 	GLuint texture_veget[NB_TEXTURES_VEGET];
 	texture_veget[0] = CreateTexture("textures/rock.png");
@@ -300,6 +301,7 @@ int main(int argc, char** argv){
 	
 	/* Bind the Cube Map */
 	BindCubeMap(texture_sky, GL_TEXTURE6);
+	BindCubeMap(texture_envmap, GL_TEXTURE7);
 	
 	/* ***************************************
 	 *       DYNAMIC SKY CREATION
@@ -330,7 +332,7 @@ int main(int argc, char** argv){
 	bool timePause = false;
 	float cloudsTime = 0.;
 	
-	// Creation Light
+	// Creation sunS
 	glm::vec3 sunPos = glm::normalize(glm::vec3(cos(time), sin(time), 0.f));
 	
 	//Creation Cameras
@@ -458,7 +460,7 @@ int main(int argc, char** argv){
 		
 		moveWaterTime+=0.0005;
 		// Comupte the sky textures
-		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, sunPos, cloudsTime, skyLocations);
+		paintTheSky(skyFBO, texture_sky, texture_envmap, skyProgram, quadVAO, sunPos, cloudsTime, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1218,6 +1220,7 @@ int main(int argc, char** argv){
 	
 	/* Debind the Cube Map */
 	BindCubeMap(0, GL_TEXTURE6);
+	BindCubeMap(0, GL_TEXTURE7);
 	
 	// Destruction des ressources OpenGL
 	glDeleteBuffers(1, &cubeVBO);
@@ -1229,6 +1232,7 @@ int main(int argc, char** argv){
 	glDeleteVertexArrays(1, &groundVAO);
 	glDeleteVertexArrays(nbVao, l_VAOs);
 	glDeleteTextures(1, &texture_sky);
+	glDeleteTextures(1, &texture_envmap);
 	for(uint16_t i=0; i<NB_TEXTURES_VEGET;++i){
 		glDeleteTextures(1, &texture_veget[i]);
 	}
