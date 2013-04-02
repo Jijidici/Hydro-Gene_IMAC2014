@@ -236,6 +236,6 @@ void main() {
 		}
 	}
 	else if(uMode == SKYBOX){
-		fFragColor = texture(uSkyTex, gPos);
+		fFragColor = texture(uEnvmapTex, gPos);
 	}
 }

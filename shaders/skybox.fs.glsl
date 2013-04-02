@@ -203,6 +203,6 @@ void main(){
 	}
 	//Draw the envmap
 	else{
-	
+		fFragColor = vec4(absolutePos, 1.f);
 	}
 }
