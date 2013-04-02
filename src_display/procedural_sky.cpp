@@ -24,16 +24,14 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 }
 
 /* Test for dynamique texturing the sky */
-void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, float time, GLint* skyLocations){
+void paintTheSky(GLuint skyFboID, GLuint SkyboxTexID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, float time, GLint* skyLocations){
 	glUseProgram(skyProgram);
 	
 	//send uniforms
 	glUniform3fv(skyLocations[SUN_POS], 1, glm::value_ptr(sunPos));
 	glUniform1f(skyLocations[SKY_TIME], time);
 	
-	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
-	glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
-	
+	//Define cube properties
 	GLenum types[] = {
 		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
 		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
@@ -66,9 +64,13 @@ void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVA
 		glm::vec3(0., -1., 0.),
 	};
 	
+	//Draw the skybox
+	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
+	glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
+	
 	for(uint32_t i=0;i<5;++i){
-		//Attach the top of the skybox cubemap
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], texID, 0);
+		//Attach the face of the skybox cubemap
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], SkyboxTexID, 0);
 		//check the FBO status
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if(status != GL_FRAMEBUFFER_COMPLETE){
@@ -79,7 +81,6 @@ void paintTheSky(GLuint skyFboID, GLuint texID, GLuint skyProgram, GLuint quadVA
 		glUniform3fv(skyLocations[PLAN_OR], 1, glm::value_ptr(origins[i]));
 		glUniform3fv(skyLocations[PLAN_U], 1, glm::value_ptr(planU[i]));
 		glUniform3fv(skyLocations[PLAN_V], 1, glm::value_ptr(planV[i]));
-		//~ glUniform1f(skyLocations[TIME], time);
 		
 		//Clear the drawing zone
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
