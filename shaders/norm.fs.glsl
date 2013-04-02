@@ -133,7 +133,8 @@ void main() {
 			vec3 aColor = vec3(0.05);
 			
 			/* Compute diffus coefficient */
-			float dCoeff = 0.;
+			vec3 envMapSample = texture(uSkyTex, gNormal).xyz;
+			float dCoeff = (envMapSample.r+envMapSample.g+envMapSample.b)/3.;
 			
 			/* Compute the diffus color */
 			vec3 dColor = vec3(0.);
@@ -217,7 +218,8 @@ void main() {
 			}
 			
 			//Final light
-			vec3 color = vec3(1.f)*(aColor+ dColor*dCoeff);
+			vec3 lightColor = mix(vec3(1.f), envMapSample, 0.4f);
+			vec3 color = lightColor*(aColor+ dColor*dCoeff);
 			
 			/* Simulate fog */
 			if(uFog == 1){
