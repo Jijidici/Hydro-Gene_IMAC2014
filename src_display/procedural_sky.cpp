@@ -23,6 +23,7 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[SUN_POS] = glGetUniformLocation(skyProgram, "uSunPos");
 	skyLocations[SKY_TIME] = glGetUniformLocation(skyProgram, "uTime");
 	skyLocations[SKY_TEX] = glGetUniformLocation(skyProgram, "uSkyTex");
+	skyLocations[SAMPLE_STEP] = glGetUniformLocation(skyProgram, "uSampleStep");
 	skyLocations[IS_SKYBOX] = glGetUniformLocation(skyProgram, "uIsSkybox");
 }
 
@@ -100,6 +101,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint
 		glUniform1i(skyLocations[IS_SKYBOX], 0);
 		glViewport(0, 0, ENVMAP_SIZE, ENVMAP_SIZE);
 		
+		glUniform1f(skyLocations[SAMPLE_STEP], 1./(float)ENVMAP_SIZE);
 		glUniform1i(skyLocations[SKY_TEX], 0);
 		BindCubeMap(skyboxTexID, GL_TEXTURE0);
 		

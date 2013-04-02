@@ -11,6 +11,7 @@ uniform vec3 uSunPos;
 uniform float uTime;
 uniform samplerCube uSkyTex;
 uniform int uIsSkybox;
+uniform float uSampleStep;
 
 out vec4 fFragColor;
 
