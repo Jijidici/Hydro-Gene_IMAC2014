@@ -12,13 +12,12 @@
 using namespace hydrogene;
 
 /* ENUM */
-static const size_t NB_LOCATIONS = 31;
+static const size_t NB_LOCATIONS = 30;
 
 enum Locations{
 	MVP,
 	MODELVIEW,
 	INV_VIEWMATRIX,
-	LIGHTSUN,
 	TIME,
 	WATERTIME,
 	MOVEWATERTIME,

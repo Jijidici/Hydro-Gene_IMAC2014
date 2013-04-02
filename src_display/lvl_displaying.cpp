@@ -24,7 +24,6 @@ void getLocations(GLint* locations, GLuint program){
 	locations[INV_VIEWMATRIX] = glGetUniformLocation(program, "uInvViewMatrix");
 	
 	/* Light */
-	locations[LIGHTSUN] = glGetUniformLocation(program, "uLightSunVect");
 	locations[TIME] = glGetUniformLocation(program, "uTime");
 
 	/* Time */

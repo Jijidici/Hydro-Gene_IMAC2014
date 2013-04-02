@@ -331,7 +331,7 @@ int main(int argc, char** argv){
 	float cloudsTime = 0.;
 	
 	// Creation Light
-	glm::vec3 lightSun = -glm::normalize(glm::vec3(cos(time), sin(time), 0.f));
+	glm::vec3 sunPos = glm::normalize(glm::vec3(cos(time), sin(time), 0.f));
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -458,7 +458,7 @@ int main(int argc, char** argv){
 		
 		moveWaterTime+=0.0005;
 		// Comupte the sky textures
-		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, -lightSun, cloudsTime, skyLocations);
+		paintTheSky(skyFBO, texture_sky, skyProgram, quadVAO, sunPos, cloudsTime, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -470,7 +470,6 @@ int main(int argc, char** argv){
 		glUniform1f(locations[TIME], cos(time));
 		glUniform1f(locations[WATERTIME], waterTime);
 		glUniform1f(locations[MOVEWATERTIME], moveWaterTime);
-		glUniform3fv(locations[LIGHTSUN], 1, glm::value_ptr(lightSun));
 		glUniform3fv(locations[FF_FRONT_VECTOR], 1, glm::value_ptr(ffCam.getFrontVector()));
 
 		/* Send fog */
@@ -1177,8 +1176,8 @@ int main(int argc, char** argv){
 		cloudsTime += timeStep;
 		
 		//Manage the sun
-		lightSun.x = cos(time);
-		lightSun.y = sin(time);
+		sunPos.x = cos(time);
+		sunPos.y = sin(time);
 		
 		/* timelaps animation */
 		if(timelaps){			

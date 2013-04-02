@@ -24,7 +24,6 @@ in float gGradient;
 in float gSurface;
 in float gAltitude;
 
-uniform vec3 uLightSunVect = vec3(0.,0.,0.);
 uniform mat4 uMVPMatrix = mat4(1.f);
 uniform mat4 uModelView = mat4(1.f);
 uniform mat4 uInvViewMatrix = mat4(1.f);
@@ -134,7 +133,7 @@ void main() {
 			vec3 aColor = vec3(0.05);
 			
 			/* Compute diffus coefficient */
-			float dCoeff = min(max(0, dot(normalize(gNormal), -normalize(uLightSunVect))), 1.);
+			float dCoeff = 0.;
 			
 			/* Compute the diffus color */
 			vec3 dColor = vec3(0.);
@@ -184,9 +183,6 @@ void main() {
 					vec4 bumpAlt = normalize(vec4(texture(uWaterTex, HMCoordAlt).xyz*2.f-1.f, 0.f));
 					vec4 N = normalize(uModelView*(uWaterTime*bump + (1.-uWaterTime)*bumpAlt + vec4(normalize(gNormal), 0.f)));
 				
-					/* compute normal for diffus component */
-					dCoeff = min(max(0, dot(normalize(gNormal+uWaterTime*bump.xyz+(1-uWaterTime)*bumpAlt.xyz), -normalize(vec3(0.f, -1.f, 0.f)))), 1.);
-					
 					/* fragment position in camera space */
 					vec4 P = normalize(uModelView*vec4(gPos, 1.f));
 					
