@@ -9,6 +9,7 @@ uniform vec3 uPlanU;
 uniform vec3 uPlanV;
 uniform vec3 uSunPos;
 uniform float uTime;
+uniform samplerCube uSkyTex;
 uniform int uIsSkybox;
 
 out vec4 fFragColor;
@@ -203,6 +204,6 @@ void main(){
 	}
 	//Draw the envmap
 	else{
-		fFragColor = vec4(absolutePos, 1.f);
+		fFragColor = texture(uSkyTex, absolutePos);
 	}
 }

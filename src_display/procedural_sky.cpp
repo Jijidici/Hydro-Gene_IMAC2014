@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "display/cube_model.hpp"
 
 static const size_t WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
 
@@ -21,6 +22,7 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[PLAN_V] = glGetUniformLocation(skyProgram, "uPlanV");
 	skyLocations[SUN_POS] = glGetUniformLocation(skyProgram, "uSunPos");
 	skyLocations[SKY_TIME] = glGetUniformLocation(skyProgram, "uTime");
+	skyLocations[SKY_TEX] = glGetUniformLocation(skyProgram, "uSkyTex");
 	skyLocations[IS_SKYBOX] = glGetUniformLocation(skyProgram, "uIsSkybox");
 }
 
@@ -98,6 +100,9 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint
 		glUniform1i(skyLocations[IS_SKYBOX], 0);
 		glViewport(0, 0, ENVMAP_SIZE, ENVMAP_SIZE);
 		
+		glUniform1i(skyLocations[SKY_TEX], 0);
+		BindCubeMap(skyboxTexID, GL_TEXTURE0);
+		
 		for(uint8_t i=0;i<5;++i){
 			//Attache the envmap face
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], envmapTexID, 0);
@@ -119,7 +124,9 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint
 			glBindVertexArray(quadVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 			glBindVertexArray(0);
-		}	
+		}
+		
+		BindCubeMap(0, GL_TEXTURE0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 }
