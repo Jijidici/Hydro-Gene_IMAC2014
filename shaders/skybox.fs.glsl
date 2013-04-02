@@ -9,6 +9,7 @@ uniform vec3 uPlanU;
 uniform vec3 uPlanV;
 uniform vec3 uSunPos;
 uniform float uTime;
+uniform int uIsSkybox;
 
 out vec4 fFragColor;
 
@@ -123,77 +124,85 @@ vec3 HSLtoRGB(int h, float s, float l){
 
 void main(){
 	vec3 absolutePos = normalize(uPlanOr + vPos.x*uPlanU + vPos.y*uPlanV);
-	float time = uTime*0.125f;
-	float sunY = (uSunPos.y+1.)*0.5;
-	float sunX = (uSunPos.x+1.)*0.5;
-	float normPosX = (absolutePos.x+1)*0.5;
-	float distanceToSun = distance(absolutePos, uSunPos)*0.5;
-	float satGradient = 0.18*pow((1. - absolutePos.y), 2);
-	float lighnessGradient = 0.28 + 0.31*pow((1. - absolutePos.y), 2);
-
-	/* sky color */
-	vec3 skyColor;
-	skyColor.x = 209;
-	skyColor.y = 0.76 + satGradient;
-	skyColor.z = 0.1 + lighnessGradient*((2-distanceToSun)*sunY);
 	
-	/* dawn effect */
-	if(sunX > 0.9){
-		vec3 dawnColor;
-		dawnColor.x = 359;
-		dawnColor.y = 0.82+satGradient;
-		dawnColor.z = 0.325+lighnessGradient;
-		float dawnCoef = (1-(1-sunX)/0.1)*max(0., normPosX);
-		skyColor = mix(skyColor, dawnColor, dawnCoef);
-	}
-	
-	/* twillight effect */
-	if(sunX < 0.1){
-		vec3 twillightColor;
-		twillightColor.x = 384;
-		twillightColor.y = 0.8+satGradient;
-		twillightColor.z = 0.165+lighnessGradient;
-		float twillightCoef = (1-(sunX)/0.1)*max(0., 1-normPosX);
-		skyColor = mix(skyColor, twillightColor, twillightCoef);
-	}
-	
-	/* stars noise */
-	float starsCoef = 0.f;
-	if(absolutePos.y > 0.f){
-		starsCoef = cnoise(absolutePos*100);
-		if(starsCoef < 0.99f) starsCoef *= pow(0.5f, (1.f-starsCoef)*15.f);
-	}
+	//Draw the skybox
+	if(uIsSkybox == 1){
+		float time = uTime*0.125f;
+		float sunY = (uSunPos.y+1.)*0.5;
+		float sunX = (uSunPos.x+1.)*0.5;
+		float normPosX = (absolutePos.x+1)*0.5;
+		float distanceToSun = distance(absolutePos, uSunPos)*0.5;
+		float satGradient = 0.18*pow((1. - absolutePos.y), 2);
+		float lighnessGradient = 0.28 + 0.31*pow((1. - absolutePos.y), 2);
 
-	/* day */
-	float sunFragDistance = distance(absolutePos, uSunPos);
-	if(sunFragDistance <= SUN_RADIUS){
-		skyColor.z = 1;
-	}else if(sunFragDistance <= HALO_RADIUS){
-		skyColor.z += (1-skyColor.z)*pow((1-((sunFragDistance-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS))), 3);
-	}
-
-
-	/* clouds noise */
-	// where we draw clouds
-	float cloudCoef = 0.f;
-	if(absolutePos.y > 0.f){
-		float cloudZone = ((cnoise((absolutePos+time)*2)+1.)/2.)*0.9;
-		if(cloudZone < 0.f) cloudZone = 0.f;
-
-		// clouds noise inside this zone
-		absolutePos.x += time*2;
-		cloudCoef = cnoise(vec3(absolutePos.x*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
-		cloudCoef = (cloudCoef + 2.f)*0.3f;
-
-		cloudCoef *= cloudZone;
-		if(cloudCoef < 0.f) cloudCoef = 0.f;
-
-		/* no clouds on the horizon */
-		if(absolutePos.y < 0.1){
-			cloudCoef = cloudCoef*(absolutePos.y*10);
+		/* sky color */
+		vec3 skyColor;
+		skyColor.x = 209;
+		skyColor.y = 0.76 + satGradient;
+		skyColor.z = 0.1 + lighnessGradient*((2-distanceToSun)*sunY);
+		
+		/* dawn effect */
+		if(sunX > 0.9){
+			vec3 dawnColor;
+			dawnColor.x = 359;
+			dawnColor.y = 0.82+satGradient;
+			dawnColor.z = 0.325+lighnessGradient;
+			float dawnCoef = (1-(1-sunX)/0.1)*max(0., normPosX);
+			skyColor = mix(skyColor, dawnColor, dawnCoef);
 		}
+		
+		/* twillight effect */
+		if(sunX < 0.1){
+			vec3 twillightColor;
+			twillightColor.x = 384;
+			twillightColor.y = 0.8+satGradient;
+			twillightColor.z = 0.165+lighnessGradient;
+			float twillightCoef = (1-(sunX)/0.1)*max(0., 1-normPosX);
+			skyColor = mix(skyColor, twillightColor, twillightCoef);
+		}
+		
+		/* stars noise */
+		float starsCoef = 0.f;
+		if(absolutePos.y > 0.f){
+			starsCoef = cnoise(absolutePos*100);
+			if(starsCoef < 0.99f) starsCoef *= pow(0.5f, (1.f-starsCoef)*15.f);
+		}
+
+		/* day */
+		float sunFragDistance = distance(absolutePos, uSunPos);
+		if(sunFragDistance <= SUN_RADIUS){
+			skyColor.z = 1;
+		}else if(sunFragDistance <= HALO_RADIUS){
+			skyColor.z += (1-skyColor.z)*pow((1-((sunFragDistance-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS))), 3);
+		}
+
+
+		/* clouds noise */
+		// where we draw clouds
+		float cloudCoef = 0.f;
+		if(absolutePos.y > 0.f){
+			float cloudZone = ((cnoise((absolutePos+time)*2)+1.)/2.)*0.9;
+			if(cloudZone < 0.f) cloudZone = 0.f;
+
+			// clouds noise inside this zone
+			absolutePos.x += time*2;
+			cloudCoef = cnoise(vec3(absolutePos.x*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
+			cloudCoef = (cloudCoef + 2.f)*0.3f;
+
+			cloudCoef *= cloudZone;
+			if(cloudCoef < 0.f) cloudCoef = 0.f;
+
+			/* no clouds on the horizon */
+			if(absolutePos.y < 0.1){
+				cloudCoef = cloudCoef*(absolutePos.y*10);
+			}
+		}
+		
+		fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*sunY), 1.f );
+		fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-sunY));
 	}
+	//Draw the envmap
+	else{
 	
-	fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*sunY), 1.f );
-	fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-sunY));
+	}
 }

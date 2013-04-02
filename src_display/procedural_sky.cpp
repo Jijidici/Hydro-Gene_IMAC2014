@@ -21,6 +21,7 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[PLAN_V] = glGetUniformLocation(skyProgram, "uPlanV");
 	skyLocations[SUN_POS] = glGetUniformLocation(skyProgram, "uSunPos");
 	skyLocations[SKY_TIME] = glGetUniformLocation(skyProgram, "uTime");
+	skyLocations[IS_SKYBOX] = glGetUniformLocation(skyProgram, "uIsSkybox");
 }
 
 /* Test for dynamique texturing the sky */
@@ -30,6 +31,7 @@ void paintTheSky(GLuint skyFboID, GLuint SkyboxTexID, GLuint skyProgram, GLuint 
 	//send uniforms
 	glUniform3fv(skyLocations[SUN_POS], 1, glm::value_ptr(sunPos));
 	glUniform1f(skyLocations[SKY_TIME], time);
+	glUniform1i(skyLocations[IS_SKYBOX], 1);
 	
 	//Define cube properties
 	GLenum types[] = {
@@ -64,32 +66,36 @@ void paintTheSky(GLuint skyFboID, GLuint SkyboxTexID, GLuint skyProgram, GLuint 
 		glm::vec3(0., -1., 0.),
 	};
 	
-	//Draw the skybox
-	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
-	glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
 	
-	for(uint32_t i=0;i<5;++i){
-		//Attach the face of the skybox cubemap
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], SkyboxTexID, 0);
-		//check the FBO status
-		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if(status != GL_FRAMEBUFFER_COMPLETE){
-			throw std::runtime_error("sky framebuffer isn't complete");
+	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
+		//Draw the skybox
+		glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
+		
+		for(uint32_t i=0;i<5;++i){
+			//Attach the face of the skybox cubemap
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], SkyboxTexID, 0);
+			//check the FBO status
+			GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+			if(status != GL_FRAMEBUFFER_COMPLETE){
+				throw std::runtime_error("sky framebuffer isn't complete");
+			}
+			
+			/* send uniforms */
+			glUniform3fv(skyLocations[PLAN_OR], 1, glm::value_ptr(origins[i]));
+			glUniform3fv(skyLocations[PLAN_U], 1, glm::value_ptr(planU[i]));
+			glUniform3fv(skyLocations[PLAN_V], 1, glm::value_ptr(planV[i]));
+			
+			//Clear the drawing zone
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			
+			//Draw the quad
+			glBindVertexArray(quadVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			glBindVertexArray(0);
 		}
 		
-		/* send uniforms */
-		glUniform3fv(skyLocations[PLAN_OR], 1, glm::value_ptr(origins[i]));
-		glUniform3fv(skyLocations[PLAN_U], 1, glm::value_ptr(planU[i]));
-		glUniform3fv(skyLocations[PLAN_V], 1, glm::value_ptr(planV[i]));
-		
-		//Clear the drawing zone
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		//Draw the quad
-		glBindVertexArray(quadVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBindVertexArray(0);
-	}		
+		//Draw the envmap
+		glUniform1i(skyLocations[IS_SKYBOX], 0);	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 }
