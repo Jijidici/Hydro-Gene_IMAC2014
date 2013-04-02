@@ -205,6 +205,20 @@ void main(){
 	}
 	//Draw the envmap
 	else{
-		fFragColor = texture(uSkyTex, absolutePos);
+		vec3 color = vec3(0.f);
+		float blurBeginX = absolutePos.x-2*uSampleStep;
+		float blurBeginY = absolutePos.y-2*uSampleStep;
+		float blurBeginZ = absolutePos.z-2*uSampleStep;
+		float blurEndX = absolutePos.x+2*uSampleStep;
+		float blurEndY = absolutePos.y+2*uSampleStep;
+		float blurEndZ = absolutePos.z+2*uSampleStep;
+		for(float i=blurBeginX;i<=blurEndX;i+=uSampleStep){
+			for(float j=blurBeginY;j<=blurEndY;j+=uSampleStep){
+				for(float z=blurBeginZ;z<=blurEndZ;z+=uSampleStep){
+					color+= texture(uSkyTex, vec3(i, j, z)).xyz;
+				}
+			}
+		}
+		fFragColor = vec4(color/125., 1.f);
 	}
 }
