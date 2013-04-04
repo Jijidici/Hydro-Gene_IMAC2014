@@ -390,7 +390,8 @@ int main(int argc, char** argv){
 	
 	/* rotation animation */
 	bool rotationAnim = false;
-
+	
+	std::cout<<ENVMAP_SIZE<<std::endl;
 
 	/* ------------- IMGUI --------------- */
 	GLenum err = glewInit();

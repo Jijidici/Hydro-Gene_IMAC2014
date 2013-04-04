@@ -1,5 +1,6 @@
 #include "display/procedural_sky.hpp"
 
+#include <iostream>
 #include <stdexcept>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -69,11 +70,10 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint
 		glm::vec3(0., -1., 0.),
 	};
 	
-	
-	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
-		//Draw the skybox
-		glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
-		
+	//DRAW THE SKYBOX
+	glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
+	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);		
+		//for each planes of the cubemap
 		for(uint8_t i=0;i<5;++i){
 			//Attach the face of the skybox cubemap
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], skyboxTexID, 0);
@@ -95,16 +95,22 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint
 			glBindVertexArray(quadVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 			glBindVertexArray(0);
+			
+			//detach the skybox face
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], 0, 0);
 		}
-		
-		//Draw the envmap
+	
+	
+		//DRAW THE ENVMAP
+		glViewport(0, 0, ENVMAP_SIZE, ENVMAP_SIZE);	
 		glUniform1i(skyLocations[IS_SKYBOX], 0);
-		glViewport(0, 0, ENVMAP_SIZE, ENVMAP_SIZE);
-		
 		glUniform1f(skyLocations[SAMPLE_STEP], 1./(float)ENVMAP_SIZE);
 		glUniform1i(skyLocations[SKY_TEX], 0);
+		
+		//Use skybox as base for the blur
 		BindCubeMap(skyboxTexID, GL_TEXTURE0);
 		
+		//for each planes of the cubemap
 		for(uint8_t i=0;i<5;++i){
 			//Attache the envmap face
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], envmapTexID, 0);
@@ -126,6 +132,9 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint
 			glBindVertexArray(quadVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 			glBindVertexArray(0);
+			
+			//dettach the envmap face
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], 0, 0);
 		}
 		
 		BindCubeMap(0, GL_TEXTURE0);

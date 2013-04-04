@@ -134,7 +134,7 @@ void main() {
 			vec3 aColor = vec3(0.05);
 			
 			/* Compute diffus coefficient */
-			vec3 envMapSample = texture(uSkyTex, gNormal).xyz;
+			vec3 envMapSample = texture(uEnvmapTex, gNormal).xyz;
 			float dCoeff = (envMapSample.r+envMapSample.g+envMapSample.b)/3.;
 			
 			/* Compute the diffus color */
