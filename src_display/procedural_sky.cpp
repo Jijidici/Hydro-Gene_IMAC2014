@@ -26,6 +26,7 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[SKY_TEX] = glGetUniformLocation(skyProgram, "uSkyTex");
 	skyLocations[SAMPLE_STEP] = glGetUniformLocation(skyProgram, "uSampleStep");
 	skyLocations[IS_SKYBOX] = glGetUniformLocation(skyProgram, "uIsSkybox");
+	skyLocations[IS_INITIAL_BLUR] = glGetUniformLocation(skyProgram, "uIsInitialBlur");
 }
 
 /* Test for dynamique texturing the sky */
@@ -104,6 +105,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint
 		//DRAW THE ENVMAP
 		glViewport(0, 0, ENVMAP_SIZE, ENVMAP_SIZE);	
 		glUniform1i(skyLocations[IS_SKYBOX], 0);
+		glUniform1i(skyLocations[IS_INITIAL_BLUR], 1);
 		glUniform1f(skyLocations[SAMPLE_STEP], 1./(float)ENVMAP_SIZE);
 		glUniform1i(skyLocations[SKY_TEX], 0);
 		
