@@ -105,7 +105,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint
 		//DRAW THE ENVMAP
 		glViewport(0, 0, ENVMAP_SIZE, ENVMAP_SIZE);	
 		glUniform1i(skyLocations[IS_SKYBOX], 0);
-		glUniform1i(skyLocations[IS_INITIAL_BLUR], 1);
+		glUniform1i(skyLocations[IS_INITIAL_BLUR], 0);
 		glUniform1f(skyLocations[SAMPLE_STEP], 1./(float)ENVMAP_SIZE);
 		glUniform1i(skyLocations[SKY_TEX], 0);
 		
