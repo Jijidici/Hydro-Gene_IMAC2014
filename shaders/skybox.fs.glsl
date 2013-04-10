@@ -134,7 +134,7 @@ void main(){
 		float sunY = (uSunPos.y+1.)*0.5;
 		float sunX = (uSunPos.x+1.)*0.5;
 		float normPosX = (absolutePos.x+1)*0.5;
-		float distanceToSun = distance(absolutePos, uSunPos)*0.5;
+		float distanceToSun = distance(absolutePos, uSunPos);
 		float satGradient = 0.18*pow((1. - absolutePos.y), 2);
 		float lighnessGradient = 0.28 + 0.31*pow((1. - absolutePos.y), 2);
 
@@ -142,7 +142,7 @@ void main(){
 		vec3 skyColor;
 		skyColor.x = 209;
 		skyColor.y = 0.76 + satGradient;
-		skyColor.z = 0.1 + lighnessGradient*((2-distanceToSun)*sunY);
+		skyColor.z = 0.1 + lighnessGradient*((2-distanceToSun*0.5)*sunY);
 		
 		/* dawn effect */
 		if(sunX > 0.9){
@@ -172,11 +172,10 @@ void main(){
 		}
 
 		/* day */
-		float sunFragDistance = distance(absolutePos, uSunPos);
-		if(sunFragDistance <= SUN_RADIUS){
+		if(distanceToSun <= SUN_RADIUS){
 			skyColor.z = 1;
-		}else if(sunFragDistance <= HALO_RADIUS){
-			skyColor.z += (1-skyColor.z)*pow((1-((sunFragDistance-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS))), 3);
+		}else if(distanceToSun <= HALO_RADIUS){
+			skyColor.z += (1-skyColor.z)*pow((1-((distanceToSun-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS))), 3);
 		}
 
 
@@ -188,8 +187,8 @@ void main(){
 			if(cloudZone < 0.f) cloudZone = 0.f;
 
 			// clouds noise inside this zone
-			absolutePos.x += time*2;
-			cloudCoef = cnoise(vec3(absolutePos.x*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
+			float posX = absolutePos.x + time*2;
+			cloudCoef = cnoise(vec3(posX*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
 			cloudCoef = (cloudCoef + 2.f)*0.3f;
 
 			cloudCoef *= cloudZone;
@@ -201,9 +200,13 @@ void main(){
 			}
 		}
 		
-		//fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*sunY), 1.f );
-		//fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-sunY));
-		fFragColor = vec4((absolutePos.y+1)*0.5);
+		//~ fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*sunY), 1.f );
+		//~ fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-sunY));
+		vec3 testColor = vec3(0.f);
+		if(absolutePos.x >= 0.) testColor.r = 1.f;
+		else testColor.g = 1.f;
+		if(absolutePos.z >= 0.) testColor.b = 1.;
+		fFragColor = vec4(testColor, 1.f);
 	}
 	//Draw the envmap
 	else{
@@ -215,38 +218,38 @@ void main(){
 			if(uPlanU.z == 0 && uPlanV.z == 0){
 				float blurBeginX = absolutePos.x-uSampleStep;
 				float blurBeginY = absolutePos.y-uSampleStep;
-				float blurEndX = absolutePos.x+uSampleStep;
-				float blurEndY = absolutePos.y+uSampleStep;
-				for(float i=blurBeginX;i<=blurEndX;i+=uSampleStep){
-					for(float j=blurBeginY;j<=blurEndY;j+=uSampleStep){
-						color+= texture(uSkyTex, normalize(vec3(i, j, absolutePos.z))).rgb;
+				float blurEndX = absolutePos.x+2*uSampleStep;
+				float blurEndY = absolutePos.y+2*uSampleStep;
+				for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
+					for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
+						color+= texture(uSkyTex, vec3(i, j, absolutePos.z)).rgb;
 					}
 				}
 			}
 			/* case of Z-Y plane */
-			//~ else if(uPlanU.x == 0 && uPlanV.x == 0){
-				//~ float blurBeginZ = absolutePos.z-uSampleStep;
-				//~ float blurBeginY = absolutePos.y-uSampleStep;
-				//~ float blurEndZ = absolutePos.z+uSampleStep;
-				//~ float blurEndY = absolutePos.y+uSampleStep;
-				//~ for(float k=blurBeginZ;k<=blurEndZ;k+=uSampleStep){
-					//~ for(float j=blurBeginY;j<=blurEndY;j+=uSampleStep){
-						//~ color+= texture(uSkyTex, vec3(absolutePos.x, j, k)).rgb;
-					//~ }
-				//~ }
-			//~ }
-			//~ /* case of X-Z plane */
-			//~ else{
-				//~ float blurBeginX = absolutePos.x-uSampleStep;
-				//~ float blurBeginZ = absolutePos.z-uSampleStep;
-				//~ float blurEndX = absolutePos.x+uSampleStep;
-				//~ float blurEndZ = absolutePos.z+uSampleStep;
-				//~ for(float i=blurBeginX;i<=blurEndX;i+=uSampleStep){
-					//~ for(float k=blurBeginZ;k<=blurEndZ;k+=uSampleStep){
-						//~ color+= texture(uSkyTex, vec3(i, absolutePos.y, k)).rgb;
-					//~ }
-				//~ }
-			//~ }
+			else if(uPlanU.x == 0 && uPlanV.x == 0){
+				float blurBeginZ = absolutePos.z-uSampleStep;
+				float blurBeginY = absolutePos.y-uSampleStep;
+				float blurEndZ = absolutePos.z+2*uSampleStep;
+				float blurEndY = absolutePos.y+2*uSampleStep;
+				for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
+					for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
+						color+= texture(uSkyTex, vec3(absolutePos.x, j, k)).rgb;
+					}
+				}
+			}
+			/* case of X-Z plane */
+			else{
+				float blurBeginX = absolutePos.x-uSampleStep;
+				float blurBeginZ = absolutePos.z-uSampleStep;
+				float blurEndX = absolutePos.x+2*uSampleStep;
+				float blurEndZ = absolutePos.z+2*uSampleStep;
+				for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
+					for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
+						color+= texture(uSkyTex, vec3(i, absolutePos.y, k)).rgb;
+					}
+				}
+			}
 			color /= 9;
 			fFragColor = vec4(color, 1.f);
 		}
