@@ -214,7 +214,7 @@ void main(){
 		
 		/* stars noise */
 		float starsCoef = 0.f;
-		if(absolutePos.y > 0.f){
+		if(absolutePos.y > 0.f && sunY < 0.6){
 			starsCoef = cnoise(absolutePos*100);
 			if(starsCoef < 0.99f) starsCoef *= pow(0.5f, (1.f-starsCoef)*15.f);
 		}
@@ -230,7 +230,7 @@ void main(){
 		/* clouds noise */
 		// where we draw clouds
 		float cloudCoef = 0.f;
-		if(absolutePos.y > 0.f){
+		if(absolutePos.y > 0.f && sunY > 0.2){
 			float cloudZone = ((cnoise((absolutePos+time)*2)+1.)/2.)*0.9;
 			if(cloudZone < 0.f) cloudZone = 0.f;
 
@@ -248,8 +248,11 @@ void main(){
 			}
 		}
 		
-		fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*sunY), 1.f );
-		fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-sunY));
+		float cloudTempo = max(sunY-0.2,0)/0.8; //sun position influence the density of clouds and stars
+		float starsTempo = max((1.-sunY)-0.4, 0)/0.6;
+		
+		fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*cloudTempo), 1.f );
+		fFragColor = mix( fFragColor, vec4(1.), starsCoef*starsTempo);
 		
 		//~ test skybox
 		//~ vec3 testColor = vec3(0.f);
