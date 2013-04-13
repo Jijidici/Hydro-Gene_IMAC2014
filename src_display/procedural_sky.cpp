@@ -31,7 +31,7 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 }
 
 /* Test for dynamique texturing the sky */
-void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, float time, GLint* skyLocations){
+void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, GLuint envmapTexID_tmp, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, float time, GLint* skyLocations){
 	glUseProgram(skyProgram);
 	
 	//send uniforms
@@ -117,7 +117,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint
 		//for each planes of the cubemap
 		for(uint8_t i=0;i<5;++i){
 			//Attache the envmap face
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], envmapTexID, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], envmapTexID_main, 0);
 			//check the FBO status
 			GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 			if(status != GL_FRAMEBUFFER_COMPLETE){
