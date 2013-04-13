@@ -24,6 +24,7 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[SUN_POS] = glGetUniformLocation(skyProgram, "uSunPos");
 	skyLocations[SKY_TIME] = glGetUniformLocation(skyProgram, "uTime");
 	skyLocations[SKY_TEX] = glGetUniformLocation(skyProgram, "uSkyTex");
+	skyLocations[ENVMAP_TEX] = glGetUniformLocation(skyProgram, "uEnvmapTex");
 	skyLocations[SAMPLE_STEP] = glGetUniformLocation(skyProgram, "uSampleStep");
 	skyLocations[IS_SKYBOX] = glGetUniformLocation(skyProgram, "uIsSkybox");
 	skyLocations[IS_INITIAL_BLUR] = glGetUniformLocation(skyProgram, "uIsInitialBlur");
@@ -108,6 +109,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID, GLuint
 		glUniform1i(skyLocations[IS_INITIAL_BLUR], 0);
 		glUniform1f(skyLocations[SAMPLE_STEP], 1./(float)ENVMAP_SIZE);
 		glUniform1i(skyLocations[SKY_TEX], 0);
+		glUniform1i(skyLocations[ENVMAP_TEX], 1);
 		
 		//Use skybox as base for the blur
 		BindCubeMap(skyboxTexID, GL_TEXTURE0);

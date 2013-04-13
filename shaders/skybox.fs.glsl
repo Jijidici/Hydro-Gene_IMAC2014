@@ -10,9 +10,10 @@ uniform vec3 uPlanV;
 uniform vec3 uSunPos;
 uniform float uTime;
 uniform samplerCube uSkyTex;
+uniform samplerCube uEnvmapTex;
+uniform float uSampleStep;
 uniform int uIsSkybox;
 uniform int uIsInitialBlur;
-uniform float uSampleStep;
 
 out vec4 fFragColor;
 
