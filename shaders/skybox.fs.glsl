@@ -128,6 +128,7 @@ vec3 HSLtoRGB(int h, float s, float l){
 
 vec3 getBluredTexel(vec3 position){
 	vec3 color = vec3(0.f);
+	int nbIt = 0;
 	//~ /* case of X-Y plane */
 	if(uPlanU.z == 0 && uPlanV.z == 0){
 		float blurBeginX = position.x-uSampleStep;
@@ -137,6 +138,7 @@ vec3 getBluredTexel(vec3 position){
 		for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
 			for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
 				color+= texture(uEnvmapTex, vec3(i, j, position.z)).rgb;
+				++nbIt;
 			}
 		}
 	}
@@ -149,6 +151,7 @@ vec3 getBluredTexel(vec3 position){
 		for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
 			for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
 				color+= texture(uEnvmapTex, vec3(position.x, j, k)).rgb;
+				++nbIt;
 			}
 		}
 	}
@@ -161,10 +164,11 @@ vec3 getBluredTexel(vec3 position){
 		for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
 			for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
 				color+= texture(uEnvmapTex, vec3(i, position.y, k)).rgb;
+				++nbIt;
 			}
 		}
 	}
-	color /= 9;
+	color /= nbIt;
 	return color;
 }
 
@@ -243,13 +247,13 @@ void main(){
 			}
 		}
 		
-		//~ fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*sunY), 1.f );
-		//~ fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-sunY));
-		vec3 testColor = vec3(0.f);
-		if(absolutePos.x >= 0.) testColor.r = 1.f;
-		else testColor.g = 1.f;
-		if(absolutePos.z >= 0.) testColor.b = 1.;
-		fFragColor = vec4(testColor, 1.f);
+		fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*sunY), 1.f );
+		fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-sunY));
+		//~ vec3 testColor = vec3(0.f);
+		//~ if(absolutePos.x >= 0.) testColor.r = 1.f;
+		//~ else testColor.g = 1.f;
+		//~ if(absolutePos.z >= 0.) testColor.b = 1.;
+		//~ fFragColor = vec4(testColor, 1.f);
 	}
 	//Draw the envmap
 	else{
