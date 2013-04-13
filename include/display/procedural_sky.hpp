@@ -4,8 +4,8 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-static const size_t SKYTEX_SIZE = 1024;
-static const size_t ENVMAP_SIZE = 256;
+static const size_t SKYTEX_SIZE = 512;
+static const size_t ENVMAP_SIZE = 128;
 static const size_t NB_SKYLOCATIONS = 10;
 
 enum SkyLocation{

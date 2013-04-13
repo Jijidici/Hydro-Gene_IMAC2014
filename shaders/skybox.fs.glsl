@@ -129,7 +129,7 @@ vec3 HSLtoRGB(int h, float s, float l){
 vec3 getBluredTexel(vec3 position){
 	vec3 color = vec3(0.f);
 	int nbIt = 0;
-	int blurWidth = 2;
+	int blurWidth = 1;
 	//~ /* case of X-Y plane */
 	if(uPlanU.z == 0 && uPlanV.z == 0){
 		float blurBeginX = position.x-blurWidth*uSampleStep;

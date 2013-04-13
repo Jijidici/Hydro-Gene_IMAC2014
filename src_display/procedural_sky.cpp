@@ -8,7 +8,7 @@
 #include "display/cube_model.hpp"
 
 static const size_t WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
-static const size_t BLUR_PRECISION = 7; //Must be impar and greater than 1 (like 2*blur+1, with blur != 0)
+static const size_t BLUR_PRECISION = 9; //Must be impar and greater than 1 (like 2*blur+1, with blur != 0)
 
 /* Create FBO */
 GLuint createFBO(){
@@ -107,7 +107,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 		//DRAW THE ENVMAP
 		glViewport(0, 0, ENVMAP_SIZE, ENVMAP_SIZE);	
 		glUniform1i(skyLocations[IS_SKYBOX], 0);
-		glUniform1f(skyLocations[SAMPLE_STEP], 10*(1./(float)ENVMAP_SIZE));
+		glUniform1f(skyLocations[SAMPLE_STEP], 5*(1./(float)ENVMAP_SIZE));
 		glUniform1i(skyLocations[SKY_TEX], 0);
 		glUniform1i(skyLocations[ENVMAP_TEX], 1);
 		
