@@ -138,7 +138,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 			//for each planes of the cubemap
 			for(uint8_t i=0;i<5;++i){
 				//Attache the envmap face
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], envmapTexID_main, 0);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], writtenEnvMap, 0);
 				//check the FBO status
 				GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 				if(status != GL_FRAMEBUFFER_COMPLETE){
