@@ -8,7 +8,7 @@
 #include "display/cube_model.hpp"
 
 static const size_t WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
-static const size_t BLUR_PRECISION = 3; //Must be impar and greater than 1 (like 2*blur+1, with blur != 0)
+static const size_t BLUR_PRECISION = 15; //Must be impar and greater than 1 (like 2*blur+1, with blur != 0)
 
 /* Create FBO */
 GLuint createFBO(){
@@ -125,7 +125,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 			}else{
 				glUniform1i(skyLocations[IS_INITIAL_BLUR], 0);
 				//determine which blur step we are
-				if(blur%2 == 0){
+				if(blur%2 == 1){
 					writtenEnvMap = envmapTexID_tmp;
 					BindCubeMap(envmapTexID_main, GL_TEXTURE1);
 				}else{
@@ -133,7 +133,6 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 					BindCubeMap(envmapTexID_tmp, GL_TEXTURE1);
 				}
 			}
-			
 		
 			//for each planes of the cubemap
 			for(uint8_t i=0;i<5;++i){
@@ -160,11 +159,10 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 				
 				//dettach the envmap face
 				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], 0, 0);
-				//Unbind the envmap texture
-				BindCubeMap(0, GL_TEXTURE1);
 			}
 		}
 		
+		BindCubeMap(0, GL_TEXTURE1);
 		BindCubeMap(0, GL_TEXTURE0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);

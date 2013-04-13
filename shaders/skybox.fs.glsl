@@ -136,7 +136,7 @@ vec3 getBluredTexel(vec3 position){
 		float blurEndY = position.y+2*uSampleStep;
 		for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
 			for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
-				color+= texture(uSkyTex, vec3(i, j, position.z)).rgb;
+				color+= texture(uEnvmapTex, vec3(i, j, position.z)).rgb;
 			}
 		}
 	}
@@ -148,7 +148,7 @@ vec3 getBluredTexel(vec3 position){
 		float blurEndY = position.y+2*uSampleStep;
 		for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
 			for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
-				color+= texture(uSkyTex, vec3(position.x, j, k)).rgb;
+				color+= texture(uEnvmapTex, vec3(position.x, j, k)).rgb;
 			}
 		}
 	}
@@ -160,7 +160,7 @@ vec3 getBluredTexel(vec3 position){
 		float blurEndZ = position.z+2*uSampleStep;
 		for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
 			for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
-				color+= texture(uSkyTex, vec3(i, position.y, k)).rgb;
+				color+= texture(uEnvmapTex, vec3(i, position.y, k)).rgb;
 			}
 		}
 	}
