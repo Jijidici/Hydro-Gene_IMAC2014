@@ -126,6 +126,48 @@ vec3 HSLtoRGB(int h, float s, float l){
 	return color;
 }
 
+vec3 getBluredTexel(vec3 position){
+	vec3 color = vec3(0.f);
+	//~ /* case of X-Y plane */
+	if(uPlanU.z == 0 && uPlanV.z == 0){
+		float blurBeginX = position.x-uSampleStep;
+		float blurBeginY = position.y-uSampleStep;
+		float blurEndX = position.x+2*uSampleStep;
+		float blurEndY = position.y+2*uSampleStep;
+		for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
+			for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
+				color+= texture(uSkyTex, vec3(i, j, position.z)).rgb;
+			}
+		}
+	}
+	/* case of Z-Y plane */
+	else if(uPlanU.x == 0 && uPlanV.x == 0){
+		float blurBeginZ = position.z-uSampleStep;
+		float blurBeginY = position.y-uSampleStep;
+		float blurEndZ = position.z+2*uSampleStep;
+		float blurEndY = position.y+2*uSampleStep;
+		for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
+			for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
+				color+= texture(uSkyTex, vec3(position.x, j, k)).rgb;
+			}
+		}
+	}
+	/* case of X-Z plane */
+	else{
+		float blurBeginX = position.x-uSampleStep;
+		float blurBeginZ = position.z-uSampleStep;
+		float blurEndX = position.x+2*uSampleStep;
+		float blurEndZ = position.z+2*uSampleStep;
+		for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
+			for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
+				color+= texture(uSkyTex, vec3(i, position.y, k)).rgb;
+			}
+		}
+	}
+	color /= 9;
+	return color;
+}
+
 void main(){
 	vec3 absolutePos = normalize(uPlanOr + vPos.x*uPlanU + vPos.y*uPlanV);
 	
@@ -214,45 +256,7 @@ void main(){
 		if(uIsInitialBlur == 1){
 			fFragColor = texture(uSkyTex, absolutePos);
 		}else{
-			vec3 color = vec3(0.f);
-			//~ /* case of X-Y plane */
-			if(uPlanU.z == 0 && uPlanV.z == 0){
-				float blurBeginX = absolutePos.x-uSampleStep;
-				float blurBeginY = absolutePos.y-uSampleStep;
-				float blurEndX = absolutePos.x+2*uSampleStep;
-				float blurEndY = absolutePos.y+2*uSampleStep;
-				for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
-					for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
-						color+= texture(uSkyTex, vec3(i, j, absolutePos.z)).rgb;
-					}
-				}
-			}
-			/* case of Z-Y plane */
-			else if(uPlanU.x == 0 && uPlanV.x == 0){
-				float blurBeginZ = absolutePos.z-uSampleStep;
-				float blurBeginY = absolutePos.y-uSampleStep;
-				float blurEndZ = absolutePos.z+2*uSampleStep;
-				float blurEndY = absolutePos.y+2*uSampleStep;
-				for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
-					for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
-						color+= texture(uSkyTex, vec3(absolutePos.x, j, k)).rgb;
-					}
-				}
-			}
-			/* case of X-Z plane */
-			else{
-				float blurBeginX = absolutePos.x-uSampleStep;
-				float blurBeginZ = absolutePos.z-uSampleStep;
-				float blurEndX = absolutePos.x+2*uSampleStep;
-				float blurEndZ = absolutePos.z+2*uSampleStep;
-				for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
-					for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
-						color+= texture(uSkyTex, vec3(i, absolutePos.y, k)).rgb;
-					}
-				}
-			}
-			color /= 9;
-			fFragColor = vec4(color, 1.f);
+			fFragColor = vec4(getBluredTexel(absolutePos), 1.f);
 		}
 	}
 }
