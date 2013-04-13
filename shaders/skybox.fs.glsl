@@ -129,12 +129,13 @@ vec3 HSLtoRGB(int h, float s, float l){
 vec3 getBluredTexel(vec3 position){
 	vec3 color = vec3(0.f);
 	int nbIt = 0;
+	int blurWidth = 2;
 	//~ /* case of X-Y plane */
 	if(uPlanU.z == 0 && uPlanV.z == 0){
-		float blurBeginX = position.x-uSampleStep;
-		float blurBeginY = position.y-uSampleStep;
-		float blurEndX = position.x+2*uSampleStep;
-		float blurEndY = position.y+2*uSampleStep;
+		float blurBeginX = position.x-blurWidth*uSampleStep;
+		float blurBeginY = position.y-blurWidth*uSampleStep;
+		float blurEndX = position.x+(blurWidth+1)*uSampleStep;
+		float blurEndY = position.y+(blurWidth+1)*uSampleStep;
 		for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
 			for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
 				color+= texture(uEnvmapTex, vec3(i, j, position.z)).rgb;
@@ -144,10 +145,10 @@ vec3 getBluredTexel(vec3 position){
 	}
 	/* case of Z-Y plane */
 	else if(uPlanU.x == 0 && uPlanV.x == 0){
-		float blurBeginZ = position.z-uSampleStep;
-		float blurBeginY = position.y-uSampleStep;
-		float blurEndZ = position.z+2*uSampleStep;
-		float blurEndY = position.y+2*uSampleStep;
+		float blurBeginZ = position.z-blurWidth*uSampleStep;
+		float blurBeginY = position.y-blurWidth*uSampleStep;
+		float blurEndZ = position.z+(blurWidth+1)*uSampleStep;
+		float blurEndY = position.y+(blurWidth+1)*uSampleStep;
 		for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
 			for(float j=blurBeginY;j<blurEndY;j+=uSampleStep){
 				color+= texture(uEnvmapTex, vec3(position.x, j, k)).rgb;
@@ -157,10 +158,10 @@ vec3 getBluredTexel(vec3 position){
 	}
 	/* case of X-Z plane */
 	else{
-		float blurBeginX = position.x-uSampleStep;
-		float blurBeginZ = position.z-uSampleStep;
-		float blurEndX = position.x+2*uSampleStep;
-		float blurEndZ = position.z+2*uSampleStep;
+		float blurBeginX = position.x-blurWidth*uSampleStep;
+		float blurBeginZ = position.z-blurWidth*uSampleStep;
+		float blurEndX = position.x+(blurWidth+1)*uSampleStep;
+		float blurEndZ = position.z+(blurWidth+1)*uSampleStep;
 		for(float i=blurBeginX;i<blurEndX;i+=uSampleStep){
 			for(float k=blurBeginZ;k<blurEndZ;k+=uSampleStep){
 				color+= texture(uEnvmapTex, vec3(i, position.y, k)).rgb;

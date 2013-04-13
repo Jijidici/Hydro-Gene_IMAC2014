@@ -8,7 +8,7 @@
 #include "display/cube_model.hpp"
 
 static const size_t WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
-static const size_t BLUR_PRECISION = 15; //Must be impar and greater than 1 (like 2*blur+1, with blur != 0)
+static const size_t BLUR_PRECISION = 7; //Must be impar and greater than 1 (like 2*blur+1, with blur != 0)
 
 /* Create FBO */
 GLuint createFBO(){
