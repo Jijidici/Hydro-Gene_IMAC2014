@@ -250,6 +250,8 @@ void main(){
 		
 		fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*sunY), 1.f );
 		fFragColor = mix( fFragColor, vec4(1.), starsCoef*(1.-sunY));
+		
+		//~ test skybox
 		//~ vec3 testColor = vec3(0.f);
 		//~ if(absolutePos.x >= 0.) testColor.r = 1.f;
 		//~ else testColor.g = 1.f;
