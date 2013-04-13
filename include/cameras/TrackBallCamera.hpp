@@ -7,7 +7,7 @@ namespace hydrogene{
 
 class TrackBallCamera{
 	public:
-		TrackBallCamera();
+		TrackBallCamera(float distance);
 		void moveFront(float distance);
 		void rotateLeft(float degrees);
 		void rotateUp(float degrees);

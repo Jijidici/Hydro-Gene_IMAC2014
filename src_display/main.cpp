@@ -338,8 +338,8 @@ int main(int argc, char** argv){
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
-	hydrogene::TrackBallCamera tbCam;
-	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, 0.f, 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
+	hydrogene::TrackBallCamera tbCam(5*maxCoeffArray[4]*terrainScale);
+	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4]*terrainScale, 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
 	
 	/* Uniform Locations */
 	GLint* locations = new GLint[NB_LOCATIONS];
@@ -502,7 +502,7 @@ int main(int argc, char** argv){
 			glUniform1i(locations[OCEAN], 1);
 			mvStack.push();
 				mvStack.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
-				mvStack.scale(glm::vec3(10*terrainScale));
+				mvStack.scale(glm::vec3(20*terrainScale));
 				/* Send the model view */
 				glUniformMatrix4fv(locations[MODELVIEW], 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 				ms.push();
