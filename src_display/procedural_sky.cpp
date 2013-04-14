@@ -23,6 +23,7 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[PLAN_U] = glGetUniformLocation(skyProgram, "uPlanU");
 	skyLocations[PLAN_V] = glGetUniformLocation(skyProgram, "uPlanV");
 	skyLocations[SUN_POS] = glGetUniformLocation(skyProgram, "uSunPos");
+	skyLocations[MOON_POS] = glGetUniformLocation(skyProgram, "uMoonPos");
 	skyLocations[SKY_TIME] = glGetUniformLocation(skyProgram, "uTime");
 	skyLocations[SKY_TEX] = glGetUniformLocation(skyProgram, "uSkyTex");
 	skyLocations[ENVMAP_TEX] = glGetUniformLocation(skyProgram, "uEnvmapTex");
@@ -37,6 +38,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 	
 	//send uniforms
 	glUniform3fv(skyLocations[SUN_POS], 1, glm::value_ptr(sunPos));
+	glUniform3fv(skyLocations[MOON_POS], 1, glm::value_ptr(moonPos));
 	glUniform1f(skyLocations[SKY_TIME], time);
 	glUniform1i(skyLocations[IS_SKYBOX], 1);
 	

@@ -6,13 +6,14 @@
 
 static const size_t SKYTEX_SIZE = 512;
 static const size_t ENVMAP_SIZE = 128;
-static const size_t NB_SKYLOCATIONS = 10;
+static const size_t NB_SKYLOCATIONS = 11;
 
 enum SkyLocation{
 	PLAN_OR,
 	PLAN_U,
 	PLAN_V,
 	SUN_POS,
+	MOON_POS,
 	SKY_TIME,
 	ENVMAP_TEX,
 	SKY_TEX,

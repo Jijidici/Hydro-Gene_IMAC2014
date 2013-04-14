@@ -8,6 +8,7 @@ uniform vec3 uPlanOr;
 uniform vec3 uPlanU;
 uniform vec3 uPlanV;
 uniform vec3 uSunPos;
+uniform vec3 uMoonPos;
 uniform float uTime;
 uniform samplerCube uSkyTex;
 uniform samplerCube uEnvmapTex;
