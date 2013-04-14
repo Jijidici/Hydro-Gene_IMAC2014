@@ -10,6 +10,7 @@ uniform vec3 uMoonPos;
 uniform float uTime;
 uniform samplerCube uSkyTex;
 uniform samplerCube uEnvmapTex;
+uniform sampler2D uMoonTex;
 uniform float uSampleStep;
 uniform int uIsSkybox;
 uniform int uIsInitialBlur;
