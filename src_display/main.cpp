@@ -1238,7 +1238,8 @@ int main(int argc, char** argv){
 	glDeleteVertexArrays(1, &groundVAO);
 	glDeleteVertexArrays(nbVao, l_VAOs);
 	glDeleteTextures(1, &texture_sky);
-	//~ glDeleteTextures(1, &texture_envmap_main);
+	glDeleteTextures(1, &texture_envmap_main);
+	glDeleteTextures(1, &texture_envmap_tmp);
 	for(uint16_t i=0; i<NB_TEXTURES_VEGET;++i){
 		glDeleteTextures(1, &texture_veget[i]);
 	}

@@ -1,6 +1,4 @@
 #version 330
-#define SUN_RADIUS 0.05
-#define HALO_RADIUS 0.07
 
 in vec2 vPos;
 
@@ -185,6 +183,7 @@ void main(){
 		float sunX = (uSunPos.x+1.)*0.5;
 		float normPosX = (absolutePos.x+1)*0.5;
 		float distanceToSun = distance(absolutePos, uSunPos);
+		float distanceToMoon = distance(absolutePos, uMoonPos);
 		float satGradient = 0.18*pow((1. - absolutePos.y), 2);
 		float lighnessGradient = 0.28 + 0.31*pow((1. - absolutePos.y), 2);
 
@@ -221,16 +220,6 @@ void main(){
 			if(starsCoef < 0.99f) starsCoef *= pow(0.5f, (1.f-starsCoef)*15.f);
 		}
 
-		/* day */
-		float sun_radius = 0.03 + (1-sunY)*0.05;
-		float halo_radius = sun_radius + 0.08;
-		if(distanceToSun <= sun_radius){
-			skyColor.z = 1;
-		}else if(distanceToSun <= halo_radius){
-			skyColor.z += (1-skyColor.z)*pow((1-((distanceToSun-sun_radius)/0.08)), 3);
-		}
-
-
 		/* clouds noise */
 		// where we draw clouds
 		float cloudCoef = 0.f;
@@ -252,6 +241,33 @@ void main(){
 			}
 		}
 		
+		/* sun drawing */
+		float sun_radius = 0.03 + (1-sunY)*0.05;
+		float sun_halo = sun_radius + 0.05;
+		if(distanceToSun <= sun_radius){
+			skyColor.z = 1;
+		}else if(distanceToSun <= sun_halo){
+			skyColor.z += (1-skyColor.z)*pow((1-((distanceToSun-sun_radius)/0.05)), 3);
+		}
+		
+		/* moon drawing */
+		float moon_radius = 0.03;
+		float moon_antialiasing = moon_radius + 0.01;
+		float moon_halo = moon_antialiasing + 0.8;
+		if(distanceToMoon <= moon_radius){
+			skyColor.z = 1;
+		}else if(distanceToMoon <= moon_antialiasing){
+			skyColor.z += (1-skyColor.z)*pow((1-((distanceToMoon-moon_radius)/0.01)), 3);
+		}
+		if(distanceToMoon > moon_radius && distanceToMoon <= moon_halo){
+				skyColor.z += (1-skyColor.z)*pow((1-((distanceToMoon-moon_radius)/0.8)), 2)*0.1;
+				//effect of moon lightning pollution on stars
+				starsCoef *= distanceToMoon/moon_halo;
+		}
+		
+		
+		
+		/* final color */
 		float cloudTempo = max(sunY-0.2,0)/0.8; //sun position influence the density of clouds and stars
 		float starsTempo = max((1.-sunY)-0.4, 0)/0.6;
 		
