@@ -283,6 +283,7 @@ int main(int argc, char** argv){
 	GLuint texture_sky = CreateCubeMap(SKYTEX_SIZE);
 	GLuint texture_envmap_main = CreateCubeMap(ENVMAP_SIZE);
 	GLuint texture_envmap_tmp = CreateCubeMap(ENVMAP_SIZE);
+	GLuint texture_moon = CreateTexture("textures/moon.png");
 	/* vegetation textures */
 	GLuint texture_veget[NB_TEXTURES_VEGET];
 	texture_veget[0] = CreateTexture("textures/rock.png");
@@ -461,7 +462,7 @@ int main(int argc, char** argv){
 		
 		moveWaterTime+=0.0005;
 		// Comupte the sky textures
-		paintTheSky(skyFBO, texture_sky, texture_envmap_main, texture_envmap_tmp, skyProgram, quadVAO, sunPos, moonPos, cloudsTime, skyLocations);
+		paintTheSky(skyFBO, texture_sky, texture_envmap_main, texture_envmap_tmp, texture_moon, skyProgram, quadVAO, sunPos, moonPos, cloudsTime, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1240,6 +1241,7 @@ int main(int argc, char** argv){
 	glDeleteTextures(1, &texture_sky);
 	glDeleteTextures(1, &texture_envmap_main);
 	glDeleteTextures(1, &texture_envmap_tmp);
+	glDeleteTextures(1, &texture_moon);
 	for(uint16_t i=0; i<NB_TEXTURES_VEGET;++i){
 		glDeleteTextures(1, &texture_veget[i]);
 	}
