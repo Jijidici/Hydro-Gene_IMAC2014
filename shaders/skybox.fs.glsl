@@ -127,6 +127,36 @@ vec3 HSLtoRGB(int h, float s, float l){
 	return color;
 }
 
+vec3 RGBtoHSL(float r, float g, float b){
+	float h = 0;
+	float s = 0;
+	float l = 0;
+
+	float var_min = min(min(r, g), b);
+	float var_max = max(max(r, g), b);
+	float del_max = var_max - var_min;
+	
+	l = (var_max + var_min)*0.5;
+	
+	if(del_max != 0){
+		if(l < 0.5) s = del_max / (var_max + var_min);
+		else 		s = del_max / (2 - var_max - var_min);
+		
+		float del_r = (((var_max - r)/6.) + (del_max*0.5)) / del_max;
+		float del_g = (((var_max - g)/6.) + (del_max*0.5)) / del_max;
+		float del_b = (((var_max - b)/6.) + (del_max*0.5)) / del_max;
+		
+		if(r == var_max) h = del_b - del_g;
+		else if(g == var_max) h = 1./3. + del_r - del_b;
+		else if(b == var_max) h = 2./3. + del_g - del_r;
+		
+		if(h < 0) h += 1;
+		if(h > 1) h -= 1;
+		h *= 360;
+		return vec3(h,s,l);
+	}
+}
+
 vec3 getBluredTexel(vec3 position){
 	vec3 color = vec3(0.f);
 	int nbIt = 0;
@@ -255,6 +285,8 @@ void main(){
 		float moon_radius = 0.03;
 		float moon_antialiasing = moon_radius + 0.01;
 		float moon_halo = moon_antialiasing + 0.8;
+		vec3 moonOrigin = uMoonPos - moon_antialiasing;
+		
 		if(distanceToMoon <= moon_radius){
 			skyColor.z = 1;
 		}else if(distanceToMoon <= moon_antialiasing){

@@ -42,7 +42,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 	glUniform3fv(skyLocations[MOON_POS], 1, glm::value_ptr(moonPos));
 	glUniform1f(skyLocations[SKY_TIME], time);
 	glUniform1i(skyLocations[IS_SKYBOX], 1);
-	glUniform1i(skyLocations[MOON_TEX], 1);
+	glUniform1i(skyLocations[MOON_TEX], 0);
 	
 	//Define cube properties
 	GLenum types[] = {
