@@ -329,12 +329,13 @@ int main(int argc, char** argv){
 	
 	// Time variables
 	float timeStep = (2*M_PI)/1000.;
-	float time = 500*timeStep;
+	float time = 0;
 	bool timePause = false;
 	float cloudsTime = 0.;
 	
-	// Creation sunS
+	// Creation sun and moon
 	glm::vec3 sunPos = glm::normalize(glm::vec3(cos(time), sin(time), 0.f));
+	glm::vec3 moonPos = glm::normalize(glm::vec3(0., sin(time+M_PI), cos(time+M_PI)));
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
@@ -460,7 +461,7 @@ int main(int argc, char** argv){
 		
 		moveWaterTime+=0.0005;
 		// Comupte the sky textures
-		paintTheSky(skyFBO, texture_sky, texture_envmap_main, texture_envmap_tmp, skyProgram, quadVAO, sunPos, cloudsTime, skyLocations);
+		paintTheSky(skyFBO, texture_sky, texture_envmap_main, texture_envmap_tmp, skyProgram, quadVAO, sunPos, moonPos, cloudsTime, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1179,9 +1180,12 @@ int main(int argc, char** argv){
 		}
 		cloudsTime += timeStep;
 		
-		//Manage the sun
+		//Manage the sun and the moon
 		sunPos.x = cos(time);
 		sunPos.y = sin(time);
+		
+		moonPos.z = cos(time+M_PI);
+		moonPos.y = sin(time+M_PI);
 		
 		/* timelaps animation */
 		if(timelaps){			
