@@ -221,10 +221,12 @@ void main(){
 		}
 
 		/* day */
-		if(distanceToSun <= SUN_RADIUS){
+		float sun_radius = 0.03 + (1-sunY)*0.05;
+		float halo_radius = sun_radius + 0.08;
+		if(distanceToSun <= sun_radius){
 			skyColor.z = 1;
-		}else if(distanceToSun <= HALO_RADIUS){
-			skyColor.z += (1-skyColor.z)*pow((1-((distanceToSun-SUN_RADIUS)/(HALO_RADIUS-SUN_RADIUS))), 3);
+		}else if(distanceToSun <= halo_radius){
+			skyColor.z += (1-skyColor.z)*pow((1-((distanceToSun-sun_radius)/0.08)), 3);
 		}
 
 
