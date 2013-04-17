@@ -190,10 +190,13 @@ void main(){
 			// clouds noise inside this zone
 			absolutePos.x += time*2;
 			cloudCoef = cnoise(vec3(absolutePos.x*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
-			cloudCoef = (cloudCoef + 2.f)*0.3f;
+			//~ cloudCoef = cnoise(vec3(absolutePos.x*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*(0.3/cloudZone))*3;
+			//~ cloudCoef = (cloudCoef + 2.f)*0.3f;
+			cloudCoef = cloudCoef*cloudCoef/2.;
 
 			cloudCoef *= cloudZone;
 			if(cloudCoef < 0.f) cloudCoef = 0.f;
+			if(cloudCoef > 1.f) cloudCoef = 1.f;
 
 			/* no clouds on the horizon */
 			if(absolutePos.y < 0.1){
