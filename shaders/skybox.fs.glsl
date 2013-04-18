@@ -1,6 +1,4 @@
 #version 330
-#define SUN_RADIUS 0.05
-#define HALO_RADIUS 0.07
 
 in vec2 vPos;
 
@@ -8,9 +6,11 @@ uniform vec3 uPlanOr;
 uniform vec3 uPlanU;
 uniform vec3 uPlanV;
 uniform vec3 uSunPos;
+uniform vec3 uMoonPos;
 uniform float uTime;
 uniform samplerCube uSkyTex;
 uniform samplerCube uEnvmapTex;
+uniform sampler2D uMoonTex;
 uniform float uSampleStep;
 uniform int uIsSkybox;
 uniform int uIsInitialBlur;
@@ -127,6 +127,36 @@ vec3 HSLtoRGB(int h, float s, float l){
 	return color;
 }
 
+vec3 RGBtoHSL(float r, float g, float b){
+	float h = 0;
+	float s = 0;
+	float l = 0;
+
+	float var_min = min(min(r, g), b);
+	float var_max = max(max(r, g), b);
+	float del_max = var_max - var_min;
+	
+	l = (var_max + var_min)*0.5;
+	
+	if(del_max != 0){
+		if(l < 0.5) s = del_max / (var_max + var_min);
+		else 		s = del_max / (2 - var_max - var_min);
+		
+		float del_r = (((var_max - r)/6.) + (del_max*0.5)) / del_max;
+		float del_g = (((var_max - g)/6.) + (del_max*0.5)) / del_max;
+		float del_b = (((var_max - b)/6.) + (del_max*0.5)) / del_max;
+		
+		if(r == var_max) h = del_b - del_g;
+		else if(g == var_max) h = 1./3. + del_r - del_b;
+		else if(b == var_max) h = 2./3. + del_g - del_r;
+		
+		if(h < 0) h += 1;
+		if(h > 1) h -= 1;
+		h *= 360;
+		return vec3(h,s,l);
+	}
+}
+
 vec3 getBluredTexel(vec3 position){
 	vec3 color = vec3(0.f);
 	int nbIt = 0;
@@ -184,6 +214,7 @@ void main(){
 		float sunX = (uSunPos.x+1.)*0.5;
 		float normPosX = (absolutePos.x+1)*0.5;
 		float distanceToSun = distance(absolutePos, uSunPos);
+		float distanceToMoon = distance(absolutePos, uMoonPos);
 		float satGradient = 0.18*pow((1. - absolutePos.y), 2);
 		float lighnessGradient = 0.28 + 0.31*pow((1. - absolutePos.y), 2);
 
@@ -220,16 +251,6 @@ void main(){
 			if(starsCoef < 0.99f) starsCoef *= pow(0.5f, (1.f-starsCoef)*15.f);
 		}
 
-		/* day */
-		float sun_radius = 0.03 + (1-sunY)*0.05;
-		float halo_radius = sun_radius + 0.08;
-		if(distanceToSun <= sun_radius){
-			skyColor.z = 1;
-		}else if(distanceToSun <= halo_radius){
-			skyColor.z += (1-skyColor.z)*pow((1-((distanceToSun-sun_radius)/0.08)), 3);
-		}
-
-
 		/* clouds noise */
 		// where we draw clouds
 		float cloudCoef = 0.f;
@@ -254,12 +275,44 @@ void main(){
 			}
 		}
 		
+		/* sun drawing */
+		float sun_radius = 0.03 + (1-sunY)*0.05;
+		float sun_halo = sun_radius + 0.05;
+		if(distanceToSun <= sun_radius){
+			skyColor.z = 1;
+		}else if(distanceToSun <= sun_halo){
+			skyColor.z += (1-skyColor.z)*pow((1-((distanceToSun-sun_radius)/0.05)), 3);
+		}
+		
+		/* moon drawing */
+		float moon_radius = 0.1;
+		float moon_antialiasing = moon_radius + 0.01;
+		float moon_halo = moon_antialiasing + 0.8;
+		
+		if(distanceToMoon <= moon_antialiasing){
+			vec3 OP = normalize(absolutePos) - normalize(uMoonPos);
+			vec3 U = vec3(1, 0, 0.);
+			float r = length(OP);
+			float moonTexCoord_x = dot(OP, U);
+			float moonTexCoord_y = -sqrt(r*r - moonTexCoord_x*moonTexCoord_x);
+			moonTexCoord_x = moonTexCoord_x/moon_antialiasing * 0.45 + 0.5;
+			moonTexCoord_y = moonTexCoord_y/moon_antialiasing * 0.45 + 0.5;
+			vec4 moonColor = texture(uMoonTex, vec2(moonTexCoord_x, moonTexCoord_y));
+			float moonBlendCoef = moonColor.a * pow((1-sunY), 2);
+			skyColor = mix(skyColor, RGBtoHSL(moonColor.x, moonColor.y, moonColor.z), moonBlendCoef);
+		}	
+		if(distanceToMoon <= moon_halo){
+				skyColor.z += (1-skyColor.z)*pow((1-((distanceToMoon-moon_radius)/0.8)), 2)*0.1;
+				//effect of moon lightning pollution on stars
+				starsCoef *= distanceToMoon/moon_halo;
+		}
+		
+		/* final color */
 		float cloudTempo = max(sunY-0.2,0)/0.8; //sun position influence the density of clouds and stars
 		float starsTempo = max((1.-sunY)-0.4, 0)/0.6;
 		
 		fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*cloudTempo), 1.f );
 		fFragColor = mix( fFragColor, vec4(1.), starsCoef*starsTempo);
-		
 		//~ test skybox
 		//~ vec3 testColor = vec3(0.f);
 		//~ if(absolutePos.x >= 0.) testColor.r = 1.f;
