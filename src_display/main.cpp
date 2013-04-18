@@ -281,7 +281,8 @@ int main(int argc, char** argv){
 	 *     TEXTURES CREATION
 	 * ******************************* */
 	GLuint texture_sky = CreateCubeMap(SKYTEX_SIZE);
-	GLuint texture_envmap = CreateCubeMap(ENVMAP_SIZE);
+	GLuint texture_envmap_main = CreateCubeMap(ENVMAP_SIZE);
+	GLuint texture_envmap_tmp = CreateCubeMap(ENVMAP_SIZE);
 	/* vegetation textures */
 	GLuint texture_veget[NB_TEXTURES_VEGET];
 	texture_veget[0] = CreateTexture("textures/rock.png");
@@ -301,7 +302,7 @@ int main(int argc, char** argv){
 	
 	/* Bind the Cube Map */
 	BindCubeMap(texture_sky, GL_TEXTURE6);
-	BindCubeMap(texture_envmap, GL_TEXTURE7);
+	BindCubeMap(texture_envmap_main, GL_TEXTURE7);
 	
 	/* ***************************************
 	 *       DYNAMIC SKY CREATION
@@ -337,8 +338,8 @@ int main(int argc, char** argv){
 	
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
-	hydrogene::TrackBallCamera tbCam;
-	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, 0.f, 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
+	hydrogene::TrackBallCamera tbCam(5*maxCoeffArray[4]*terrainScale);
+	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4]*terrainScale, 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
 	
 	/* Uniform Locations */
 	GLint* locations = new GLint[NB_LOCATIONS];
@@ -390,8 +391,6 @@ int main(int argc, char** argv){
 	
 	/* rotation animation */
 	bool rotationAnim = false;
-	
-	std::cout<<ENVMAP_SIZE<<std::endl;
 
 	/* ------------- IMGUI --------------- */
 	GLenum err = glewInit();
@@ -461,7 +460,7 @@ int main(int argc, char** argv){
 		
 		moveWaterTime+=0.0005;
 		// Comupte the sky textures
-		paintTheSky(skyFBO, texture_sky, texture_envmap, skyProgram, quadVAO, sunPos, cloudsTime, skyLocations);
+		paintTheSky(skyFBO, texture_sky, texture_envmap_main, texture_envmap_tmp, skyProgram, quadVAO, sunPos, cloudsTime, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -503,7 +502,7 @@ int main(int argc, char** argv){
 			glUniform1i(locations[OCEAN], 1);
 			mvStack.push();
 				mvStack.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
-				mvStack.scale(glm::vec3(10*terrainScale));
+				mvStack.scale(glm::vec3(20*terrainScale));
 				/* Send the model view */
 				glUniformMatrix4fv(locations[MODELVIEW], 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 				ms.push();
@@ -1144,7 +1143,7 @@ int main(int argc, char** argv){
 			int32_t voxX = (unscaleCamPosX+1.f)*0.5f*total_nbSub;
 			int32_t voxZ = (unscaleCamPosZ+1.f)*0.5f*total_nbSub;
 			
-			if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub){
+			if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub || memory.size() == 0){
 				xtremAltitude = maxCoeffArray[5] + halfVoxelSize;
 			}else{
 				/* get the top current voxel height */
@@ -1167,7 +1166,9 @@ int main(int argc, char** argv){
 		}	
 		
 		/* Sort the memory with camera position */
-		std::sort(memory.begin(), memory.end(), memory.front());
+		if(memory.size() != 0){
+			std::sort(memory.begin(), memory.end(), memory.front());
+		}
 		
 		//Simulate time
 		if(!timePause){
@@ -1233,7 +1234,7 @@ int main(int argc, char** argv){
 	glDeleteVertexArrays(1, &groundVAO);
 	glDeleteVertexArrays(nbVao, l_VAOs);
 	glDeleteTextures(1, &texture_sky);
-	//~ glDeleteTextures(1, &texture_envmap);
+	//~ glDeleteTextures(1, &texture_envmap_main);
 	for(uint16_t i=0; i<NB_TEXTURES_VEGET;++i){
 		glDeleteTextures(1, &texture_veget[i]);
 	}
