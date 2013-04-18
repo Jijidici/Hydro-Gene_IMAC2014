@@ -27,7 +27,7 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[SKY_TIME] = glGetUniformLocation(skyProgram, "uTime");
 	skyLocations[SKY_TEX] = glGetUniformLocation(skyProgram, "uSkyTex");
 	skyLocations[ENVMAP_TEX] = glGetUniformLocation(skyProgram, "uEnvmapTex");
-	skyLocations[ENVMAP_TEX] = glGetUniformLocation(skyProgram, "uMoonTex");
+	skyLocations[MOON_TEX] = glGetUniformLocation(skyProgram, "uMoonTex");
 	skyLocations[SAMPLE_STEP] = glGetUniformLocation(skyProgram, "uSampleStep");
 	skyLocations[IS_SKYBOX] = glGetUniformLocation(skyProgram, "uIsSkybox");
 	skyLocations[IS_INITIAL_BLUR] = glGetUniformLocation(skyProgram, "uIsInitialBlur");
@@ -42,7 +42,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 	glUniform3fv(skyLocations[MOON_POS], 1, glm::value_ptr(moonPos));
 	glUniform1f(skyLocations[SKY_TIME], time);
 	glUniform1i(skyLocations[IS_SKYBOX], 1);
-	glUniform1i(skyLocations[MOON_TEX], 0);
+	glUniform1i(skyLocations[MOON_TEX], 2);
 	
 	//Define cube properties
 	GLenum types[] = {
@@ -80,7 +80,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 	//DRAW THE SKYBOX
 	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
 		glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
-		BindTexture(moonTexID, GL_TEXTURE0);
+		BindTexture(moonTexID, GL_TEXTURE2);
 		
 		//for each planes of the cubemap
 		for(uint8_t i=0;i<5;++i){
@@ -108,7 +108,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 			//detach the skybox face
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], 0, 0);
 		}
-		BindTexture(0, GL_TEXTURE0);
+		BindTexture(0, GL_TEXTURE2);
 	
 		//DRAW THE ENVMAP
 		glViewport(0, 0, ENVMAP_SIZE, ENVMAP_SIZE);	
