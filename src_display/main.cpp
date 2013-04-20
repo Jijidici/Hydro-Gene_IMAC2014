@@ -426,6 +426,10 @@ int main(int argc, char** argv){
 	int closeScrollArea = 0;
 	
 	int toggle = 0;
+	
+	/*** travelling UI ***/
+	int travUIHeight = 150;
+	int travUIScrollArea = 0;
 
 	bool bendItem = false;
 	bool drainItem = false;
@@ -790,6 +794,16 @@ int main(int argc, char** argv){
 			
 			imguiEndScrollArea();
 			/* end View UI */
+			
+			/* travelling UI */
+			imguiBeginScrollArea("View", WINDOW_WIDTH - (10 + WINDOW_WIDTH / 4), WINDOW_HEIGHT - (travUIHeight+10+viewUIHeight+10), WINDOW_WIDTH / 4, travUIHeight, &travUIScrollArea);
+			imguiSeparator();
+			imguiSeparatorLine();
+			
+			imguiSlider("timelapse duration", &timeLapsDuration, 100.f, 5000.f, 10.f);
+			
+			imguiEndScrollArea();
+			/* end travelling UI */
 			
 			/* INFO */
 			imguiBeginScrollArea("Press i to close UI", (WINDOW_WIDTH-130) / 2, WINDOW_HEIGHT - 45, 130, 35, &closeScrollArea);
