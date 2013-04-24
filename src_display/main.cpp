@@ -391,6 +391,15 @@ int main(int argc, char** argv){
 	bool timelaps = false;
 	float timelapsPosOffset = 0.;
 	
+	glm::vec3 startPoint = glm::vec3(0.,0.,0.);
+	glm::vec3 endPoint = glm::vec3(0.,0.,0.);
+	int setStartPoint = 0;
+	float timeLapsX = 0.;
+	float timeLapsY = 0.;
+	float timeLapsZ = 0.;
+	
+	float timeLapsDuration = 3000.;
+	
 	/* rotation animation */
 	bool rotationAnim = false;
 
@@ -419,6 +428,10 @@ int main(int argc, char** argv){
 	int closeScrollArea = 0;
 	
 	int toggle = 0;
+	
+	/*** travelling UI ***/
+	int travUIHeight = 150;
+	int travUIScrollArea = 0;
 
 	bool bendItem = false;
 	bool drainItem = false;
@@ -784,6 +797,16 @@ int main(int argc, char** argv){
 			imguiEndScrollArea();
 			/* end View UI */
 			
+			/* travelling UI */
+			imguiBeginScrollArea("View", WINDOW_WIDTH - (10 + WINDOW_WIDTH / 4), WINDOW_HEIGHT - (travUIHeight+10+viewUIHeight+10), WINDOW_WIDTH / 4, travUIHeight, &travUIScrollArea);
+			imguiSeparator();
+			imguiSeparatorLine();
+			
+			imguiSlider("timelapse duration", &timeLapsDuration, 100.f, 5000.f, 10.f);
+			
+			imguiEndScrollArea();
+			/* end travelling UI */
+			
 			/* INFO */
 			imguiBeginScrollArea("Press i to close UI", (WINDOW_WIDTH-130) / 2, WINDOW_HEIGHT - 45, 130, 35, &closeScrollArea);
 			imguiEndScrollArea();
@@ -942,6 +965,12 @@ int main(int argc, char** argv){
 						case SDLK_p:
 							if(currentCam == FREE_FLY){
 								ffCam.printInfos();
+								if(setStartPoint % 2){
+									endPoint = ffCam.getCameraPosition();
+								}else{
+									startPoint = ffCam.getCameraPosition();
+								}
+								++setStartPoint;
 							}
 							break;
 							
@@ -950,8 +979,11 @@ int main(int argc, char** argv){
 								if(timelaps == false){
 									timelaps = true;
 									timelapsPosOffset = 0.;
-									ffCam.resetView(-0.0418879, 7.99012);
-									ffCam.setCameraPosition(glm::vec3(-0.425563,0.09999,-0.230102), 0.);
+									timeLapsX = (endPoint.x - startPoint.x);
+									timeLapsY = (endPoint.y - startPoint.y);
+									timeLapsZ = (endPoint.z - startPoint.z);
+									//ffCam.resetView(-0.0418879, 7.99012);
+									//ffCam.setCameraPosition(startPoint);
 								}else{
 									timelaps = false;
 								}
@@ -1190,10 +1222,11 @@ int main(int argc, char** argv){
 		
 		/* timelaps animation */
 		if(timelaps){			
-			ffCam.resetView(-0.198968, 4.23068);
-			ffCam.setCameraPosition(glm::vec3(0.315615,0.266901-timelapsPosOffset/40.,0.224783), -timelapsPosOffset/20.);
+			//~ ffCam.resetView(-0.198968, 4.23068);
+			ffCam.setCameraPosition(startPoint + glm::vec3(timeLapsX*timelapsPosOffset, timeLapsY*timelapsPosOffset, timeLapsZ*timelapsPosOffset));
+			//~ ffCam.setCameraPosition(startPoint);
 			
-			timelapsPosOffset+= 1./2880.;
+			timelapsPosOffset+= 1./timeLapsDuration;
 			if(timelapsPosOffset >= 1.){
 				timelaps = false;
 			}

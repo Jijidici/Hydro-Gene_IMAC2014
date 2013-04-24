@@ -49,6 +49,7 @@ class FreeFlyCamera{
 		glm::mat4 getViewMatrix() const;
 		glm::vec3 getCameraPosition();
 		void setCameraPosition(glm::vec3 position, float leftOffset);
+		void setCameraPosition(glm::vec3 position);
 		void resetView(float theta, float phi);
 		void printInfos();
 		glm::vec3 getFrontVector();
