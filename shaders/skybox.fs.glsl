@@ -259,9 +259,8 @@ void main(){
 			if(cloudZone < 0.f) cloudZone = 0.f;
 
 			// clouds noise inside this zone
-			absolutePos.x += time*2;
-			cloudCoef = snoise(vec3(absolutePos.x*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
-			//~ cloudCoef = cnoise(vec3(absolutePos.x*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*(0.3/cloudZone))*3;
+			float cloudPosX = absolutePos.x + time*2;
+			cloudCoef = snoise(vec3(cloudPosX*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
 			//~ cloudCoef = (cloudCoef + 2.f)*0.3f;
 			cloudCoef = cloudCoef*cloudCoef/2.;
 
@@ -273,15 +272,6 @@ void main(){
 			if(absolutePos.y < 0.1){
 				cloudCoef = cloudCoef*(absolutePos.y*10);
 			}
-		}
-		
-		/* sun drawing */
-		float sun_radius = 0.03 + (1-sunY)*0.05;
-		float sun_halo = sun_radius + 0.05;
-		if(distanceToSun <= sun_radius){
-			skyColor.z = 1;
-		}else if(distanceToSun <= sun_halo){
-			skyColor.z += (1-skyColor.z)*pow((1-((distanceToSun-sun_radius)/0.05)), 3);
 		}
 		
 		/* moon drawing */
@@ -305,6 +295,15 @@ void main(){
 				skyColor.z += (1-skyColor.z)*pow((1-((distanceToMoon-moon_radius)/0.8)), 2)*0.1;
 				//effect of moon lightning pollution on stars
 				starsCoef *= distanceToMoon/moon_halo;
+		}
+		
+		/* sun drawing */
+		float sun_radius = 0.03 + (1-sunY)*0.05;
+		float sun_halo = sun_radius + 0.05;
+		if(distanceToSun <= sun_radius){
+			skyColor.z = 1;
+		}else if(distanceToSun <= sun_halo){
+			skyColor.z += (1-skyColor.z)*pow((1-((distanceToSun-sun_radius)/0.05)), 3);
 		}
 		
 		/* final color */
