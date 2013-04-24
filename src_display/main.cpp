@@ -326,7 +326,7 @@ int main(int argc, char** argv){
 	MatrixStack mvStack;
 	
 	//distance for changing of LOD
-	float thresholdDistance = 5.f;
+	float thresholdDistance = 30.f;
 	
 	// Time variables
 	float timeStep = (2*M_PI)/1000.;
@@ -897,10 +897,12 @@ int main(int argc, char** argv){
 							//change shaders
 							if(displayDebug){
 								glUseProgram(terrainProgram);
+								//getLocations(locations, terrainProgram);
 								sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 								displayDebug = false;
 							}else{
 								glUseProgram(debugProgram);
+								//getLocations(locations, debugProgram);
 								sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 								displayDebug = true;
 							}

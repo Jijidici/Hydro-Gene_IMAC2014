@@ -33,11 +33,11 @@ out float gAltitude;
 
 void main(){	
 	if(uMode == SKYBOX){
-	  for(int i=0; i<gl_in.length(); i++){
+		for(int i=0; i<gl_in.length(); i++){
 			gPos = vPos[i];
 			gTexCoords = vTexCoords[i];
 		  gl_Position = gl_in[i].gl_Position;
-	 	  EmitVertex();
+		  EmitVertex();
 		}
 	 	EndPrimitive();
 	}
