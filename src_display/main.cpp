@@ -711,7 +711,7 @@ int main(int argc, char** argv){
 			
 			imguiSeparator();
 			imguiLabel("Level of details distance");
-			imguiSlider("threshold", &thresholdDistance, 0.f, 30.f, 0.001f);
+			imguiSlider("threshold", &thresholdDistance, 0.f, terrainScale, 0.01f);
 			
 			imguiEndScrollArea();
 			/* end Details UI */
@@ -723,7 +723,7 @@ int main(int argc, char** argv){
 			
 			float modCamSpeed = camSpeed * 100;
 			imguiLabel("Camera speed (Mouse wheel)");
-			imguiSlider("speed", &modCamSpeed, 0.001f, 10.f, 0.01f);
+			imguiSlider("speed", &modCamSpeed, 0.001f, terrainScale*0.25f, 0.01f);
 			camSpeed = modCamSpeed / 100.;
 			
 			imguiSeparator();
