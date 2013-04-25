@@ -1170,29 +1170,30 @@ int main(int argc, char** argv){
 			}
 			
 			camPosition = ffCam.getCameraPosition();
-			float xtremAltitude;
-			float unscaleCamPosX = camPosition.x/terrainScale;
-			float unscaleCamPosZ = camPosition.z/terrainScale;
+			//~ float xtremAltitude;
+			//~ float unscaleCamPosX = camPosition.x/terrainScale;
+			//~ float unscaleCamPosZ = camPosition.z/terrainScale;
+			//~ 
+			//~ int32_t voxX = (unscaleCamPosX+1.f)*0.5f*total_nbSub;
+			//~ int32_t voxZ = (unscaleCamPosZ+1.f)*0.5f*total_nbSub;
+			//~ 
+			//~ if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub || memory.size() == 0){
+				//~ xtremAltitude = maxCoeffArray[5] + halfVoxelSize;
+			//~ }else{
+				//~ /* get the top current voxel height */
+				//~ voxX = voxX%nbSub_lvl2;
+				//~ voxZ = voxZ%nbSub_lvl2;
+				//~ uint32_t voxY = nbSub_lvl2;
+				//~ for(int32_t j=nbSub_lvl2-1;j>=0;--j){
+					//~ if(memory[0].voxels[voxX + j*nbSub_lvl2 + voxZ*nbSub_lvl2*nbSub_lvl2].nbFaces != 0){
+						//~ break;
+					//~ }
+					//~ voxY = j;
+				//~ }
+				//~ xtremAltitude = (voxY*voxelSize+memory[0].pos.y+leafSize*0.8)*terrainScale;
+			//~ }
 			
-			int32_t voxX = (unscaleCamPosX+1.f)*0.5f*total_nbSub;
-			int32_t voxZ = (unscaleCamPosZ+1.f)*0.5f*total_nbSub;
-			
-			if(voxX < 0 || voxX >= total_nbSub || voxZ < 0 || voxZ >= total_nbSub || memory.size() == 0){
-				xtremAltitude = maxCoeffArray[5] + halfVoxelSize;
-			}else{
-				/* get the top current voxel height */
-				voxX = voxX%nbSub_lvl2;
-				voxZ = voxZ%nbSub_lvl2;
-				uint32_t voxY = nbSub_lvl2;
-				for(int32_t j=nbSub_lvl2-1;j>=0;--j){
-					if(memory[0].voxels[voxX + j*nbSub_lvl2 + voxZ*nbSub_lvl2*nbSub_lvl2].nbFaces != 0){
-						break;
-					}
-					voxY = j;
-				}
-				xtremAltitude = (voxY*voxelSize+memory[0].pos.y+leafSize*0.8)*terrainScale;
-			}
-			
+			float xtremAltitude = maxCoeffArray[5];
 			if(camPosition.y < xtremAltitude){
 				camPosition.y = xtremAltitude;
 			}
