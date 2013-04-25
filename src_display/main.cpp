@@ -341,7 +341,7 @@ int main(int argc, char** argv){
 	//Creation Cameras
 	CamType currentCam = TRACK_BALL;
 	hydrogene::TrackBallCamera tbCam(5*maxCoeffArray[4]*terrainScale);
-	hydrogene::FreeFlyCamera ffCam(glm::vec3(0.f, maxCoeffArray[4]*terrainScale, 0.f), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
+	hydrogene::FreeFlyCamera ffCam(glm::vec3(terrainScale, maxCoeffArray[4]*terrainScale, terrainScale), nearDistance, farDistance, verticalFieldOfView, leafSize*terrainScale);
 	
 	/* Uniform Locations */
 	GLint* locations = new GLint[NB_LOCATIONS];

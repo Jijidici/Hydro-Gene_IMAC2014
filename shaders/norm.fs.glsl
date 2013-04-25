@@ -135,7 +135,6 @@ void main() {
 			
 			/* Compute diffus coefficient */
 			vec3 envMapSample = texture(uEnvmapTex, gNormal).xyz;
-			float dCoeff = (envMapSample.r+envMapSample.g+envMapSample.b)/3.;
 			
 			/* Compute the diffus color */
 			vec3 dColor = vec3(0.);
@@ -181,9 +180,11 @@ void main() {
 					rotatHMcoord[1][1] = 0.965925826;
 					vec2 HMCoordAlt = -(rotatHMcoord*HMCoord);
 
-					vec4 bump = normalize(vec4(texture(uWaterTex, HMCoord).xyz*2.f-1.f, 0.f));
-					vec4 bumpAlt = normalize(vec4(texture(uWaterTex, HMCoordAlt).xyz*2.f-1.f, 0.f));
-					vec4 N = normalize(uModelView*(uWaterTime*bump + (1.-uWaterTime)*bumpAlt + vec4(normalize(gNormal), 0.f)));
+					vec3 bump = normalize(texture(uWaterTex, HMCoord).xyz*2.f-1.f);
+					vec3 bumpAlt = normalize(texture(uWaterTex, HMCoordAlt).xyz*2.f-1.f);
+					vec3 bumpedNormal = uWaterTime*bump + (1.-uWaterTime)*bumpAlt + normalize(gNormal);
+					envMapSample = texture(uEnvmapTex, bumpedNormal).xyz;
+					vec4 N = normalize(uModelView*vec4(bumpedNormal, 0.f));
 				
 					/* fragment position in camera space */
 					vec4 P = normalize(uModelView*vec4(gPos, 1.f));
@@ -219,6 +220,7 @@ void main() {
 			}
 			
 			//Final light
+			float dCoeff = (envMapSample.r+envMapSample.g+envMapSample.b)/3.;
 			vec3 lightColor = mix(vec3(1.f), envMapSample, 0.4f);
 			vec3 color = lightColor*(aColor+ dColor*dCoeff);
 			
