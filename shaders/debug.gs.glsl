@@ -5,7 +5,7 @@
 #define VEGET 7
 
 layout(triangles) in;
-layout(line_strip, max_vertices=3) out;
+layout(line_strip, max_vertices=6) out;
 
 in vec3 vPos[];
 in vec3 vNormal[];

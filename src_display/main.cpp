@@ -254,6 +254,7 @@ int main(int argc, char** argv){
 	 *      PROGRAM CREATION
 	 * ******************************* */
 	GLuint terrainProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/instances.gs.glsl");
+	GLuint currentProgram = terrainProgram;
 	GLuint debugProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/debug.gs.glsl");
 	GLuint skyProgram = hydrogene::loadProgram("shaders/skybox.vs.glsl", "shaders/skybox.fs.glsl");
 	if(!terrainProgram || !debugProgram || !skyProgram){
@@ -274,8 +275,7 @@ int main(int argc, char** argv){
 		delete[] nbLeaves;
 		delete[] chunkOffset;
 		return (EXIT_FAILURE);
-	}	
-	glUseProgram(terrainProgram);
+	}
 	
 	/* *******************************
 	 *     TEXTURES CREATION
@@ -480,7 +480,7 @@ int main(int argc, char** argv){
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		glUseProgram(terrainProgram);
+		glUseProgram(currentProgram);
 		sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 		
 		glUniform1i(locations[MODE], TRIANGLES);
@@ -784,12 +784,12 @@ int main(int argc, char** argv){
 			toggle = imguiCheck("Debug Mode (f)", displayDebug);
 			if(toggle){
 				if(displayDebug){
-					glUseProgram(terrainProgram);
-					sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
+					currentProgram = terrainProgram;
+					getLocations(locations, terrainProgram);
 					displayDebug = false;
 				}else{
-					glUseProgram(debugProgram);
-					sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
+					currentProgram = debugProgram;
+					getLocations(locations, debugProgram);
 					displayDebug = true;
 				}
 			}
@@ -896,14 +896,12 @@ int main(int argc, char** argv){
 						case SDLK_f:
 							//change shaders
 							if(displayDebug){
-								glUseProgram(terrainProgram);
-								//getLocations(locations, terrainProgram);
-								sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
+								currentProgram = terrainProgram;
+								getLocations(locations, terrainProgram);
 								displayDebug = false;
 							}else{
-								glUseProgram(debugProgram);
-								//getLocations(locations, debugProgram);
-								sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
+								currentProgram = debugProgram;
+								getLocations(locations, debugProgram);
 								displayDebug = true;
 							}
 							break;
