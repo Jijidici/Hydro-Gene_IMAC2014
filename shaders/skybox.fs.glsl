@@ -253,26 +253,6 @@ void main(){
 
 		/* clouds noise */
 		// where we draw clouds
-		float cloudCoef = 0.f;
-		if(absolutePos.y > 0.f && sunY > 0.2){
-			float cloudZone = ((snoise((absolutePos+time)*2)+1.)/2.)*0.9;
-			if(cloudZone < 0.f) cloudZone = 0.f;
-
-			// clouds noise inside this zone
-			float cloudPosX = absolutePos.x + time*2;
-			cloudCoef = snoise(vec3(cloudPosX*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
-			//~ cloudCoef = (cloudCoef + 2.f)*0.3f;
-			cloudCoef = cloudCoef*cloudCoef/2.;
-
-			cloudCoef *= cloudZone;
-			if(cloudCoef < 0.f) cloudCoef = 0.f;
-			if(cloudCoef > 1.f) cloudCoef = 1.f;
-
-			/* no clouds on the horizon */
-			if(absolutePos.y < 0.1){
-				cloudCoef = cloudCoef*(absolutePos.y*10);
-			}
-		}
 		
 		/* moon drawing */
 		float moon_radius = 0.1;
@@ -307,10 +287,9 @@ void main(){
 		}
 		
 		/* final color */
-		float cloudTempo = max(sunY-0.2,0)/0.8; //sun position influence the density of clouds and stars
 		float starsTempo = max((1.-sunY)-0.4, 0)/0.6;
 		
-		fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*cloudTempo), 1.f );
+		fFragColor = vec4(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), 1.f );
 		fFragColor = mix( fFragColor, vec4(1.), starsCoef*starsTempo);
 		//~ test skybox
 		//~ vec3 testColor = vec3(0.f);
