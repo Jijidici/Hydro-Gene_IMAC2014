@@ -292,6 +292,9 @@ void main(){
 		
 		fFragColor = vec4(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), 1.f );
 		fFragColor = mix( fFragColor, vec4(1.), starsCoef*starsTempo);
+		if(absolutePos.y > 0.8){
+			fFragColor = texture(uCloudTex, absolutePos.xz);
+		}
 		//~ test skybox
 		//~ vec3 testColor = vec3(0.f);
 		//~ if(absolutePos.x >= 0.) testColor.r = 1.f;
