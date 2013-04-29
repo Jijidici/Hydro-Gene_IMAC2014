@@ -11,6 +11,7 @@ uniform float uTime;
 uniform samplerCube uSkyTex;
 uniform samplerCube uEnvmapTex;
 uniform sampler2D uMoonTex;
+uniform sampler2D uCloudTex;
 uniform float uSampleStep;
 uniform int uIsSkybox;
 uniform int uIsInitialBlur;
