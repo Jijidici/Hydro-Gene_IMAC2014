@@ -6,6 +6,7 @@
 
 static const size_t SKYTEX_SIZE = 512;
 static const size_t ENVMAP_SIZE = 128;
+static const size_t CLOUDTEX_SIZE = 1024;
 static const size_t NB_SKYLOCATIONS = 12;
 
 enum SkyLocation{

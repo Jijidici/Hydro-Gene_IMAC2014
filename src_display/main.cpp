@@ -52,7 +52,7 @@ static const size_t GRID_3D_SIZE = 2;
 static const size_t TERRAIN_SCALE_PARAM = 150000;
 
 static const size_t NB_TEXTURES_VEGET = 5;
-static const size_t NB_TEXTURES_TERRAIN = 6;
+static const size_t NB_TEXTURES_TERRAIN = 7;
 
 int main(int argc, char** argv){
 
@@ -300,6 +300,7 @@ int main(int argc, char** argv){
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
 	texture_terrain[5] = CreateTexture("textures/waterground2.jpg");
+	texture_terrain[6] = CreateTexture(CLOUDTEX_SIZE);
 	
 	/* Bind the Cube Map */
 	BindCubeMap(texture_sky, GL_TEXTURE6);
