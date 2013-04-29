@@ -1,5 +1,7 @@
 #version 330
 
+#define CLOUD_HIGH 1.
+
 in vec2 vPos;
 
 uniform vec3 uPlanOr;
@@ -254,7 +256,12 @@ void main(){
 
 		/* clouds noise */
 		// where we draw clouds
-		float cloudCoef = texture(uCloudTex, absolutePos.xz).r;
+		float cloudCoef = 0.f;
+		if(absolutePos.y > 0.01f){
+			float k = CLOUD_HIGH/absolutePos.y;
+			vec2 cloudTexCoords = vec2(k*absolutePos.x, k*absolutePos.z);
+			cloudCoef = texture(uCloudTex, 0.2*cloudTexCoords).r;
+		}
 		
 		/* moon drawing */
 		float moon_radius = 0.1;
@@ -272,7 +279,7 @@ void main(){
 			vec4 moonColor = texture(uMoonTex, vec2(moonTexCoord_x, moonTexCoord_y));
 			float moonBlendCoef = moonColor.a * pow((1-sunY), 2);
 			skyColor = mix(skyColor, RGBtoHSL(moonColor.x, moonColor.y, moonColor.z), moonBlendCoef);
-		}	
+		}
 		if(distanceToMoon <= moon_halo){
 				skyColor.z += (1-skyColor.z)*pow((1-((distanceToMoon-moon_radius)/0.8)), 2)*0.1;
 				//effect of moon lightning pollution on stars
