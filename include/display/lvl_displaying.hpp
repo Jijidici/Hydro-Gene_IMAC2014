@@ -12,7 +12,7 @@
 using namespace hydrogene;
 
 /* ENUM */
-static const size_t NB_LOCATIONS = 31;
+static const size_t NB_LOCATIONS = 32;
 
 enum Locations{
 	MVP,
@@ -28,6 +28,7 @@ enum Locations{
 	WATERGROUNDTEX,
 	SKYTEX,
 	ENVMAPTEX,
+	CLOUDTEX,
 	GRASSTEX,
 	WATERTEX,
 	STONETEX,

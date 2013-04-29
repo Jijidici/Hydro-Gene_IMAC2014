@@ -526,6 +526,7 @@ int main(int argc, char** argv){
 				ms.push();
 					ms.mult(mvStack.top());
 					glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
+					BindTexture(texture_terrain[6], GL_TEXTURE8);
 					BindTexture(texture_terrain[5], GL_TEXTURE5);
 					BindTexture(texture_terrain[1], GL_TEXTURE1);
 						glBindVertexArray(groundVAO);
@@ -533,6 +534,7 @@ int main(int argc, char** argv){
 						glBindVertexArray(0);
 					BindTexture(0, GL_TEXTURE1);
 					BindTexture(0, GL_TEXTURE5);
+					BindTexture(0, GL_TEXTURE8);
 				ms.pop();
 			mvStack.pop();
 			glUniform1i(locations[OCEAN], 0);

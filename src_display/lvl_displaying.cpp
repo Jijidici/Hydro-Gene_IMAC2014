@@ -40,6 +40,7 @@ void getLocations(GLint* locations, GLuint program){
 	/* Textures */
 	locations[SKYTEX] = glGetUniformLocation(program, "uSkyTex");
 	locations[ENVMAPTEX] = glGetUniformLocation(program, "uEnvmapTex");
+	locations[CLOUDTEX] = glGetUniformLocation(program, "uCloudTex");
 	locations[GRASSTEX] = glGetUniformLocation(program, "uGrassTex");
 	locations[WATERTEX] = glGetUniformLocation(program, "uWaterTex");
 	locations[WATERGROUNDTEX] = glGetUniformLocation(program, "uWaterGroundTex");
@@ -88,6 +89,8 @@ void sendUniforms(GLint* locations, float* maxCoeffArray, float thresholdDistanc
 	//Send sky textures
 	glUniform1i(locations[SKYTEX], 6);
 	glUniform1i(locations[ENVMAPTEX], 7);
+	glUniform1i(locations[CLOUDTEX], 8);
+	
 	// Send details textures
 	glUniform1i(locations[ROCKTEX], 0);
 	glUniform1i(locations[PLANTTEX], 1);
@@ -159,6 +162,7 @@ void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint3
 	BindTexture(textures[2], GL_TEXTURE2);
 	BindTexture(textures[3], GL_TEXTURE3);
 	BindTexture(textures[4], GL_TEXTURE4);
+	BindTexture(textures[6], GL_TEXTURE8);
 		glBindVertexArray(meshVAO);
 			glDrawArrays(GL_TRIANGLES, 0, nbVertices);
 		glBindVertexArray(0);
@@ -167,6 +171,7 @@ void display_triangle(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint3
 	BindTexture(0, GL_TEXTURE2);
 	BindTexture(0, GL_TEXTURE3);
 	BindTexture(0, GL_TEXTURE4);
+	BindTexture(0, GL_TEXTURE8);
 }
 
 void display_vegetation(GLuint meshVAO, MatrixStack& ms, GLuint MVPLocation, uint32_t nbVertices, GLint ChoiceLocation, GLuint* textures){
