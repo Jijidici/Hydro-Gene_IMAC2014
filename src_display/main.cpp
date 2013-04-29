@@ -257,7 +257,8 @@ int main(int argc, char** argv){
 	GLuint currentProgram = terrainProgram;
 	GLuint debugProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/debug.gs.glsl");
 	GLuint skyProgram = hydrogene::loadProgram("shaders/skybox.vs.glsl", "shaders/skybox.fs.glsl");
-	if(!terrainProgram || !debugProgram || !skyProgram){
+	GLuint cloudsProgram = hydrogene::loadProgram("shaders/clouds.vs.glsl", "shaders/clouds.fs.glsl");
+	if(!terrainProgram || !debugProgram || !skyProgram || !cloudsProgram){
 		glDeleteBuffers(1, &cubeVBO);
 		glDeleteBuffers(1, &quadVBO);
 		glDeleteBuffers(nbVao, l_VBOs);
