@@ -477,6 +477,7 @@ int main(int argc, char** argv){
 		
 		moveWaterTime+=0.0005;
 		// Comupte the sky textures
+		paintClouds(skyFBO, texture_terrain[6], cloudsProgram, quadVAO);
 		paintTheSky(skyFBO, texture_sky, texture_envmap_main, texture_envmap_tmp, texture_moon, skyProgram, quadVAO, sunPos, moonPos, cloudsTime, skyLocations);
 		
 		// Nettoyage de la fenêtre

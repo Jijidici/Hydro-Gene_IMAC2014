@@ -33,6 +33,30 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[IS_INITIAL_BLUR] = glGetUniformLocation(skyProgram, "uIsInitialBlur");
 }
 
+/* Fill the clouds 2D texture with Simplex noise */
+void paintClouds(GLuint skyFboID, GLuint cloudsTexID, GLuint cloudsProgram, GLuint quadVAO){
+	glUseProgram(cloudsProgram);
+	glViewport(0, 0, CLOUDTEX_SIZE, CLOUDTEX_SIZE);
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cloudsTexID, 0);
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if(status != GL_FRAMEBUFFER_COMPLETE){
+			throw std::runtime_error("sky framebuffer isn't complete");
+		}
+		
+		//Clear the drawing zone
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		//Draw the quad
+		glBindVertexArray(quadVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+		
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 /* Test for dynamique texturing the sky */
 void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, GLuint envmapTexID_tmp, GLuint moonTexID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, glm::vec3 moonPos, float time, GLint* skyLocations){
 	glUseProgram(skyProgram);

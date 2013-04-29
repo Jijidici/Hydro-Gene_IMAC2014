@@ -30,6 +30,9 @@ GLuint createFBO();
 /* Initialize the sky location */
 void getSkyLocation(GLint* skyLocations, GLuint skyProgram);
 
+/* Fill the clouds 2D texture with Simplex noise */
+void paintClouds(GLuint skyFboID, GLuint cloudsTexID, GLuint cloudsProgram, GLuint quadVAO);
+
 /* Test for dynamique texturing the sky */
 void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, GLuint envmapTexID_tmp, GLuint moonTexID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, glm::vec3 moonPos, float time, GLint* skyLocations);
 
