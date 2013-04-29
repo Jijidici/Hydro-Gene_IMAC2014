@@ -254,6 +254,7 @@ void main(){
 
 		/* clouds noise */
 		// where we draw clouds
+		float cloudCoef = texture(uCloudTex, absolutePos.xz).r;
 		
 		/* moon drawing */
 		float moon_radius = 0.1;
@@ -290,11 +291,8 @@ void main(){
 		/* final color */
 		float starsTempo = max((1.-sunY)-0.4, 0)/0.6;
 		
-		fFragColor = vec4(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), 1.f );
+		fFragColor = mix(vec4(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), 1.f ), vec4(1.f), cloudCoef);
 		fFragColor = mix( fFragColor, vec4(1.), starsCoef*starsTempo);
-		if(absolutePos.y > 0.8){
-			fFragColor = texture(uCloudTex, absolutePos.xz);
-		}
 		//~ test skybox
 		//~ vec3 testColor = vec3(0.f);
 		//~ if(absolutePos.x >= 0.) testColor.r = 1.f;
