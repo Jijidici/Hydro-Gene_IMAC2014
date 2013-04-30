@@ -430,7 +430,7 @@ int main(int argc, char** argv){
 	int toggle = 0;
 	
 	/*** travelling UI ***/
-	int travUIHeight = 150;
+	int travUIHeight = 100;
 	int travUIScrollArea = 0;
 
 	bool bendItem = false;
@@ -441,6 +441,11 @@ int main(int argc, char** argv){
 	float moveWaterTime = 0.;
 	float step = 0.03;
 	float coeffStep = 1;
+	
+	/*** Ocean altitude ***/
+	float oceanAltitude = maxCoeffArray[5];
+	int oceanAltitudeUIHeight = 100;
+	int oceanAltitudeUIScrollArea = 0;
 	
 	if(arguments[BENDING]) bendItem = true;
 	if(arguments[DRAIN]) drainItem = true;
@@ -516,7 +521,7 @@ int main(int argc, char** argv){
 			glUniform1i(locations[CHOICE], NORMAL);
 			glUniform1i(locations[OCEAN], 1);
 			mvStack.push();
-				mvStack.translate(glm::vec3(0.f, maxCoeffArray[5], 0.f));
+				mvStack.translate(glm::vec3(0.f, oceanAltitude, 0.f));
 				mvStack.scale(glm::vec3(20*terrainScale));
 				/* Send the model view */
 				glUniformMatrix4fv(locations[MODELVIEW], 1, GL_FALSE, glm::value_ptr(mvStack.top()));
@@ -807,6 +812,16 @@ int main(int argc, char** argv){
 			imguiEndScrollArea();
 			/* end travelling UI */
 			
+			/* ocean altitude UI */
+			imguiBeginScrollArea("Ocean altitude", WINDOW_WIDTH - (10 + WINDOW_WIDTH / 4), WINDOW_HEIGHT - (travUIHeight+10+viewUIHeight+10+oceanAltitudeUIHeight+10), WINDOW_WIDTH / 4, oceanAltitudeUIHeight, &oceanAltitudeUIScrollArea);
+			imguiSeparator();
+			imguiSeparatorLine();
+			
+			imguiSlider("Ocean altitude", &oceanAltitude, -5.f, 5.f, 0.01f);
+			
+			imguiEndScrollArea();
+			/* end ocean altitude UI */
+			
 			/* INFO */
 			imguiBeginScrollArea("Press i to close UI", (WINDOW_WIDTH-130) / 2, WINDOW_HEIGHT - 45, 130, 35, &closeScrollArea);
 			imguiEndScrollArea();
@@ -1009,6 +1024,9 @@ int main(int argc, char** argv){
 						
 						case SDLK_g:
 							displayFog = !displayFog;
+							break;
+							
+						case SDLK_F10:
 							break;
 						
 						default:
