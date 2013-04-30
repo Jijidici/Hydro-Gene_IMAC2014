@@ -12,15 +12,16 @@
 using namespace hydrogene;
 
 /* ENUM */
-static const size_t NB_LOCATIONS = 31;
+static const size_t NB_LOCATIONS = 33;
 
 enum Locations{
 	MVP,
 	MODELVIEW,
 	INV_VIEWMATRIX,
-	TIME,
+	SUNDIR,
 	WATERTIME,
 	MOVEWATERTIME,
+	CLOUDSTIME,
 	MODE,
 	CHOICE,
 	FOG,
@@ -28,6 +29,7 @@ enum Locations{
 	WATERGROUNDTEX,
 	SKYTEX,
 	ENVMAPTEX,
+	CLOUDTEX,
 	GRASSTEX,
 	WATERTEX,
 	STONETEX,

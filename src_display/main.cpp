@@ -52,7 +52,7 @@ static const size_t GRID_3D_SIZE = 2;
 static const size_t TERRAIN_SCALE_PARAM = 150000;
 
 static const size_t NB_TEXTURES_VEGET = 5;
-static const size_t NB_TEXTURES_TERRAIN = 6;
+static const size_t NB_TEXTURES_TERRAIN = 7;
 
 int main(int argc, char** argv){
 
@@ -257,7 +257,8 @@ int main(int argc, char** argv){
 	GLuint currentProgram = terrainProgram;
 	GLuint debugProgram = hydrogene::loadProgram("shaders/basic.vs.glsl", "shaders/norm.fs.glsl", "shaders/debug.gs.glsl");
 	GLuint skyProgram = hydrogene::loadProgram("shaders/skybox.vs.glsl", "shaders/skybox.fs.glsl");
-	if(!terrainProgram || !debugProgram || !skyProgram){
+	GLuint cloudsProgram = hydrogene::loadProgram("shaders/clouds.vs.glsl", "shaders/clouds.fs.glsl");
+	if(!terrainProgram || !debugProgram || !skyProgram || !cloudsProgram){
 		glDeleteBuffers(1, &cubeVBO);
 		glDeleteBuffers(1, &quadVBO);
 		glDeleteBuffers(nbVao, l_VBOs);
@@ -300,6 +301,7 @@ int main(int argc, char** argv){
 	texture_terrain[3] = CreateTexture("textures/snow.jpg");
 	texture_terrain[4] = CreateTexture("textures/sand.jpeg");
 	texture_terrain[5] = CreateTexture("textures/waterground2.jpg");
+	texture_terrain[6] = CreateTexture(CLOUDTEX_SIZE);
 	
 	/* Bind the Cube Map */
 	BindCubeMap(texture_sky, GL_TEXTURE6);
@@ -480,7 +482,8 @@ int main(int argc, char** argv){
 		
 		moveWaterTime+=0.0005;
 		// Comupte the sky textures
-		paintTheSky(skyFBO, texture_sky, texture_envmap_main, texture_envmap_tmp, texture_moon, skyProgram, quadVAO, sunPos, moonPos, cloudsTime, skyLocations);
+		paintClouds(skyFBO, texture_terrain[6], cloudsProgram, quadVAO);
+		paintTheSky(skyFBO, texture_sky, texture_envmap_main, texture_envmap_tmp, texture_moon, texture_terrain[6], skyProgram, quadVAO, sunPos, moonPos, cloudsTime, skyLocations);
 		
 		// Nettoyage de la fenêtre
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -489,10 +492,11 @@ int main(int argc, char** argv){
 		sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 		
 		glUniform1i(locations[MODE], TRIANGLES);
-		glUniform1f(locations[TIME], cos(time));
 		glUniform1f(locations[WATERTIME], waterTime);
 		glUniform1f(locations[MOVEWATERTIME], moveWaterTime);
+		glUniform1f(locations[CLOUDSTIME], cloudsTime);
 		glUniform3fv(locations[FF_FRONT_VECTOR], 1, glm::value_ptr(ffCam.getFrontVector()));
+		glUniform3fv(locations[SUNDIR], 1, glm::value_ptr(-sunPos));
 
 		/* Send fog */
 		if(displayFog){
@@ -528,6 +532,7 @@ int main(int argc, char** argv){
 				ms.push();
 					ms.mult(mvStack.top());
 					glUniformMatrix4fv(locations[MVP], 1, GL_FALSE, glm::value_ptr(ms.top()));
+					BindTexture(texture_terrain[6], GL_TEXTURE8);
 					BindTexture(texture_terrain[5], GL_TEXTURE5);
 					BindTexture(texture_terrain[1], GL_TEXTURE1);
 						glBindVertexArray(groundVAO);
@@ -535,6 +540,7 @@ int main(int argc, char** argv){
 						glBindVertexArray(0);
 					BindTexture(0, GL_TEXTURE1);
 					BindTexture(0, GL_TEXTURE5);
+					BindTexture(0, GL_TEXTURE8);
 				ms.pop();
 			mvStack.pop();
 			glUniform1i(locations[OCEAN], 0);
@@ -1230,7 +1236,7 @@ int main(int argc, char** argv){
 				time = 0.;
 			}
 		}
-		cloudsTime += timeStep;
+		cloudsTime += 0.25*timeStep;
 		
 		//Manage the sun and the moon
 		sunPos.x = cos(time);

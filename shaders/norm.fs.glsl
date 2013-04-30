@@ -14,6 +14,7 @@
 #define DEBUG_TRI 9
 
 #define REFLECT_ANGLE -1.4835298642
+#define CLOUD_HIGH 1.
 
 in vec3 gPos;
 in vec3 gNormal;
@@ -28,9 +29,11 @@ uniform mat4 uMVPMatrix = mat4(1.f);
 uniform mat4 uModelView = mat4(1.f);
 uniform mat4 uInvViewMatrix = mat4(1.f);
 uniform vec3 uFrontVector = vec3(0.);
+uniform vec3 uSunDir = vec3(0.);
 
 uniform samplerCube uSkyTex;
 uniform samplerCube uEnvmapTex;
+uniform sampler2D uCloudTex;
 uniform sampler2D uGrassTex;
 uniform sampler2D uWaterTex;
 uniform sampler2D uWaterGroundTex;
@@ -46,14 +49,16 @@ uniform sampler2D uSnowTreeTex;
 uniform int uMode;
 uniform int uChoice;
 uniform int uFog;
-uniform float uTime;
 uniform float uWaterTime;
 uniform float uMoveWaterTime;
+uniform float uCloudsTime;
 uniform float uMaxBending = 0;
 uniform float uMaxDrain = 0;
 uniform float uMaxGradient = 0;
 uniform float uMaxSurface = 0;
 uniform float uMaxAltitude = 0;
+uniform int uOcean;
+uniform float uTerrainScale;
 
 
 out vec4 fFragColor;
@@ -237,6 +242,21 @@ void main() {
 				vec3 fogColor = vec3(0.3);
 				color = mix(fogColor, color, fogCoef);
 			}
+			
+			/* Clouds shadow */
+			float cloudShadow = 0.;
+			/* if the sun is above the clouds */
+			vec2 cloudShadowTexCoords = gPos.xz;
+			if(uOcean == 1){
+				cloudShadowTexCoords *= 20;
+			}
+			cloudShadowTexCoords = 0.5*cloudShadowTexCoords + 0.5*uCloudsTime;
+			cloudShadow = 0.3*texture(uCloudTex, cloudShadowTexCoords).r * max(0., -uSunDir.y);
+			
+			color.r = max(0.f, color.r-cloudShadow);
+			color.g = max(0.f, color.g-cloudShadow);
+			color.b = max(0.f, color.b-cloudShadow);
+			
 			fFragColor = vec4(color, 1.f);
 		}
 	}

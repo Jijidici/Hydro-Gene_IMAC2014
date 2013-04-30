@@ -28,13 +28,38 @@ void getSkyLocation(GLint* skyLocations, GLuint skyProgram){
 	skyLocations[SKY_TEX] = glGetUniformLocation(skyProgram, "uSkyTex");
 	skyLocations[ENVMAP_TEX] = glGetUniformLocation(skyProgram, "uEnvmapTex");
 	skyLocations[MOON_TEX] = glGetUniformLocation(skyProgram, "uMoonTex");
+	skyLocations[CLOUDS_TEX] = glGetUniformLocation(skyProgram, "uCloudTex");
 	skyLocations[SAMPLE_STEP] = glGetUniformLocation(skyProgram, "uSampleStep");
 	skyLocations[IS_SKYBOX] = glGetUniformLocation(skyProgram, "uIsSkybox");
 	skyLocations[IS_INITIAL_BLUR] = glGetUniformLocation(skyProgram, "uIsInitialBlur");
 }
 
+/* Fill the clouds 2D texture with Simplex noise */
+void paintClouds(GLuint skyFboID, GLuint cloudsTexID, GLuint cloudsProgram, GLuint quadVAO){
+	glUseProgram(cloudsProgram);
+	glViewport(0, 0, CLOUDTEX_SIZE, CLOUDTEX_SIZE);
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cloudsTexID, 0);
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if(status != GL_FRAMEBUFFER_COMPLETE){
+			throw std::runtime_error("sky framebuffer isn't complete");
+		}
+		
+		//Clear the drawing zone
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		//Draw the quad
+		glBindVertexArray(quadVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+		
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 /* Test for dynamique texturing the sky */
-void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, GLuint envmapTexID_tmp, GLuint moonTexID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, glm::vec3 moonPos, float time, GLint* skyLocations){
+void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, GLuint envmapTexID_tmp, GLuint moonTexID, GLuint cloudsTexID, GLuint skyProgram, GLuint quadVAO, glm::vec3 sunPos, glm::vec3 moonPos, float time, GLint* skyLocations){
 	glUseProgram(skyProgram);
 	
 	//send uniforms
@@ -43,6 +68,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 	glUniform1f(skyLocations[SKY_TIME], time);
 	glUniform1i(skyLocations[IS_SKYBOX], 1);
 	glUniform1i(skyLocations[MOON_TEX], 2);
+	glUniform1i(skyLocations[CLOUDS_TEX], 3);
 	
 	//Define cube properties
 	GLenum types[] = {
@@ -81,6 +107,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 	glBindFramebuffer(GL_FRAMEBUFFER, skyFboID);
 		glViewport(0, 0, SKYTEX_SIZE, SKYTEX_SIZE);
 		BindTexture(moonTexID, GL_TEXTURE2);
+		BindTexture(cloudsTexID, GL_TEXTURE3);
 		
 		//for each planes of the cubemap
 		for(uint8_t i=0;i<5;++i){
@@ -108,6 +135,7 @@ void paintTheSky(GLuint skyFboID, GLuint skyboxTexID, GLuint envmapTexID_main, G
 			//detach the skybox face
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, types[i], 0, 0);
 		}
+		BindTexture(0, GL_TEXTURE3);
 		BindTexture(0, GL_TEXTURE2);
 	
 		//DRAW THE ENVMAP

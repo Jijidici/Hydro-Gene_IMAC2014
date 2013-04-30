@@ -1,5 +1,7 @@
 #version 330
 
+#define CLOUD_HIGH 1.
+
 in vec2 vPos;
 
 uniform vec3 uPlanOr;
@@ -11,6 +13,7 @@ uniform float uTime;
 uniform samplerCube uSkyTex;
 uniform samplerCube uEnvmapTex;
 uniform sampler2D uMoonTex;
+uniform sampler2D uCloudTex;
 uniform float uSampleStep;
 uniform int uIsSkybox;
 uniform int uIsInitialBlur;
@@ -254,23 +257,14 @@ void main(){
 		/* clouds noise */
 		// where we draw clouds
 		float cloudCoef = 0.f;
-		if(absolutePos.y > 0.f && sunY > 0.2){
-			float cloudZone = ((snoise((absolutePos+time)*2)+1.)/2.)*0.9;
-			if(cloudZone < 0.f) cloudZone = 0.f;
-
-			// clouds noise inside this zone
-			float cloudPosX = absolutePos.x + time*2;
-			cloudCoef = snoise(vec3(cloudPosX*2., (1.-absolutePos.y)*4., absolutePos.z*0.75)*2)*3;
-			//~ cloudCoef = (cloudCoef + 2.f)*0.3f;
-			cloudCoef = cloudCoef*cloudCoef/2.;
-
-			cloudCoef *= cloudZone;
-			if(cloudCoef < 0.f) cloudCoef = 0.f;
-			if(cloudCoef > 1.f) cloudCoef = 1.f;
-
-			/* no clouds on the horizon */
-			if(absolutePos.y < 0.1){
-				cloudCoef = cloudCoef*(absolutePos.y*10);
+		if(absolutePos.y > 0.01f){
+			float k = CLOUD_HIGH/absolutePos.y;
+			vec2 cloudTexCoords = vec2(k*absolutePos.x, k*absolutePos.z)+uTime;
+			cloudCoef = texture(uCloudTex, 0.1*(cloudTexCoords) +0.5).r;
+			if(sunY > 0.3){
+				cloudCoef *= min(1. ,(sunY-0.3)/0.7 + 0.2);
+			}else{
+				cloudCoef *= 0.2;
 			}
 		}
 		
@@ -290,7 +284,7 @@ void main(){
 			vec4 moonColor = texture(uMoonTex, vec2(moonTexCoord_x, moonTexCoord_y));
 			float moonBlendCoef = moonColor.a * pow((1-sunY), 2);
 			skyColor = mix(skyColor, RGBtoHSL(moonColor.x, moonColor.y, moonColor.z), moonBlendCoef);
-		}	
+		}
 		if(distanceToMoon <= moon_halo){
 				skyColor.z += (1-skyColor.z)*pow((1-((distanceToMoon-moon_radius)/0.8)), 2)*0.1;
 				//effect of moon lightning pollution on stars
@@ -307,10 +301,9 @@ void main(){
 		}
 		
 		/* final color */
-		float cloudTempo = max(sunY-0.2,0)/0.8; //sun position influence the density of clouds and stars
 		float starsTempo = max((1.-sunY)-0.4, 0)/0.6;
 		
-		fFragColor = vec4( mix(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), vec3(1.f), cloudCoef*cloudTempo), 1.f );
+		fFragColor = mix(vec4(HSLtoRGB(int(skyColor.x), skyColor.y, skyColor.z), 1.f ), vec4(1.f), cloudCoef);
 		fFragColor = mix( fFragColor, vec4(1.), starsCoef*starsTempo);
 		//~ test skybox
 		//~ vec3 testColor = vec3(0.f);
