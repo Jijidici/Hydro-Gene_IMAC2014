@@ -65,7 +65,19 @@ float snoise(vec2 v) {
 }
 
 void main(){
-	float color = snoise(vPos*5);
+	vec2 noiseCoords = vPos;
+	float color = 0;
+	float amplitude = 1;
+	
+	for(int i=0;i<5;++i){
+		color += snoise(noiseCoords) * amplitude;
+		noiseCoords *= 2;
+		amplitude *= 0.5;
+	}	
+	
+	//Gradient on the texture border
+	color *= min(1., (1-abs(vPos.x))*5); 
+	color *= min(1., (1-abs(vPos.y))*5);
 	
 	fFragColor = vec4(color, color, color, 1.);
 }

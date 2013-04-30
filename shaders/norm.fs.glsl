@@ -249,7 +249,7 @@ void main() {
 			}
 			cloudShadowTexCoords += uCloudsTime;
 			cloudShadowTexCoords.x = (cloudShadowTexCoords.x-0.1*uSunDir.x)*(1. - 0.2*abs(uSunDir.x));
-			cloudShadow = texture(uCloudTex, cloudShadowTexCoords).r * max(0., -uSunDir.y);
+			cloudShadow = 0.5*texture(uCloudTex, cloudShadowTexCoords).r * max(0., -uSunDir.y);
 			
 			color.r = max(0.f, color.r-cloudShadow);
 			color.g = max(0.f, color.g-cloudShadow);
