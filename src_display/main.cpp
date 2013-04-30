@@ -487,10 +487,10 @@ int main(int argc, char** argv){
 		sendUniforms(locations, maxCoeffArray, thresholdDistance, terrainScale);
 		
 		glUniform1i(locations[MODE], TRIANGLES);
-		glUniform1f(locations[TIME], cos(time));
 		glUniform1f(locations[WATERTIME], waterTime);
 		glUniform1f(locations[MOVEWATERTIME], moveWaterTime);
 		glUniform3fv(locations[FF_FRONT_VECTOR], 1, glm::value_ptr(ffCam.getFrontVector()));
+		glUniform3fv(locations[SUNDIR], 1, glm::value_ptr(-sunPos));
 
 		/* Send fog */
 		if(displayFog){
