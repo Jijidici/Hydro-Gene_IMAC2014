@@ -74,7 +74,9 @@ void main(){
 		noiseCoords *= 2;
 		amplitude *= 0.5;
 		color = min(1., max(0., color));
-	}	
+	}
+	
+	color *= 0.7;
 	
 	//Gradient on the texture border
 	color *= min(1., (1-abs(vPos.x))*2.5); 

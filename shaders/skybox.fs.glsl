@@ -261,6 +261,11 @@ void main(){
 			float k = CLOUD_HIGH/absolutePos.y;
 			vec2 cloudTexCoords = vec2(k*absolutePos.x, k*absolutePos.z)+uTime;
 			cloudCoef = texture(uCloudTex, 0.1*(cloudTexCoords) +0.5).r;
+			if(sunY > 0.3){
+				cloudCoef *= min(1. ,(sunY-0.3)/0.7 + 0.2);
+			}else{
+				cloudCoef *= 0.2;
+			}
 		}
 		
 		/* moon drawing */
