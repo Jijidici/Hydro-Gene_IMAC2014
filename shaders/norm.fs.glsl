@@ -247,9 +247,8 @@ void main() {
 			if(uOcean == 1){
 				cloudShadowTexCoords *= 20;
 			}
-			cloudShadowTexCoords += uCloudsTime;
-			cloudShadowTexCoords.x = (cloudShadowTexCoords.x-0.1*uSunDir.x)*(1. - 0.2*abs(uSunDir.x));
-			cloudShadow = 0.5*texture(uCloudTex, cloudShadowTexCoords).r * max(0., -uSunDir.y);
+			cloudShadowTexCoords += 0.5*uCloudsTime;
+			cloudShadow = 0.3*texture(uCloudTex, cloudShadowTexCoords).r * max(0., -uSunDir.y);
 			
 			color.r = max(0.f, color.r-cloudShadow);
 			color.g = max(0.f, color.g-cloudShadow);
