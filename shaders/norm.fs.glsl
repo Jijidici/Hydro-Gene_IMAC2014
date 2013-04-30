@@ -51,6 +51,7 @@ uniform int uChoice;
 uniform int uFog;
 uniform float uWaterTime;
 uniform float uMoveWaterTime;
+uniform float uCloudsTime;
 uniform float uMaxBending = 0;
 uniform float uMaxDrain = 0;
 uniform float uMaxGradient = 0;
@@ -242,12 +243,12 @@ void main() {
 			/* Clouds shadow */
 			float cloudShadow = 0.;
 			/* if the sun is above the clouds */
-			vec2 fragPos = gPos.xz;
+			vec2 cloudShadowTexCoords = gPos.xz;
 			if(uOcean == 1){
-				fragPos *= 20;
+				cloudShadowTexCoords *= 20;
 			}
-			vec2 cloudShadowTexCoords = fragPos;
-			cloudShadowTexCoords.x = (cloudShadowTexCoords.x-0.15*abs(uSunDir.x))*(1. - 0.3*abs(uSunDir.x));
+			cloudShadowTexCoords += uCloudsTime;
+			cloudShadowTexCoords.x = (cloudShadowTexCoords.x-0.1*uSunDir.x)*(1. - 0.2*abs(uSunDir.x));
 			cloudShadow = texture(uCloudTex, cloudShadowTexCoords).r * max(0., -uSunDir.y);
 			
 			color.r = max(0.f, color.r-cloudShadow);

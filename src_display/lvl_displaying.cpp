@@ -29,6 +29,7 @@ void getLocations(GLint* locations, GLuint program){
 	/* Time */
 	locations[WATERTIME] = glGetUniformLocation(program, "uWaterTime");
 	locations[MOVEWATERTIME] = glGetUniformLocation(program, "uMoveWaterTime");
+	locations[CLOUDSTIME] = glGetUniformLocation(program, "uCloudsTime");
 
 	/* Shaders modes */
 	locations[MODE] = glGetUniformLocation(program, "uMode");

@@ -12,7 +12,7 @@
 using namespace hydrogene;
 
 /* ENUM */
-static const size_t NB_LOCATIONS = 32;
+static const size_t NB_LOCATIONS = 33;
 
 enum Locations{
 	MVP,
@@ -21,6 +21,7 @@ enum Locations{
 	SUNDIR,
 	WATERTIME,
 	MOVEWATERTIME,
+	CLOUDSTIME,
 	MODE,
 	CHOICE,
 	FOG,

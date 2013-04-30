@@ -489,6 +489,7 @@ int main(int argc, char** argv){
 		glUniform1i(locations[MODE], TRIANGLES);
 		glUniform1f(locations[WATERTIME], waterTime);
 		glUniform1f(locations[MOVEWATERTIME], moveWaterTime);
+		glUniform1f(locations[CLOUDSTIME], cloudsTime);
 		glUniform3fv(locations[FF_FRONT_VECTOR], 1, glm::value_ptr(ffCam.getFrontVector()));
 		glUniform3fv(locations[SUNDIR], 1, glm::value_ptr(-sunPos));
 
@@ -1217,7 +1218,7 @@ int main(int argc, char** argv){
 				time = 0.;
 			}
 		}
-		cloudsTime += timeStep;
+		cloudsTime += 0.25*timeStep;
 		
 		//Manage the sun and the moon
 		sunPos.x = cos(time);

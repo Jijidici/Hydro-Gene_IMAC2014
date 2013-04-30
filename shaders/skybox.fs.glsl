@@ -259,7 +259,7 @@ void main(){
 		float cloudCoef = 0.f;
 		if(absolutePos.y > 0.01f){
 			float k = CLOUD_HIGH/absolutePos.y;
-			vec2 cloudTexCoords = vec2(k*absolutePos.x, k*absolutePos.z);
+			vec2 cloudTexCoords = vec2(k*absolutePos.x, k*absolutePos.z)+uTime;
 			cloudCoef = texture(uCloudTex, 0.2*cloudTexCoords).r;
 		}
 		
