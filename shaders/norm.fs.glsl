@@ -139,16 +139,19 @@ void main() {
 			/* Compute the diffus color */
 			vec3 dColor = vec3(0.);
 			if(uChoice == BENDING){
-				dColor = vec3(1.f - ratioBending, ratioBending, 1.f - ratioBending);
+				ratioBending *= 2.f;
+				dColor = vec3(1.f-ratioBending, 1.f, 1.f-ratioBending);
 			}
 			else if(uChoice == DRAIN){
-				dColor = vec3(1.f - ratioDrain, 1.f - ratioDrain, ratioDrain);
+				ratioDrain *= 3.f;
+				dColor = vec3(1.f-ratioDrain, 1.f-ratioDrain, 1.);
 			}
 			else if(uChoice == GRADIENT){
-				dColor = vec3(ratioGradient, 1.f - ratioGradient, 1.f - ratioGradient);
+				dColor = vec3(1., 1.-ratioGradient, 1.-ratioGradient);
 			}
 			else if(uChoice == SURFACE){
-				dColor = vec3(0.5f - ratioSurface, ratioSurface, 0.5f - ratioSurface);
+				ratioSurface *= 10.f;
+				dColor = vec3(1.f, 1.f-(0.5f*ratioSurface), 1.f - ratioSurface);
 			}
 			else if(uChoice == NORMAL){
 				/* compute texture coefs */
