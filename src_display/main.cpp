@@ -734,7 +734,7 @@ int main(int argc, char** argv){
 			
 			float modCamSpeed = camSpeed * 100;
 			imguiLabel("Camera speed (Mouse wheel)");
-			imguiSlider("speed", &modCamSpeed, 0.001f, terrainScale*0.25f, 0.01f);
+			imguiSlider("speed", &modCamSpeed, 0.001f, terrainScale*0.50f, 0.01f);
 			camSpeed = modCamSpeed / 100.;
 			
 			imguiSeparator();
@@ -823,7 +823,7 @@ int main(int argc, char** argv){
 			imguiSeparator();
 			imguiSeparatorLine();
 			
-			imguiSlider("Ocean altitude", &oceanAltitude, -5.f, 5.f, 0.01f);
+			imguiSlider("Ocean altitude", &oceanAltitude, -5.f, 20.f, 0.01f);
 			
 			imguiEndScrollArea();
 			/* end ocean altitude UI */
@@ -984,7 +984,7 @@ int main(int argc, char** argv){
 							break;
 							
 						case SDLK_p:
-							if(currentCam == FREE_FLY){
+							//~ if(currentCam == FREE_FLY){
 								//~ ffCam.printInfos();
 								//~ if(setStartPoint % 2){
 									//~ endPoint = ffCam.getCameraPosition();
@@ -992,15 +992,16 @@ int main(int argc, char** argv){
 									//~ startPoint = ffCam.getCameraPosition();
 								//~ }
 								//~ ++setStartPoint;
+							//~ }
+							if(currentCam == FREE_FLY)
 								startPoint = ffCam.getCameraPosition();
-							}
 							break;
 							
 						case SDLK_m:
-							if(currentCam == FREE_FLY){
+							if(currentCam == FREE_FLY)
 								endPoint = ffCam.getCameraPosition();
-							}
-							
+							break;
+						
 						case SDLK_t:
 							if(currentCam == FREE_FLY){
 								if(timelaps == false){
