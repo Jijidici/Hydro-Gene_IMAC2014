@@ -402,6 +402,15 @@ int main(int argc, char** argv){
 	
 	float timeLapsDuration = 3000.;
 	
+	/* pano animation */
+	bool panoAnim = false;
+	float thetaOffset = 0.;
+	/* end pano animation */
+	
+	/* emerge */
+	bool emerge = false;
+	float oceanOffset = 0.;
+	
 	/* rotation animation */
 	bool rotationAnim = false;
 
@@ -525,7 +534,7 @@ int main(int argc, char** argv){
 			glUniform1i(locations[CHOICE], NORMAL);
 			glUniform1i(locations[OCEAN], 1);
 			mvStack.push();
-				mvStack.translate(glm::vec3(0.f, oceanAltitude, 0.f));
+				mvStack.translate(glm::vec3(0.f, oceanAltitude + oceanOffset, 0.f));
 				mvStack.scale(glm::vec3(20*terrainScale));
 				/* Send the model view */
 				glUniformMatrix4fv(locations[MODELVIEW], 1, GL_FALSE, glm::value_ptr(mvStack.top()));
@@ -1005,7 +1014,13 @@ int main(int argc, char** argv){
 						case SDLK_l:
 							if(currentCam == FREE_FLY){
 								panoAnim = !panoAnim;
+								thetaOffset = 0.;
 							}
+							break;
+							
+						case SDLK_k:
+							oceanOffset = 0.f;
+							emerge = !emerge;
 							break;
 						
 						case SDLK_t:
@@ -1276,6 +1291,15 @@ int main(int argc, char** argv){
 			if(timelapsPosOffset >= 1.){
 				rotationAnim = false;
 			}
+		}
+		
+		if(panoAnim){
+			ffCam.resetView(0., thetaOffset);
+			thetaOffset -= 0.001;
+		}
+		
+		if(emerge){
+			oceanOffset -= 0.01;
 		}
 		
 		// Gestion compteur
