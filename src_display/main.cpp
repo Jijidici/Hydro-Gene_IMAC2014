@@ -809,11 +809,11 @@ int main(int argc, char** argv){
 			/* end View UI */
 			
 			/* travelling UI */
-			imguiBeginScrollArea("View", WINDOW_WIDTH - (10 + WINDOW_WIDTH / 4), WINDOW_HEIGHT - (travUIHeight+10+viewUIHeight+10), WINDOW_WIDTH / 4, travUIHeight, &travUIScrollArea);
+			imguiBeginScrollArea("Travelling", WINDOW_WIDTH - (10 + WINDOW_WIDTH / 4), WINDOW_HEIGHT - (travUIHeight+10+viewUIHeight+10), WINDOW_WIDTH / 4, travUIHeight, &travUIScrollArea);
 			imguiSeparator();
 			imguiSeparatorLine();
 			
-			imguiSlider("timelapse duration", &timeLapsDuration, 100.f, 5000.f, 10.f);
+			imguiSlider("travelling duration", &timeLapsDuration, 100.f, 5000.f, 10.f);
 			
 			imguiEndScrollArea();
 			/* end travelling UI */
@@ -985,15 +985,21 @@ int main(int argc, char** argv){
 							
 						case SDLK_p:
 							if(currentCam == FREE_FLY){
-								ffCam.printInfos();
-								if(setStartPoint % 2){
-									endPoint = ffCam.getCameraPosition();
-								}else{
-									startPoint = ffCam.getCameraPosition();
-								}
-								++setStartPoint;
+								//~ ffCam.printInfos();
+								//~ if(setStartPoint % 2){
+									//~ endPoint = ffCam.getCameraPosition();
+								//~ }else{
+									//~ startPoint = ffCam.getCameraPosition();
+								//~ }
+								//~ ++setStartPoint;
+								startPoint = ffCam.getCameraPosition();
 							}
 							break;
+							
+						case SDLK_m:
+							if(currentCam == FREE_FLY){
+								endPoint = ffCam.getCameraPosition();
+							}
 							
 						case SDLK_t:
 							if(currentCam == FREE_FLY){
