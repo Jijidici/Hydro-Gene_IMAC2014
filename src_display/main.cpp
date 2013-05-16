@@ -79,7 +79,7 @@ int main(int argc, char** argv){
 
 	uint16_t nbSub_lvl1 = arguments[0];
 	uint16_t nbSub_lvl2 = arguments[1];
-	uint16_t total_nbSub = nbSub_lvl1*nbSub_lvl2;
+	//~ uint16_t total_nbSub = nbSub_lvl1*nbSub_lvl2;
 	uint16_t nbLevel = arguments[7];
 	
 	std::cout<<"//-> Nb Subdivision lvl 1 : "<<nbSub_lvl1<<std::endl;
@@ -157,8 +157,8 @@ int main(int argc, char** argv){
 	/* Differents cube size */
 	double leafSize = GRID_3D_SIZE/(double)nbSub_lvl1;
 	double halfLeafSize = leafSize*0.5;
-	double voxelSize = leafSize/(double) nbSub_lvl2;
-	double halfVoxelSize = voxelSize*0.5;
+	//~ double voxelSize = leafSize/(double) nbSub_lvl2;
+	//~ double halfVoxelSize = voxelSize*0.5;
 	
 	/* ******************************** */
 	/* 		Creation des VBO, VAO 		*/
@@ -383,7 +383,7 @@ int main(int argc, char** argv){
 	bool displayBending = false;
 	bool displaySurface = false;
 	bool displayGradient = false;
-	bool displayVegetation = true;
+	bool displayVegetation = false;
 	bool displayFog = false;
 	
 	bool displayDebug = false;
@@ -395,7 +395,7 @@ int main(int argc, char** argv){
 	
 	glm::vec3 startPoint = glm::vec3(0.,0.,0.);
 	glm::vec3 endPoint = glm::vec3(0.,0.,0.);
-	int setStartPoint = 0;
+	//~ int setStartPoint = 0;
 	float timeLapsX = 0.;
 	float timeLapsY = 0.;
 	float timeLapsZ = 0.;
